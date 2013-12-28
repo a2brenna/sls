@@ -1,0 +1,2 @@
+A simple Key -> List storage system that supports appending to a list and
+recalling a range of values.
