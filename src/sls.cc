@@ -67,7 +67,7 @@ int main(int argc, char *argv[]){
             list<string> l = cache[a.key().c_str()];
             string d = a.data();
             l.push_front(d);
-            cerr << "Key: " << a.key() << " now has " << l.length() << " values" << endl;
+            cerr << "Key: " << a.key() << " now has " << l.size() << " values" << endl;
         }
 
         string r;
