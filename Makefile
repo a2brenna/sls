@@ -3,8 +3,14 @@ CXXFLAGS=-O2 -g -std=c++11
 
 all: sls
 
-sls: src/sls.cc
-	${CXX} ${CXXFLAGS} src/sls.cc -o sls
+sls: src/sls.cc sls.pb.o
+	${CXX} ${CXXFLAGS} src/sls.cc sls.pb.o -o sls -lprotobuf -lpthread
+
+sls.pb.o: src/sls.pb.cc
+	${CXX} ${CXXFLAGS} -c src/sls.pb.cc -o sls.pb.o
+
+src/sls.pb.cc: sls.proto
+	protoc --cpp_out=src/ sls.proto
 
 clean:
 	rm -f *.o
