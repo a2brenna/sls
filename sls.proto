@@ -7,8 +7,8 @@ message Append{
 
 message Request{
     message Range{
-        optional uint32 start = 1;
-        optional uint32 end = 2;
+        optional uint64 start = 1;
+        optional uint64 end = 2;
     };
 
     optional Append req_append = 1;
