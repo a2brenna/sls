@@ -6,9 +6,14 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include<map>
+#include<list>
+
 #include"sls.pb.h"
 
 using namespace std;
+
+map<const char *, list<string> > cache;
 
 const char *port = "6998";
 
@@ -45,17 +50,29 @@ int main(int argc, char *argv[]){
     struct sockaddr addr;
     socklen_t addr_len = sizeof (struct sockaddr);
     while (int ready = accept(sock, &addr, &addr_len)){
-        char request[4096];
-        read(ready, (void *)request, 4096);
-
+        char buffer[4096];
+        read(ready, (void *)buffer, 4096);
+        sls::Request request;
+        try{
+            request.ParseFromString(buffer);
+        }
+        catch(...){
+            cerr << "Malformed request" << endl;
+        }
         sls::Response response;
         response.set_success(false);
 
+        if (request.has_req_append()){
+            sls::Append a = request.req_append();
+            list<string> l = cache[a.key().c_str()];
+            string d = a.data();
+            l.push_front(d);
+            cerr << "Key: " << a.key() << " now has " << l.length() << " values" << endl;
+        }
+
         string r;
         response.SerializeToString(&r);
-
         send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
-
     }
     return 0;
 }

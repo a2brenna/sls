@@ -1,9 +1,11 @@
 package sls;
 
+message Append{
+    optional string key = 1;
+    optional bytes data = 2;
+};
+
 message Request{
-    message Append{
-        optional bytes data = 1;
-    };
     message Range{
         optional uint32 start = 1;
         optional uint32 end = 2;
