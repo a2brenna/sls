@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include"sls.pb.h"
+
 using namespace std;
 
 const char *port = "6998";
@@ -38,6 +40,22 @@ int main(int argc, char *argv[]){
     int sock = listen_on(port);
     if (sock < 0){
         cerr << "Could not open socket" << endl;
+    }
+
+    struct sockaddr addr;
+    socklen_t addr_len = sizeof (struct sockaddr);
+    while (int ready = accept(sock, &addr, &addr_len)){
+        char request[4096];
+        read(ready, (void *)request, 4096);
+
+        sls::Response response;
+        response.set_success(false);
+
+        string r;
+        response.SerializeToString(&r);
+
+        send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+
     }
     return 0;
 }
