@@ -85,25 +85,25 @@ bool append(const char *key, string data){
     return retval;
 }
 
-list<string> _interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
-    list<string> r;
+list<string> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
+    list<string> *r = (list<string> *)(malloc (sizeof(list<string>)));;
     //magic sauce
     return r;
 }
 
-list<string> lastn(const char *key, int num_entries){
+list<string> *lastn(const char *key, int num_entries){
     return intervaln(key, 0, num_entries - 1);
 }
 
-list<string> all(const char *key){
+list<string> *all(const char *key){
     return intervaln(key, 0, ULLONG_MAX);
 }
 
-list<string> intervaln(const char *key, unsigned long long start, unsigned long long end){
+list<string> *intervaln(const char *key, unsigned long long start, unsigned long long end){
     return _interval(key, start, end, false);
 }
 
-list<string> intervalt(const char *key, unsigned long long start, unsigned long long end){
+list<string> *intervalt(const char *key, unsigned long long start, unsigned long long end){
     return _interval(key, start, end, true);
 }
 
