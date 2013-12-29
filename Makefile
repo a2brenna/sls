@@ -1,10 +1,13 @@
 CXX=g++
 CXXFLAGS=-O2 -g -std=c++11
 
-all: sls slsc.o
+all: sls test_client
 
 sls: src/sls.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/sls.cc sls.pb.o -o sls -lprotobuf -lpthread
+
+test_client: src/test_client.cc slsc.o
+	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o -o test_client -lprotobuf -lpthread
 
 slsc.o: src/slsc.cc
 	${CXX} ${CXXFLAGS} -c src/slsc.cc -o slsc.o
