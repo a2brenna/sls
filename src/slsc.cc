@@ -88,8 +88,21 @@ bool append(const char *key, string data){
 }
 
 list<string> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
-    list<string> *r = (list<string> *)(malloc (sizeof(list<string>)));;
-    //magic sauce
+    list<string> *r = (list<string> *)(malloc (sizeof(list<string>)));
+    sls::Request request;
+    sls::Range *range = request.mutable_req_range();
+    range->set_start(start);
+    range->set_end(end);
+    range->set_is_time(is_time);
+    request.set_key(key);
+
+    sls::Response *response = sls_send(request);
+
+    for(int i = 0; i < response->data_size(); i++){
+        r->push_back( (response->data(i)).data() );
+    }
+
+    free(response);
     return r;
 }
 
