@@ -71,6 +71,7 @@ int main(int argc, char *argv[]){
                 string r;
                 response.SerializeToString(&r);
                 send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+                close(ready);
                 free(request);
             }
             else if (request->has_req_range()){
