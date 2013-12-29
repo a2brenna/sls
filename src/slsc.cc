@@ -38,7 +38,13 @@ sls::Response *sls_send(sls::Request request){
 
     string *rstring = (string *) malloc(sizeof (string));
 
-    request.SerializeToString(rstring);
+    try{
+        request.SerializeToString(rstring);
+    }
+    catch(...){
+        retval->set_success(false);
+        return retval;
+    }
 
     if (send(sockfd, rstring, rstring->length(), 0) == rstring->length()){
         string *returned = (string *)(malloc (sizeof(string)));
