@@ -51,30 +51,31 @@ int main(int argc, char *argv[]){
     socklen_t addr_len = sizeof (struct sockaddr);
     while (int ready = accept(sock, &addr, &addr_len)){
         char buffer[4096];
-        read(ready, (void *)buffer, 4096);
-        sls::Request request;
-        try{
-            request.ParseFromString(buffer);
-        }
-        catch(...){
-            cerr << "Malformed request" << endl;
-        }
-        sls::Response response;
-        response.set_success(false);
+        if (read(ready, (void *)buffer, 4096) > 0){
+            sls::Request request;
+            try{
+                request.ParseFromString(buffer);
+            }
+            catch(...){
+                cerr << "Malformed request" << endl;
+            }
+            sls::Response response;
+            response.set_success(false);
 
-        if (request.has_req_append()){
-            sls::Append a = request.req_append();
-            list<string> l = cache[a.key().c_str()];
-            string d = a.data();
-            l.push_front(d);
-            cerr << "Key: " << a.key() << " now has " << l.size() << " values" << endl;
-            string r;
-            response.SerializeToString(&r);
-            send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
-        }
-        else if (request.has_range()){
-            //spawn thread
+            if (request.has_req_append()){
+                sls::Append a = request.req_append();
+                list<string> l = cache[a.key().c_str()];
+                string d = a.data();
+                l.push_front(d);
+                cerr << "Key: " << a.key() << " now has " << l.size() << " values" << endl;
+                string r;
+                response.SerializeToString(&r);
+                send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+            }
+            else if (request.has_req_range()){
+                //spawn thread
 
+            }
         }
     }
     return 0;
