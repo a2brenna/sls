@@ -9,6 +9,8 @@
 #include<map>
 #include<list>
 
+#include<pthread.h>
+
 #include"sls.pb.h"
 
 using namespace std;
@@ -38,6 +40,29 @@ int listen_on(const char *port){
         return -1;
     }
     return sockfd;
+}
+
+struct Lookup{
+    int sockfd;
+    sls::Request *request;
+};
+
+void *lookup(void *foo){
+    struct Lookup *lstruct = (struct Lookup *)(foo);
+    int client_sock = lstruct->sockfd;
+    sls::Request *request = (sls::Request *)(lstruct->request);
+
+    sls::Response *response = (sls::Response *)(malloc (sizeof(sls::Response)));
+    response->set_success(false);
+
+    string *r = (string *)(malloc (sizeof(string)));
+    response->SerializeToString(r);
+
+    send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
+
+    free(request);
+    free(foo);
+    close(client_sock);
 }
 
 int main(int argc, char *argv[]){
@@ -76,7 +101,12 @@ int main(int argc, char *argv[]){
             }
             else if (request->has_req_range()){
                 //spawn thread
+                struct Lookup *job = (struct Lookup *)(malloc (sizeof(Lookup)));
+                job->sockfd = ready;
+                job->request = request;
 
+                pthread_t thread;
+                pthread_create(&thread, NULL, lookup, job);
             }
             else{
                 free(request);
