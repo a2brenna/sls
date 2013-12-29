@@ -13,14 +13,17 @@
 
 using namespace std;
 
-bool sls_send(sls::Request request){
+sls::Response *sls_send(sls::Request request){
     int sockfd = 0;
     struct sockaddr_in serv_addr;
+
+    sls::Response *retval = (sls::Response *)(malloc (sizeof (sls::Response)));
+    retval->set_success(false);
 
     if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         cerr << "Error : Could not create socket" << endl;
-        return false;
+        return retval;
     }
 
     memset(&serv_addr, '0', sizeof(serv_addr));
@@ -30,23 +33,32 @@ bool sls_send(sls::Request request){
     if( connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
        cerr << "Error : Connect Failed" << endl;
-       return false;
+       return retval;
     }
 
     string *rstring = (string *) malloc(sizeof (string));
 
     request.SerializeToString(rstring);
 
-    bool retval;
     if (send(sockfd, rstring, rstring->length(), 0) == rstring->length()){
-        retval = true;
+        string *returned = (string *)(malloc (sizeof(string)));
+        int i = 0;
+        char b[512];
+        do{
+            bzero(b,512);
+            i = recv(sockfd, b, 512, 0);
+            returned->append(b, i);
+        }
+        while(i == 512);
+
+        retval->ParseFromString(*returned);
+        free(returned);
     }
     else{
         cerr << "Failed to send entire request" << endl;
-        retval = false;
     }
-
     free(rstring);
+
     return retval;
 }
 
