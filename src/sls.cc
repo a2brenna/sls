@@ -68,11 +68,14 @@ int main(int argc, char *argv[]){
             string d = a.data();
             l.push_front(d);
             cerr << "Key: " << a.key() << " now has " << l.size() << " values" << endl;
+            string r;
+            response.SerializeToString(&r);
+            send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
         }
+        else if (request.has_range()){
+            //spawn thread
 
-        string r;
-        response.SerializeToString(&r);
-        send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+        }
     }
     return 0;
 }
