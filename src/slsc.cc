@@ -49,7 +49,20 @@ bool sls_send(sls::Request request){
 }
 
 bool append(const char *key, string data){
-    return false;
+    bool retval;
+    try{
+        sls::Request *request = (sls::Request *)(malloc (sizeof(sls::Request)));
+        sls::Append *req_append = request->mutable_req_append();
+
+        req_append->set_data(data);
+        req_append->set_key(key);
+        retval = sls_send(*request);
+    }
+    catch(...){
+        return false;
+    }
+
+    return retval;
 }
 
 list<string> lastn(const char *key, int num_entries){
