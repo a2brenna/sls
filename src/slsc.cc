@@ -69,7 +69,7 @@ sls::Response *sls_send(sls::Request request){
 }
 
 bool append(const char *key, string data){
-    bool retval;
+    sls::Response *retval;
     try{
         sls::Request *request = (sls::Request *)(malloc (sizeof(sls::Request)));
         sls::Append *req_append = request->mutable_req_append();
@@ -82,7 +82,9 @@ bool append(const char *key, string data){
         return false;
     }
 
-    return retval;
+    bool r = retval->success();
+    free(retval);
+    return r;
 }
 
 list<string> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
