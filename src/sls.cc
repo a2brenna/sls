@@ -52,9 +52,9 @@ int main(int argc, char *argv[]){
     while (int ready = accept(sock, &addr, &addr_len)){
         char buffer[4096];
         if (read(ready, (void *)buffer, 4096) > 0){
-            sls::Request request;
+            sls::Request *request = (sls::Request *)(malloc (sizeof(sls::Request)));
             try{
-                request.ParseFromString(buffer);
+                request->ParseFromString(buffer);
             }
             catch(...){
                 cerr << "Malformed request" << endl;
@@ -62,8 +62,8 @@ int main(int argc, char *argv[]){
             sls::Response response;
             response.set_success(false);
 
-            if (request.has_req_append()){
-                sls::Append a = request.req_append();
+            if (request->has_req_append()){
+                sls::Append a = request->req_append();
                 list<string> l = cache[a.key().c_str()];
                 string d = a.data();
                 l.push_front(d);
@@ -71,10 +71,14 @@ int main(int argc, char *argv[]){
                 string r;
                 response.SerializeToString(&r);
                 send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+                free(request);
             }
-            else if (request.has_req_range()){
+            else if (request->has_req_range()){
                 //spawn thread
 
+            }
+            else{
+                free(request);
             }
         }
     }
