@@ -1,3 +1,4 @@
+test_client
 sls
 *.o
 *.pb.cc
