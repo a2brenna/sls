@@ -17,7 +17,7 @@ sls::Response *sls_send(sls::Request request){
     int sockfd = 0;
     struct sockaddr_in serv_addr;
 
-    sls::Response *retval = (sls::Response *)(malloc (sizeof (sls::Response)));
+    sls::Response *retval = new sls::Response;
     retval->set_success(false);
 
     if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -36,7 +36,7 @@ sls::Response *sls_send(sls::Request request){
        return retval;
     }
 
-    string *rstring = (string *) malloc(sizeof (string));
+    string *rstring = new string;
 
     try{
         request.SerializeToString(rstring);
@@ -47,7 +47,7 @@ sls::Response *sls_send(sls::Request request){
     }
 
     if (send(sockfd, rstring, rstring->length(), 0) == rstring->length()){
-        string *returned = (string *)(malloc (sizeof(string)));
+        string *returned = new string;
         int i = 0;
         char b[512];
         do{
@@ -58,12 +58,12 @@ sls::Response *sls_send(sls::Request request){
         while(i == 512);
 
         retval->ParseFromString(*returned);
-        free(returned);
+        delete returned;
     }
     else{
         cerr << "Failed to send entire request" << endl;
     }
-    free(rstring);
+    delete rstring;
 
     return retval;
 }
@@ -71,11 +71,11 @@ sls::Response *sls_send(sls::Request request){
 bool append(const char *key, string data){
     sls::Response *retval;
     try{
-        sls::Request *request = (sls::Request *)(malloc (sizeof(sls::Request)));
-        sls::Append *req_append = request->mutable_req_append();
+        sls::Request *request = new sls::Request;
 
-        req_append->set_data(data);
-        req_append->set_key(key);
+        request->mutable_req_append()->set_key(key);
+        request->mutable_req_append()->set_data(data);
+
         retval = sls_send(*request);
     }
     catch(...){
