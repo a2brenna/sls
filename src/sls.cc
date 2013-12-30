@@ -13,11 +13,24 @@
 
 #include"sls.pb.h"
 
+#include <sys/time.h>
+
 using namespace std;
 
 map<string, list<string> > cache;
 
 const char *port = "6998";
+
+unsigned long long hires_time(){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    unsigned long long millisecondsSinceEpoch =
+    (unsigned long long)(tv.tv_sec) * 1000 +
+    (unsigned long long)(tv.tv_usec) / 1000;
+
+    return millisecondsSinceEpoch;
+}
 
 int listen_on(const char *port){
     struct addrinfo *res = (struct addrinfo *) malloc(sizeof (struct addrinfo));
