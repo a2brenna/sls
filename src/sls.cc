@@ -81,6 +81,7 @@ int main(int argc, char *argv[]){
     int sock = listen_on(port);
     if (sock < 0){
         cerr << "Could not open socket" << endl;
+        return -1;
     }
 
     while (true){
