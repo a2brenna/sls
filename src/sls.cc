@@ -59,9 +59,12 @@ void *lookup(void *foo){
 
     string key = request->key();
     list<string> *d = &(cache[key]);
-    cerr << "Key: " << key << " has " << d->size() << " elements" << endl;
     list<string>::iterator i = d->begin();
-    for(; i != d->end(); ++i){
+
+    //advance iterator to start of interval
+    unsigned long long j = 0;
+    for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
+    for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
         response->add_data()->set_data(*i);
     }
 
