@@ -116,11 +116,7 @@ list<string> *lastn(const char *key, int num_entries){
 }
 
 list<string> *all(const char *key){
-    return _interval(key, 0, UINT_MAX, false);
-}
-
-list<string> *intervaln(const char *key, unsigned long long start, unsigned long long end){
-    return _interval(key, start, end, false);
+    return _interval(key, 0, ULONG_MAX, false);
 }
 
 list<string> *intervalt(const char *key, unsigned long long start, unsigned long long end){
