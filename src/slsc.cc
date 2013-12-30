@@ -14,27 +14,29 @@
 using namespace std;
 
 sls::Response *sls_send(sls::Request request){
-    int sockfd = 0;
     struct sockaddr_in serv_addr;
 
     sls::Response *retval = new sls::Response;
     retval->set_success(false);
 
-    if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        cerr << "Error : Could not create socket" << endl;
-        return retval;
-    }
+    struct addrinfo hints, *res;
+    int sockfd;
 
-    memset(&serv_addr, '0', sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(6998);
+    // first, load up address structs with getaddrinfo():
 
-    if( connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-       cerr << "Error : Connect Failed" << endl;
-       return retval;
-    }
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    getaddrinfo("127.0.0.1", "6998", &hints, &res);
+
+    // make a socket:
+
+    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+    // connect!
+
+    connect(sockfd, res->ai_addr, res->ai_addrlen);
 
     string *rstring = new string;
 
