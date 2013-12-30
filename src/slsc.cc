@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <iostream>
+#include <unistd.h>
 #include "sls.pb.h"
 
 #include <limits.h>
@@ -48,13 +49,14 @@ sls::Response *sls_send(sls::Request request){
         return retval;
     }
 
-    if (send(sockfd, rstring->c_str(), rstring->length(), 0) == rstring->length()){
+    //if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
+    if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
         string *returned = new string;
         int i = 0;
         char b[512];
         do{
             bzero(b,512);
-            i = recv(sockfd, b, 512, 0);
+            i = read(sockfd, &b, 512);
             returned->append(b, i);
         }
         while(i == 512);
@@ -110,11 +112,11 @@ list<string> *_interval(const char *key, unsigned long long start, unsigned long
 }
 
 list<string> *lastn(const char *key, int num_entries){
-    return intervaln(key, 0, num_entries - 1);
+    return _interval(key, 0, num_entries - 1, false);
 }
 
 list<string> *all(const char *key){
-    return intervaln(key, 0, ULLONG_MAX);
+    return _interval(key, 0, UINT_MAX, false);
 }
 
 list<string> *intervaln(const char *key, unsigned long long start, unsigned long long end){
