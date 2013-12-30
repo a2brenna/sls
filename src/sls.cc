@@ -15,7 +15,7 @@
 
 using namespace std;
 
-map<const char *, list<string> > cache;
+map<string, list<string> > cache;
 
 const char *port = "6998";
 
@@ -58,7 +58,8 @@ void *lookup(void *foo){
     //need to verify some sanity here...
 
     string key = request->key();
-    list<string> *d = &(cache[key.c_str()]);
+    list<string> *d = &(cache[key]);
+    cerr << "Key: " << key << " has " << d->size() << " elements" << endl;
     list<string>::iterator i = d->begin();
     for(list<string>::iterator i = d->begin(); i != d->end(); ++i){
         response->add_data()->set_data(*i);
@@ -105,12 +106,15 @@ int main(int argc, char *argv[]){
 
             if (request->has_req_append()){
                 sls::Append a = request->req_append();
-                list<string> *l = &(cache[a.key().c_str()]);
+                list<string> *l;
+                l = &(cache[a.key()]);
                 string d = a.data();
+                l->push_front(d);
                 l->push_front(d);
                 string r;
                 response.SerializeToString(&r);
                 send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+                cerr << a.key().c_str() << " has " << cache[a.key()].size() << " elements" << endl;
                 close(ready);
                 delete request;
             }
