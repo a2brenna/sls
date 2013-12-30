@@ -39,6 +39,6 @@ int main(int argc, char *argv[]){
    
     unsigned long long time = hires_time();
     r = intervalt(test_key.c_str(), time - 60000, time);
-    cerr << "Got: " << r->size() << endl;
+    cerr << "Got intervalt: " << r->size() << endl;
     return 0;
 }
