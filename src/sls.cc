@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <netdb.h>
+#include "sls.h"
 
 #include<map>
 #include<list>
@@ -92,8 +93,12 @@ void *lookup(void *foo){
         }
     }
     else{
-        cerr << "Handling time interval" << endl;
-
+        for(; ((*i).time() > request->mutable_req_range()->end()) && (i != d->end()); ++i);
+        for(; ((*i).time() > request->mutable_req_range()->start()) && i != d->end(); ++i){
+            string r;
+            (*i).SerializeToString(&r);
+            response->add_data()->set_data(r);
+        }
     }
 
     string *r = new string;
