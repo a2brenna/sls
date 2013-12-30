@@ -61,7 +61,7 @@ void *lookup(void *foo){
     list<string> *d = &(cache[key]);
     cerr << "Key: " << key << " has " << d->size() << " elements" << endl;
     list<string>::iterator i = d->begin();
-    for(list<string>::iterator i = d->begin(); i != d->end(); ++i){
+    for(; i != d->end(); ++i){
         response->add_data()->set_data(*i);
     }
 
