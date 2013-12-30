@@ -1,0 +1,10 @@
+package slsb;
+
+message Value{
+    optional uint64 time = 1;
+    optional bytes data = 2;
+}
+
+message Archive{
+    repeated Value values = 1;
+}

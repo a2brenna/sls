@@ -17,7 +17,7 @@
 
 using namespace std;
 
-map<string, list<string> > cache;
+map<string, list<sls::Value> > cache;
 
 const char *port = "6998";
 
@@ -30,6 +30,13 @@ unsigned long long hires_time(){
     (unsigned long long)(tv.tv_usec) / 1000;
 
     return millisecondsSinceEpoch;
+}
+
+sls::Value wrap(string payload){
+    sls::Value r;
+    r.set_time(hires_time());
+    r.set_data(payload);
+    return r;
 }
 
 int listen_on(const char *port){
@@ -71,15 +78,17 @@ void *lookup(void *foo){
     //need to verify some sanity here...
 
     string key = request->key();
-    list<string> *d = &(cache[key]);
-    list<string>::iterator i = d->begin();
+    list<sls::Value> *d = &(cache[key]);
+    list<sls::Value>::iterator i = d->begin();
 
     if( !request->mutable_req_range()->is_time() ){
         //advance iterator to start of interval
         unsigned long long j = 0;
         for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
         for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
-            response->add_data()->set_data(*i);
+            string r;
+            (*i).SerializeToString(&r);
+            response->add_data()->set_data(r);
         }
     }
     else{
@@ -129,11 +138,10 @@ int main(int argc, char *argv[]){
 
             if (request->has_req_append()){
                 sls::Append a = request->req_append();
-                list<string> *l;
+                list<sls::Value> *l;
                 l = &(cache[a.key()]);
                 string d = a.data();
-                l->push_front(d);
-                l->push_front(d);
+                l->push_front(wrap(d));
                 string r;
                 response.SerializeToString(&r);
                 send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);

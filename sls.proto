@@ -25,3 +25,12 @@ message Response{
     optional bool success = 1;
     repeated Data data = 2;
 }
+
+message Value{
+    optional uint64 time = 1;
+    optional bytes data = 2;
+}
+
+message Archive{
+    repeated Value values = 1;
+}
