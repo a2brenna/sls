@@ -73,10 +73,15 @@ int main(int argc, char *argv[]){
         cerr << "Could not open socket" << endl;
     }
 
-    struct sockaddr addr;
-    socklen_t addr_len = sizeof (struct sockaddr);
-    while (int ready = accept(sock, &addr, &addr_len)){
+    while (true){
+        struct sockaddr addr;
+        socklen_t addr_len = sizeof (struct sockaddr);
+        cerr << "Waiting for connection" << endl;
+        int ready = accept(sock, &addr, &addr_len);
+        cerr << "Connection received on socket " << ready << endl;
+
         char buffer[4096];
+        cerr << "Got connection" << endl;
         if (read(ready, (void *)buffer, 4096) > 0){
             sls::Request *request = new sls::Request;
             try{
