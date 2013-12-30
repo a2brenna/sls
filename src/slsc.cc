@@ -48,7 +48,7 @@ sls::Response *sls_send(sls::Request request){
         return retval;
     }
 
-    if (send(sockfd, rstring, rstring->length(), 0) == rstring->length()){
+    if (send(sockfd, rstring->c_str(), rstring->length(), 0) == rstring->length()){
         string *returned = new string;
         int i = 0;
         char b[512];
