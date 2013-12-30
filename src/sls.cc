@@ -52,16 +52,17 @@ void *lookup(void *foo){
     int client_sock = lstruct->sockfd;
     sls::Request *request = (sls::Request *)(lstruct->request);
 
-    sls::Response *response = (sls::Response *)(malloc (sizeof(sls::Response)));
+    sls::Response *response = new sls::Response;
     response->set_success(false);
 
-    string *r = (string *)(malloc (sizeof(string)));
+    string *r = new string;
     response->SerializeToString(r);
 
     send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
 
-    free(request);
+    delete request;
     free(foo);
+    delete response;
     close(client_sock);
 }
 
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]){
     while (int ready = accept(sock, &addr, &addr_len)){
         char buffer[4096];
         if (read(ready, (void *)buffer, 4096) > 0){
-            sls::Request *request = (sls::Request *)(malloc (sizeof(sls::Request)));
+            sls::Request *request = new sls::Request;
             try{
                 request->ParseFromString(buffer);
             }
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]){
                 response.SerializeToString(&r);
                 send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
                 close(ready);
-                free(request);
+                delete request;
             }
             else if (request->has_req_range()){
                 //spawn thread
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]){
                 pthread_create(&thread, NULL, lookup, job);
             }
             else{
-                free(request);
+                delete request;
             }
         }
     }
