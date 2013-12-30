@@ -48,12 +48,32 @@ struct Lookup{
 };
 
 void *lookup(void *foo){
+    cerr << "Spawned lookup job" << endl;
     struct Lookup *lstruct = (struct Lookup *)(foo);
     int client_sock = lstruct->sockfd;
     sls::Request *request = (sls::Request *)(lstruct->request);
 
     sls::Response *response = new sls::Response;
     response->set_success(false);
+
+    //need to verify some sanity here...
+
+    string key = request->key();
+    unsigned long long start = request->mutable_req_range()->start();
+    unsigned long long end = request->mutable_req_range()->end();
+    bool is_time = request->mutable_req_range()->is_time();
+
+    cerr << "Doing NOT time interval lookup" << endl;
+    unsigned long long index = 0;
+    list<string> *d = &(cache[key.c_str()]);
+    list<string>::iterator i = d->begin();
+    for(; (index < start) && (index < d->size()); index++,  i++){
+        cerr << "Skipping" << endl;
+    }
+    for(; (index < end) && (index < d->size()); index++,  i++){
+        cerr << "Appending data" << endl;
+        response->add_data()->set_data(*i);
+    }
 
     string *r = new string;
     response->SerializeToString(r);
@@ -64,6 +84,7 @@ void *lookup(void *foo){
     free(foo);
     delete response;
     close(client_sock);
+    cerr << "Finished lookup job" << endl;
 }
 
 int main(int argc, char *argv[]){
@@ -81,11 +102,16 @@ int main(int argc, char *argv[]){
         cerr << "Connection received on socket " << ready << endl;
 
         char buffer[4096];
+        bzero(buffer, 4096);
         cerr << "Got connection" << endl;
-        if (read(ready, (void *)buffer, 4096) > 0){
+        int message_len = read(ready, &buffer, 4096);
+        if (message_len > 0){
             sls::Request *request = new sls::Request;
+            string incoming;
+            incoming.assign(buffer, message_len);
+            cerr << incoming << endl;
             try{
-                request->ParseFromString(buffer);
+                request->ParseFromString(incoming);
             }
             catch(...){
                 cerr << "Malformed request" << endl;
@@ -94,6 +120,7 @@ int main(int argc, char *argv[]){
             response.set_success(false);
 
             if (request->has_req_append()){
+                cerr << "Got append" << endl;
                 sls::Append a = request->req_append();
                 list<string> *l = &(cache[a.key().c_str()]);
                 string d = a.data();
@@ -106,16 +133,21 @@ int main(int argc, char *argv[]){
                 delete request;
             }
             else if (request->has_req_range()){
+                cerr << "Got data request" << endl;
                 //spawn thread
                 struct Lookup *job = (struct Lookup *)(malloc (sizeof(Lookup)));
                 job->sockfd = ready;
                 job->request = request;
 
+                cerr << job->request->DebugString() << endl;
+
                 pthread_t thread;
                 pthread_create(&thread, NULL, lookup, job);
             }
             else{
+                cerr << "Cannot handle request" << endl;
                 delete request;
+                close(ready);
             }
         }
     }
