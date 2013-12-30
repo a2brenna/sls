@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
     append(test_key.c_str(), "1");
     append(test_key.c_str(), "2");
 
-    list<string> *r = all(test_key.c_str());
+    list<sls::Value> *r = all(test_key.c_str());
     cerr << "Got: " << r->size() << endl;
 
     r = lastn(test_key.c_str(), 6);

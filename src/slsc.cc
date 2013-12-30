@@ -91,8 +91,8 @@ bool append(const char *key, string data){
     return r;
 }
 
-list<string> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
-    list<string> *r = new list<string>;
+list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
+    list<sls::Value> *r = new list<sls::Value>;
     sls::Request request;
     sls::Range *range = request.mutable_req_range();
     request.mutable_req_range()->set_start(start);
@@ -104,22 +104,29 @@ list<string> *_interval(const char *key, unsigned long long start, unsigned long
     sls::Response *response = sls_send(request);
 
     for(int i = 0; i < response->data_size(); i++){
-        r->push_back( (response->data(i)).data() );
+        try{
+            sls::Value foo;
+            foo.ParseFromString((response->data(i)).data());
+            r->push_back(foo);
+        }
+        catch(...){
+            cerr << "Failed to parse incoming value" << endl;
+        }
     }
 
     free(response);
     return r;
 }
 
-list<string> *lastn(const char *key, int num_entries){
+list<sls::Value> *lastn(const char *key, int num_entries){
     return _interval(key, 0, num_entries, false);
 }
 
-list<string> *all(const char *key){
+list<sls::Value> *all(const char *key){
     return _interval(key, 0, ULONG_MAX, false);
 }
 
-list<string> *intervalt(const char *key, unsigned long long start, unsigned long long end){
+list<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned long long end){
     return _interval(key, start, end, true);
 }
 
