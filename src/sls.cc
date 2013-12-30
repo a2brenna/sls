@@ -95,10 +95,10 @@ int main(int argc, char *argv[]){
 
             if (request->has_req_append()){
                 sls::Append a = request->req_append();
-                list<string> l = cache[a.key().c_str()];
+                list<string> *l = &(cache[a.key().c_str()]);
                 string d = a.data();
-                l.push_front(d);
-                cerr << "Key: " << a.key() << " now has " << l.size() << " values" << endl;
+                l->push_front(d);
+                cerr << "Key: " << a.key() << " now has " << l->size() << " values" << endl;
                 string r;
                 response.SerializeToString(&r);
                 send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
