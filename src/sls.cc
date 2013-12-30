@@ -20,6 +20,8 @@ using namespace std;
 
 map<string, list<sls::Value> > cache;
 
+map<string, pthread_mutex_t> locks;
+
 const char *port = "6998";
 
 unsigned long long hires_time(){
@@ -79,6 +81,9 @@ void *lookup(void *foo){
     //need to verify some sanity here...
 
     string key = request->key();
+    //acquire lock
+    pthread_mutex_t *lock = &(locks[key]);
+    pthread_mutex_lock(lock);
     list<sls::Value> *d = &(cache[key]);
     list<sls::Value>::iterator i = d->begin();
 
@@ -100,6 +105,9 @@ void *lookup(void *foo){
             response->add_data()->set_data(r);
         }
     }
+
+    //release lock
+    pthread_mutex_unlock(lock);
 
     string *r = new string;
     response->SerializeToString(r);
@@ -144,9 +152,14 @@ int main(int argc, char *argv[]){
             if (request->has_req_append()){
                 sls::Append a = request->req_append();
                 list<sls::Value> *l;
+                //acquire lock
+                pthread_mutex_t *lock = &(locks[a.key()]);
+                pthread_mutex_lock(lock);
                 l = &(cache[a.key()]);
                 string d = a.data();
                 l->push_front(wrap(d));
+                //release lock
+                pthread_mutex_unlock(lock);
                 string r;
                 response.SerializeToString(&r);
                 send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
