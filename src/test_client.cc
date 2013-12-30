@@ -25,6 +25,14 @@ int main(int argc, char *argv[]){
 
     list<sls::Value> *r = all(test_key.c_str());
     cerr << "Got: " << r->size() << endl;
+    for(list<sls::Value>::iterator i = r->begin(); i != r->end(); ++i){
+        string d = unwrap(*i);
+        cerr << d << endl;
+    }
+    for(list<sls::Value>::iterator i = r->begin(); i != r->end(); ++i){
+        unsigned long long d = check_time(*i);
+        cerr << d << endl;
+    }
 
     r = lastn(test_key.c_str(), 6);
     cerr << "Got: " << r->size() << endl;
