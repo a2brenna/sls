@@ -130,7 +130,9 @@ list<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned 
     return _interval(key, start, end, true);
 }
 
-string unwrap(const string value){
-    string r;
-    return r;
+string unwrap(sls::Value value){
+    return value.data();
+}
+unsigned long long check_time(sls::Value value){
+    return value.time();
 }
