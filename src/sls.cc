@@ -61,11 +61,17 @@ void *lookup(void *foo){
     list<string> *d = &(cache[key]);
     list<string>::iterator i = d->begin();
 
-    //advance iterator to start of interval
-    unsigned long long j = 0;
-    for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
-    for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
-        response->add_data()->set_data(*i);
+    if( !request->mutable_req_range()->is_time() ){
+        //advance iterator to start of interval
+        unsigned long long j = 0;
+        for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
+        for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
+            response->add_data()->set_data(*i);
+        }
+    }
+    else{
+        cerr << "Handling time interval" << endl;
+
     }
 
     string *r = new string;
