@@ -1,5 +1,7 @@
 test_client
 sls
+*.a
+*.so
 *.o
 *.pb.cc
 *.pb.h
