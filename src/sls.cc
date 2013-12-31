@@ -176,23 +176,37 @@ void *lookup(void *foo){
     list<sls::Value> *d = &(cache[key]);
     list<sls::Value>::iterator i = d->begin();
 
+    int next_file_index = 0;
     if( !request->mutable_req_range()->is_time() ){
         //advance iterator to start of interval
         unsigned long long j = 0;
-        for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
-        for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
-            string r;
-            (*i).SerializeToString(&r);
-            response->add_data()->set_data(r);
+        do{
+            for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
+            for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
+                string r;
+                (*i).SerializeToString(&r);
+                response->add_data()->set_data(r);
+            }
+            //replace d with thing from next_file.end()
+            //replace i with next_file.start()
+            break;
         }
+        while(j < request->mutable_req_range()->end()); //and while we have another file...
     }
     else{
-        for(; ((*i).time() > request->mutable_req_range()->end()) && (i != d->end()); ++i);
-        for(; ((*i).time() > request->mutable_req_range()->start()) && i != d->end(); ++i){
-            string r;
-            (*i).SerializeToString(&r);
-            response->add_data()->set_data(r);
+        do{
+            for(; ((*i).time() > request->mutable_req_range()->end()) && (i != d->end()); ++i);
+            for(; ((*i).time() > request->mutable_req_range()->start()) && i != d->end(); ++i){
+                string r;
+                (*i).SerializeToString(&r);
+                response->add_data()->set_data(r);
+            }
+            //replace i with next_file.start()
+            //replace d with next_file.end()
+            break;
         }
+        //replace i with next_file.start()
+        while( (*i).time() > request->mutable_req_range()->start()); //and while we have another file...
     }
 
     //release lock
