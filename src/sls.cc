@@ -21,6 +21,8 @@
 
 #include <algorithm>
 
+#include <hgutil.h>
+
 using namespace std;
 
 int cache_min = 24; //3600 * 24;
@@ -32,43 +34,11 @@ string disk_dir = "/pool/sls/";
 
 const char *port = "6998";
 
-unsigned long long hires_time(){
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
-    unsigned long long millisecondsSinceEpoch =
-    (unsigned long long)(tv.tv_sec) * 1000 +
-    (unsigned long long)(tv.tv_usec) / 1000;
-
-    return millisecondsSinceEpoch;
-}
-
 sls::Value wrap(string payload){
     sls::Value r;
     r.set_time(hires_time());
     r.set_data(payload);
     return r;
-}
-
-int getdir (string dir, vector<string> &files){
-    DIR *dp;
-    struct dirent *dirp;
-    if((dp  = opendir(dir.c_str())) == NULL) {
-        cout << "Error(" << errno << ") opening " << dir << endl;
-        return errno;
-    }
-
-    while ((dirp = readdir(dp)) != NULL) {
-        if(strcmp(dirp->d_name, "..") == 0){
-            continue;
-        }
-        if(strcmp(dirp->d_name, ".") == 0){
-            continue;
-        }
-        files.push_back(string(dirp->d_name));
-    }
-    closedir(dp);
-    return 0;
 }
 
 bool page_out(string key){
@@ -129,29 +99,6 @@ bool page_out(string key){
 
     pthread_mutex_unlock(&(locks[key]));
     return true;
-}
-
-int listen_on(const char *port){
-    struct addrinfo *res = (struct addrinfo *) malloc(sizeof (struct addrinfo));
-    getaddrinfo("127.0.0.1", port, NULL, &res);
-
-    int sockfd;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0){
-        cerr << "Could not open socket\n";
-        return -1;
-    }
-
-    // bind it to the port we passed in to getaddrinfo():
-    if (bind(sockfd, res->ai_addr, res->ai_addrlen) != -1){
-    }
-    else{
-        return -1;
-    }
-    if (listen(sockfd, 20) == -1){
-        return -1;
-    }
-    return sockfd;
 }
 
 struct Lookup{
