@@ -19,26 +19,26 @@ int main(int argc, char *argv[]){
     string test_key = "key";
     string test_val = "value";
 
-    append(test_key.c_str(), test_val);
-    append(test_key.c_str(), "1");
-    append(test_key.c_str(), "2");
+    sls::append(test_key.c_str(), test_val);
+    sls::append(test_key.c_str(), "1");
+    sls::append(test_key.c_str(), "2");
 
-    list<sls::Value> *r = all(test_key.c_str());
+    list<sls::Value> *r = sls::all(test_key.c_str());
     cerr << "Got: " << r->size() << endl;
     for(list<sls::Value>::iterator i = r->begin(); i != r->end(); ++i){
         string d = unwrap(*i);
         cerr << d << endl;
     }
     for(list<sls::Value>::iterator i = r->begin(); i != r->end(); ++i){
-        unsigned long long d = check_time(*i);
+        unsigned long long d = sls::check_time(*i);
         cerr << d << endl;
     }
 
-    r = lastn(test_key.c_str(), 6);
+    r = sls::lastn(test_key.c_str(), 6);
     cerr << "Got: " << r->size() << endl;
    
     unsigned long long time = hires_time();
-    r = intervalt(test_key.c_str(), time - 60000, time);
-    cerr << "Got intervalt: " << r->size() << endl;
+    r = sls::intervalt(test_key.c_str(), time - 60000, time);
+    cerr << "Got sls::intervalt: " << r->size() << endl;
     return 0;
 }
