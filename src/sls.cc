@@ -123,7 +123,6 @@ bool page_out(string key){
         cerr << "Error opening new file" << endl;
     }
 
-
     delete outfile;
     //delete from new_end to end()
     cache[key].erase(new_end, cache[key].end());
