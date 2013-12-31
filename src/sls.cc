@@ -24,6 +24,9 @@
 #include <hgutil.h>
 #include "config.h"
 
+#include <cstdlib>
+#include <signal.h>
+
 using namespace std;
 
 map<string, list<sls::Value> > cache;
@@ -41,11 +44,7 @@ struct Page_Out{
     char key[256];
 };
 
-void *page_out(void *foo){
-    struct Page_Out *bar = (struct Page_Out *)foo;
-    string key = string(bar->key);
-    free(bar);
-    pthread_mutex_lock(&(locks[key]));
+void _page_out(string key){
     list<sls::Value>::iterator i = (cache[key]).begin();
     for(int j = 0; i != cache[key].end(), j < cache_min; ++j, ++i);
     list<sls::Value>::iterator new_end = i;
@@ -59,7 +58,6 @@ void *page_out(void *foo){
 
     string *outfile = new string;
     archive->SerializeToString(outfile);
-    cerr << "Outfile is: " << outfile->length();
     delete archive;
 
     //rotate files
@@ -99,7 +97,25 @@ void *page_out(void *foo){
     //delete from new_end to end()
     cache[key].erase(new_end, cache[key].end());
 
+}
+
+void *page_out(void *foo){
+    struct Page_Out *bar = (struct Page_Out *)foo;
+    string key = string(bar->key);
+    free(bar);
+    pthread_mutex_lock(&(locks[key]));
+    _page_out(key);
     pthread_mutex_unlock(&(locks[key]));
+}
+
+void shutdown(int signo){
+    close(sock);
+
+    for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
+        pthread_mutex_lock(&(locks[(*i).first]));
+        _page_out((*i).first);
+    }
+    exit(0);
 }
 
 struct Lookup{
@@ -215,6 +231,8 @@ int main(int argc, char *argv[]){
         cerr << "Could not open socket" << endl;
         return -1;
     }
+
+    signal(SIGINT, shutdown);
 
     while (true){
         struct sockaddr addr;
