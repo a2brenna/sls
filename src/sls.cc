@@ -41,7 +41,14 @@ sls::Value wrap(string payload){
     return r;
 }
 
-bool page_out(string key){
+struct Page_Out{
+    char key[256];
+};
+
+void *page_out(void *foo){
+    struct Page_Out *bar = (struct Page_Out *)foo;
+    string key = string(bar->key);
+    free(bar);
     pthread_mutex_lock(&(locks[key]));
     list<sls::Value>::iterator i = (cache[key]).begin();
     for(int j = 0; i != cache[key].end(), j < cache_min; ++j, ++i);
@@ -69,7 +76,6 @@ bool page_out(string key){
         if (mkdir(directory.c_str(), S_IXUSR | S_IXGRP | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0){
             cerr << "Could not make directory" << endl;
             delete outfile;
-            return false;
         }
     }
 
@@ -98,7 +104,6 @@ bool page_out(string key){
     cache[key].erase(new_end, cache[key].end());
 
     pthread_mutex_unlock(&(locks[key]));
-    return true;
 }
 
 struct Lookup{
@@ -249,7 +254,10 @@ int main(int argc, char *argv[]){
                 pthread_mutex_unlock(lock);
 
                 if(l->size() > cache_max){
-                    page_out(a.key());
+                    struct Page_Out *p = (struct Page_Out *)malloc(sizeof (struct Page_Out));
+                    strcpy(p->key, a.key().c_str());
+                    pthread_t thread;
+                    pthread_create(&thread, NULL, page_out, p);
                 }
                 string r;
                 response.SerializeToString(&r);
