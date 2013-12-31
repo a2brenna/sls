@@ -28,6 +28,7 @@ using namespace std;
 
 map<string, list<sls::Value> > cache;
 map<string, pthread_mutex_t> locks;
+int sock; //main socket
 
 sls::Value wrap(string payload){
     sls::Value r;
@@ -209,7 +210,7 @@ void *lookup(void *foo){
 
 int main(int argc, char *argv[]){
     cerr << "Starting sls..." << endl;
-    int sock = listen_on(port);
+    sock = listen_on(port);
     if (sock < 0){
         cerr << "Could not open socket" << endl;
         return -1;
