@@ -159,6 +159,11 @@ struct Lookup{
     sls::Request *request;
 };
 
+list<sls::Value> *file_lookup(string key, int fileno){
+    list<sls::Value> *r = new list<sls::Value>;
+    return NULL;
+}
+
 void *lookup(void *foo){
     struct Lookup *lstruct = (struct Lookup *)(foo);
     int client_sock = lstruct->sockfd;
@@ -187,9 +192,16 @@ void *lookup(void *foo){
                 (*i).SerializeToString(&r);
                 response->add_data()->set_data(r);
             }
-            //replace d with thing from next_file.end()
-            //replace i with next_file.start()
-            break;
+            if (next_file_index != 0){
+                //operating off of a file... need to free it
+                delete d;
+            }
+
+            d = file_lookup(key, next_file_index++);
+            if( d == NULL){
+                break;
+            }
+            i = d->begin();
         }
         while(j < request->mutable_req_range()->end()); //and while we have another file...
     }
@@ -201,9 +213,16 @@ void *lookup(void *foo){
                 (*i).SerializeToString(&r);
                 response->add_data()->set_data(r);
             }
-            //replace i with next_file.start()
-            //replace d with next_file.end()
-            break;
+            if (next_file_index != 0){
+                //operating off of a file... need to free it
+                delete d;
+            }
+
+            d = file_lookup(key, next_file_index++);
+            if( d == NULL){
+                break;
+            }
+            i = d->begin();
         }
         //replace i with next_file.start()
         while( (*i).time() > request->mutable_req_range()->start()); //and while we have another file...
