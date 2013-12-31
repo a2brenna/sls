@@ -248,16 +248,18 @@ int main(int argc, char *argv[]){
                 //release lock
                 pthread_mutex_unlock(lock);
 
+                response.set_success(true);
+                string r;
+                response.SerializeToString(&r);
+                send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+
                 if(l->size() > cache_max){
                     struct Page_Out *p = (struct Page_Out *)malloc(sizeof (struct Page_Out));
                     strcpy(p->key, a.key().c_str());
                     pthread_t thread;
                     pthread_create(&thread, NULL, page_out, p);
                 }
-                string r;
-                response.SerializeToString(&r);
-                send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
-                cerr << a.key().c_str() << " has " << cache[a.key()].size() << " elements" << endl;
+                //cerr << a.key().c_str() << " has " << cache[a.key()].size() << " elements" << endl;
                 close(ready);
                 delete request;
             }
