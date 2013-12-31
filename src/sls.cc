@@ -22,17 +22,12 @@
 #include <algorithm>
 
 #include <hgutil.h>
+#include "config.h"
 
 using namespace std;
 
-int cache_min = 24; //3600 * 24;
-int cache_max = 48; //3600 * 24;
 map<string, list<sls::Value> > cache;
 map<string, pthread_mutex_t> locks;
-
-string disk_dir = "/pool/sls/";
-
-const char *port = "6998";
 
 sls::Value wrap(string payload){
     sls::Value r;
