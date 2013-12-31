@@ -23,8 +23,8 @@
 
 using namespace std;
 
-int cache_min = 12; //3600 * 24;
-int cache_max = 24; //3600 * 24;
+int cache_min = 24; //3600 * 24;
+int cache_max = 48; //3600 * 24;
 map<string, list<sls::Value> > cache;
 map<string, pthread_mutex_t> locks;
 
@@ -161,7 +161,25 @@ struct Lookup{
 
 list<sls::Value> *file_lookup(string key, int fileno){
     list<sls::Value> *r = new list<sls::Value>;
-    return NULL;
+
+    cerr << "attempting to open: " << (disk_dir + key + "/" + to_string(fileno).c_str()) << endl;
+    ifstream in((disk_dir + key + "/" + to_string(fileno).c_str()));
+    string *s = new string((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
+    if( s->size() == 0 ){
+        delete s;
+        return NULL;
+    }
+
+    sls::Archive *archive = new sls::Archive;
+    archive->ParseFromString(*s);
+    delete s;
+
+    for(int i = 0; i < archive->values_size(); i++){
+        r->push_back(archive->values(i));
+    }
+
+    delete archive;
+    return r;
 }
 
 void *lookup(void *foo){
