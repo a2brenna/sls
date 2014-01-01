@@ -70,6 +70,7 @@ namespace sls{
             cerr << "Failed to send entire request" << endl;
         }
         delete rstring;
+        close(sockfd);
 
         return retval;
     }
