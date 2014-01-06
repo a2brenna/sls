@@ -200,7 +200,7 @@ void *lookup(void *foo){
     list<sls::Value> *d = &(cache[key]);
     list<sls::Value>::iterator i = d->begin();
 
-    int next_file_index = 0;
+    string next_file = string("head");
     if( !request->mutable_req_range()->is_time() ){
         //advance iterator to start of interval
         unsigned long long j = 0;
@@ -211,16 +211,21 @@ void *lookup(void *foo){
                 (*i).SerializeToString(&r);
                 response->add_data()->set_data(r);
             }
-            if (next_file_index != 0){
+            if (next_file != "head"){
                 //operating off of a file... need to free it
                 delete d;
             }
+            if (next_file == ""){
+                cerr << "No next file" << endl;
+                break;
+            }
 
-            d = file_lookup(key, next_file_index++);
+            d = file_lookup(key, next_file);
             if( d == NULL){
                 break;
             }
             i = d->begin();
+            next_file = next_lookup(key, next_file);
         }
         while(j < request->mutable_req_range()->end()); //and while we have another file...
     }
@@ -232,16 +237,21 @@ void *lookup(void *foo){
                 (*i).SerializeToString(&r);
                 response->add_data()->set_data(r);
             }
-            if (next_file_index != 0){
+            if (next_file != "head"){
                 //operating off of a file... need to free it
                 delete d;
             }
+            if (next_file == ""){
+                cerr << "No next file" << endl;
+                break;
+            }
 
-            d = file_lookup(key, next_file_index++);
+            d = file_lookup(key, next_file);
             if( d == NULL){
                 break;
             }
             i = d->begin();
+            next_file = next_lookup(key, next_file);
         }
         //replace i with next_file.start()
         while( (*i).time() > request->mutable_req_range()->start()); //and while we have another file...
