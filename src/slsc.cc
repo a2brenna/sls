@@ -116,7 +116,7 @@ namespace sls{
                 cerr << "Failed to parse incoming value" << endl;
             }
         }
-
+        cerr << "sls fetched " << r->size() << endl;
         free(response);
         return r;
     }
