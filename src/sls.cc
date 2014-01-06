@@ -115,6 +115,7 @@ void shutdown(int signo){
     }
     else{
         close(sock);
+    shutdown(sock, 0);
 
         for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
             pthread_mutex_lock(&(locks[(*i).first]));
@@ -122,6 +123,8 @@ void shutdown(int signo){
         }
         exit(0);
     }
+    close(sock);
+    exit(0);
 }
 
 struct Lookup{
