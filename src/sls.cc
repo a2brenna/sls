@@ -134,26 +134,53 @@ struct Lookup{
     sls::Request *request;
 };
 
-list<sls::Value> *file_lookup(string key, int fileno){
-    cerr << "attempting to open: " << (disk_dir + key + "/" + to_string(fileno).c_str()) << endl;
-    ifstream in((disk_dir + key + "/" + to_string(fileno).c_str()));
+sls::Archive *_file_lookup(string key, string filename){
+    cerr << "attempting to open: " << (disk_dir + key + "/" + filename) << endl;
+    ifstream in((disk_dir + key + "/" + filename));
     string *s = new string((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
     if( s->size() == 0 ){
         delete s;
+        cerr << "String is empty" << endl;
         return NULL;
     }
 
     sls::Archive *archive = new sls::Archive;
     archive->ParseFromString(*s);
     delete s;
+    return archive;
+}
+
+list<sls::Value> *file_lookup(string key, string filename){
+    sls::Archive *archive = _file_lookup(key, filename);
 
     list<sls::Value> *r = new list<sls::Value>;
+    if(archive == NULL){
+        return r;
+    }
     for(int i = 0; i < archive->values_size(); i++){
         r->push_back(archive->values(i));
     }
     delete archive;
 
     return r;
+}
+
+string next_lookup(string key, string filename){
+    sls::Archive *archive = _file_lookup(key, filename);
+
+    if(archive == NULL){
+        return string("");
+    }
+
+    if(archive->has_next_archive()){
+        string next_archive = archive->next_archive();
+        delete archive;
+        return next_archive;
+    }
+    else{
+        delete archive;
+        return string("");
+    }
 }
 
 void *lookup(void *foo){
