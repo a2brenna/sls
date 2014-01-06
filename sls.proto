@@ -33,4 +33,5 @@ message Value{
 
 message Archive{
     repeated Value values = 1;
+    optional string next_archive = 2;
 }

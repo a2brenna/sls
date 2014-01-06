@@ -33,6 +33,18 @@ map<string, list<sls::Value> > cache;
 map<string, pthread_mutex_t> locks;
 int sock; //main socket
 
+string RandomString(unsigned int len)
+{
+   srand(time(0));
+   string str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+   int pos;
+   while(str.size() != len) {
+    pos = ((rand() % (str.size() - 1)));
+    str.erase (pos, 1);
+   }
+   return str;
+}
+
 sls::Value wrap(string payload){
     sls::Value r;
     r.set_time(hires_time());
@@ -53,36 +65,33 @@ void _page_out(string key){
     sls::Archive *archive = new sls::Archive;
     for(; i != cache[key].end(); ++i){
         sls::Value *v = archive->add_values();
+        //maybe can eliminate this copy and use a pointer instead?
         v->CopyFrom(*i);
+    }
+
+    char head[256];
+    bzero(head, 256);
+    string head_link = disk_dir;
+    head_link.append(key);
+    head_link.append("/head");
+
+    if( readlink(head_link.c_str(), head, 256) < 0 ){
+        cerr << "Could not get current head file" << endl;
+    }
+    else{
+        archive->set_next_archive(head);
     }
 
     string *outfile = new string;
     archive->SerializeToString(outfile);
     delete archive;
 
-    //rotate files
-    vector<string> files;
+    //write new file
     string directory = disk_dir;
     directory.append(key);
     directory.append("/");
-    int retval = getdir(directory, files);
-    if(retval != 0){
-        if (mkdir(directory.c_str(), S_IXUSR | S_IXGRP | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0){
-            cerr << "Could not make directory" << endl;
-            delete outfile;
-        }
-    }
-
-    sort(files.begin(), files.end());
-
-    for(vector<string>::reverse_iterator i = files.rbegin(); i != files.rend(); i++){
-        int num = stoi((*i));
-        num++;
-        rename((directory + *i).c_str(), (directory + to_string(num)).c_str());
-    }
-
-    //write new file
-    string new_file = directory + "/0";
+    string new_file_name = RandomString(32);
+    string new_file = directory + "/" + new_file_name;
     std::ofstream fs;
     fs.open (new_file.c_str(), std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
     if(fs.is_open()){
@@ -92,8 +101,12 @@ void _page_out(string key){
     else{
         cerr << "Error opening new file" << endl;
     }
-
     delete outfile;
+
+    //set symlink from directory/head -> new_file_name
+    remove(head_link.c_str());
+    symlink(new_file_name.c_str(), head_link.c_str());
+
     //delete from new_end to end()
     cache[key].erase(new_end, cache[key].end());
 
