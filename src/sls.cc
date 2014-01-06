@@ -133,8 +133,6 @@ struct Lookup{
 };
 
 list<sls::Value> *file_lookup(string key, int fileno){
-    list<sls::Value> *r = new list<sls::Value>;
-
     cerr << "attempting to open: " << (disk_dir + key + "/" + to_string(fileno).c_str()) << endl;
     ifstream in((disk_dir + key + "/" + to_string(fileno).c_str()));
     string *s = new string((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
@@ -147,11 +145,12 @@ list<sls::Value> *file_lookup(string key, int fileno){
     archive->ParseFromString(*s);
     delete s;
 
+    list<sls::Value> *r = new list<sls::Value>;
     for(int i = 0; i < archive->values_size(); i++){
         r->push_back(archive->values(i));
     }
-
     delete archive;
+
     return r;
 }
 
