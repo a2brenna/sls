@@ -113,19 +113,18 @@ void *page_out(void *foo){
 }
 
 void shutdown(int signo){
-    if(signo != SIGINT){
-        return;
-    }
-    else{
+    if(signo == SIGSEGV){
         close(sock);
+        exit(1);
+    }
     shutdown(sock, 0);
 
-        for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
-            pthread_mutex_lock(&(locks[(*i).first]));
-            _page_out((*i).first);
-        }
-        exit(0);
+    for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
+        pthread_mutex_lock(&(locks[(*i).first]));
+        _page_out((*i).first);
     }
+
+    cerr << "Closing socket" << endl;
     close(sock);
     exit(0);
 }
@@ -252,6 +251,9 @@ int main(int argc, char *argv[]){
     }
 
     signal(SIGINT, shutdown);
+#ifndef DEBUG
+    signal(SIGSEGV, shutdown);
+#endif
 
     while (true){
         struct sockaddr addr;
