@@ -33,18 +33,6 @@ map<string, list<sls::Value> > cache;
 map<string, pthread_mutex_t> locks;
 int sock; //main socket
 
-string RandomString(unsigned int len)
-{
-   srand(time(0));
-   string str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-   int pos;
-   while(str.size() != len) {
-    pos = ((rand() % (str.size() - 1)));
-    str.erase (pos, 1);
-   }
-   return str;
-}
-
 sls::Value wrap(string payload){
     sls::Value r;
     r.set_time(hires_time());
