@@ -14,7 +14,7 @@ unsigned long long hires_time(){
     return millisecondsSinceEpoch;
 }
 
-int main(int argc, char *argv[]){
+int main(){
     cerr << "Test Client Started... " << endl;
     string test_key = "key";
     string test_val = "value";

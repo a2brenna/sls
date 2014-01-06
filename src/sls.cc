@@ -46,7 +46,7 @@ struct Page_Out{
 
 void _page_out(string key){
     list<sls::Value>::iterator i = (cache[key]).begin();
-    for(int j = 0; i != cache[key].end(), j < cache_min; ++j, ++i);
+    for(unsigned int j = 0; i != cache[key].end(), j < cache_min; ++j, ++i);
     list<sls::Value>::iterator new_end = i;
 
     //pack into archive
@@ -106,16 +106,22 @@ void *page_out(void *foo){
     pthread_mutex_lock(&(locks[key]));
     _page_out(key);
     pthread_mutex_unlock(&(locks[key]));
+    pthread_exit(NULL);
 }
 
 void shutdown(int signo){
-    close(sock);
-
-    for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
-        pthread_mutex_lock(&(locks[(*i).first]));
-        _page_out((*i).first);
+    if(signo != SIGINT){
+        return;
     }
-    exit(0);
+    else{
+        close(sock);
+
+        for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
+            pthread_mutex_lock(&(locks[(*i).first]));
+            _page_out((*i).first);
+        }
+        exit(0);
+    }
 }
 
 struct Lookup{
@@ -222,9 +228,17 @@ void *lookup(void *foo){
     free(foo);
     delete response;
     close(client_sock);
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]){
+    if(argc > 0){
+        cerr << "Unknown arguments:";
+        for(int i = 0; i < argc; i++){
+            cerr << " " << argv[i];
+        }
+        return -1;
+    }
     cerr << "Starting sls..." << endl;
     sock = listen_on(port);
     if (sock < 0){

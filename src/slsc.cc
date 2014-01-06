@@ -17,7 +17,7 @@ using namespace std;
 namespace sls{
 
     sls::Response *sls_send(sls::Request request){
-        struct sockaddr_in serv_addr;
+        struct sockaddr_in;
 
         sls::Response *retval = new sls::Response;
         retval->set_success(false);
@@ -52,22 +52,28 @@ namespace sls{
         }
 
         //if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
-        if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
-            string *returned = new string;
-            int i = 0;
-            char b[512];
-            do{
-                bzero(b,512);
-                i = read(sockfd, &b, 512);
-                returned->append(b, i);
-            }
-            while(i == 512);
+        int sent = send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL);
+        if (sent > 0){
+            if ((unsigned int)sent == rstring->size()){
+                string *returned = new string;
+                int i = 0;
+                char b[512];
+                do{
+                    bzero(b,512);
+                    i = read(sockfd, &b, 512);
+                    returned->append(b, i);
+                }
+                while(i == 512);
 
-            retval->ParseFromString(*returned);
-            delete returned;
+                retval->ParseFromString(*returned);
+                delete returned;
+            }
+            else{
+                cerr << "Failed to send entire request" << endl;
+            }
         }
         else{
-            cerr << "Failed to send entire request" << endl;
+            cerr << "Error sending request" << endl;
         }
         delete rstring;
         close(sockfd);
@@ -97,7 +103,6 @@ namespace sls{
     list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
         list<sls::Value> *r = new list<sls::Value>;
         sls::Request request;
-        sls::Range *range = request.mutable_req_range();
         request.mutable_req_range()->set_start(start);
         request.mutable_req_range()->set_start(start);
         request.mutable_req_range()->set_end(end);
