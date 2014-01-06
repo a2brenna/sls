@@ -78,6 +78,8 @@ void _page_out(string key){
     string directory = disk_dir;
     directory.append(key);
     directory.append("/");
+
+    mkdir(directory.c_str(), 0755);
     string new_file_name = RandomString(32);
     string new_file = directory + "/" + new_file_name;
     std::ofstream fs;
