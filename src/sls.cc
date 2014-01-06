@@ -273,6 +273,7 @@ void *lookup(void *foo){
 }
 
 int main(int argc, char *argv[]){
+    srand(time(0));
     if(argc > 1){
         cerr << "Unknown arguments:";
         for(int i = 1; i < argc; i++){
