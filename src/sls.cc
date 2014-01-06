@@ -109,12 +109,13 @@ void *page_out(void *foo){
 }
 
 void shutdown(int signo){
-    close(sock);
+    shutdown(sock, 0);
 
     for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
         pthread_mutex_lock(&(locks[(*i).first]));
         _page_out((*i).first);
     }
+    close(sock);
     exit(0);
 }
 
