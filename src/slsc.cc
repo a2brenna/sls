@@ -53,17 +53,18 @@ namespace sls{
 
         //if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
         int sent = send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL);
+
         if (sent > 0){
             if ((unsigned int)sent == rstring->size()){
                 string *returned = new string;
                 int i = 0;
-                char b[512];
+                char b[212992];
                 do{
-                    bzero(b,512);
-                    i = read(sockfd, &b, 512);
+                    bzero(b,212992);
+                    i = read(sockfd, &b, 212992);
                     returned->append(b, i);
                 }
-                while(i == 512);
+                while(i > 0);
 
                 retval->ParseFromString(*returned);
                 delete returned;
