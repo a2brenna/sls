@@ -44,9 +44,11 @@ struct Page_Out{
     char key[256];
 };
 
-void _page_out(string key){
+void _page_out(string key, unsigned int skip){
     list<sls::Value>::iterator i = (cache[key]).begin();
-    for(unsigned int j = 0; i != cache[key].end(), j < cache_min; ++j, ++i);
+    unsigned int j = 0;
+    unsigned int size = cache[key].size();
+    for(; (j < size) && (j < skip); ++j, ++i);
     list<sls::Value>::iterator new_end = i;
 
     //pack into archive
@@ -107,7 +109,7 @@ void *page_out(void *foo){
     string key = string(bar->key);
     free(bar);
     pthread_mutex_lock(&(locks[key]));
-    _page_out(key);
+    _page_out(key, cache_min);
     pthread_mutex_unlock(&(locks[key]));
     pthread_exit(NULL);
 }
@@ -121,7 +123,7 @@ void shutdown(int signo){
 
     for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
         pthread_mutex_lock(&(locks[(*i).first]));
-        _page_out((*i).first);
+        _page_out((*i).first, 0);
     }
 
     cerr << "Closing socket" << endl;
