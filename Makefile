@@ -3,7 +3,7 @@ CXXFLAGS=-O0 -g -std=c++11 -fPIC -Wall -Wextra
 DESTDIR=/
 PREFIX=/usr/local/
 
-all: sls test_client libsls.so libsls.a
+all: sls test_client libsls.so libsls.a src/slsfsck.py src/sls_pb2.py
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
@@ -38,6 +38,11 @@ sls.pb.o: src/sls.pb.cc
 
 src/sls.pb.cc: sls.proto
 	protoc --cpp_out=src/ sls.proto
+
+src/slsfsck.py: src/sls_pb2.py
+
+src/sls_pb2.py: sls.proto
+	protoc --python_out=src/ sls.proto
 
 clean:
 	rm -f *.o
