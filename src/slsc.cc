@@ -126,7 +126,7 @@ namespace sls{
         return r;
     }
 
-    list<sls::Value> *lastn(const char *key, int num_entries){
+    list<sls::Value> *lastn(const char *key, unsigned long long num_entries){
         return _interval(key, 0, num_entries, false);
     }
 
