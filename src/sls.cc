@@ -206,13 +206,17 @@ void *lookup(void *foo){
     if( !request->mutable_req_range()->is_time() ){
         //advance iterator to start of interval
         unsigned long long j = 0;
+        unsigned long long fetched = 0;
         do{
             for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
             for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
                 string r;
                 (*i).SerializeToString(&r);
                 response->add_data()->set_data(r);
+                fetched++;
             }
+
+            cerr << "Fetched: " << fetched << endl;
             if (next_file != "head"){
                 //operating off of a file... need to free it
                 delete d;
@@ -264,6 +268,8 @@ void *lookup(void *foo){
 
     string *r = new string;
     response->SerializeToString(r);
+
+    cerr << "Total fetched: " << response->data_size() << endl;
 
     send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
 
