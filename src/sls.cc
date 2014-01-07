@@ -279,6 +279,7 @@ void *lookup(void *foo){
     delete request;
     free(foo);
     delete response;
+    delete r;
     close(client_sock);
     pthread_exit(NULL);
 }
