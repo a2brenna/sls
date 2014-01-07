@@ -271,7 +271,10 @@ void *lookup(void *foo){
 
     cerr << "Total fetched: " << response->data_size() << endl;
 
-    send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
+    size_t sent = send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
+    if( sent != r->length()){
+        cerr << "Failed to send entire response" << endl;
+    }
 
     delete request;
     free(foo);
