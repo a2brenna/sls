@@ -114,7 +114,7 @@ void *page_out(void *foo){
 
 void shutdown(int signo){
     if(signo == SIGSEGV){
-        close(sock);
+        for(int ret = close(sock); ret != 0; ret = close(sock));
         exit(1);
     }
     shutdown(sock, 0);
@@ -125,7 +125,7 @@ void shutdown(int signo){
     }
 
     cerr << "Closing socket" << endl;
-    close(sock);
+    for(int ret = close(sock); ret != 0; ret = close(sock));
     exit(0);
 }
 
