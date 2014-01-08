@@ -40,6 +40,6 @@ for key in keys:
     if (len(orphans) > 0):
         for o in (orphans):
             orphan_string = orphan_string + o + " "
-        print("Error: " + key + " has " + str(len(orphans)) + " orphans:" + orphan_string)
+        print("Error: " + key + " has " + str(len(orphans)) + " orphan(s):" + orphan_string)
 
 
