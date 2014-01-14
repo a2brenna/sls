@@ -1,5 +1,5 @@
 CXX=clang
-CXXFLAGS=-O0 -g -std=c++11 -fPIC -Wall -Wextra
+CXXFLAGS=-O2 -g -std=c++11 -fPIC -Wall -Wextra
 DESTDIR=/
 PREFIX=/usr/local/
 
