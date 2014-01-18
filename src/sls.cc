@@ -310,13 +310,9 @@ int main(int argc, char *argv[]){
         socklen_t addr_len = sizeof (struct sockaddr);
         int ready = accept(sock, &addr, &addr_len);
 
-        char buffer[4096];
-        bzero(buffer, 4096);
-        int message_len = read(ready, &buffer, 4096);
-        if (message_len > 0){
+        string incoming = read_sock(ready);
+        if (incoming.size() > 0){
             sls::Request *request = new sls::Request;
-            string incoming;
-            incoming.assign(buffer, message_len);
             try{
                 request->ParseFromString(incoming);
             }

@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include "sls.pb.h"
 
+#include "hgutil.h"
+
 #include <limits.h>
 
 using namespace std;
@@ -57,15 +59,7 @@ namespace sls{
         if (sent > 0){
             if ((unsigned int)sent == rstring->size()){
                 string *returned = new string;
-                int i = 0;
-                char b[212992];
-                do{
-                    bzero(b,212992);
-                    i = read(sockfd, &b, 212992);
-                    returned->append(b, i);
-                }
-                while(i > 0);
-
+                read_sock(sockfd, returned);
                 retval->ParseFromString(*returned);
                 delete returned;
             }
