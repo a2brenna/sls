@@ -59,7 +59,14 @@ namespace sls{
         if (sent > 0){
             if ((unsigned int)sent == rstring->size()){
                 string *returned = new string;
-                read_sock(sockfd, returned);
+                int i = 0;
+                char b[212992];
+                do{
+                    bzero(b,212992);
+                    i = read(sockfd, &b, 212992);
+                    returned->append(b, i);
+                }
+                while(i > 0);
                 retval->ParseFromString(*returned);
                 delete returned;
             }
