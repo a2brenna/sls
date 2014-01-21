@@ -6,6 +6,7 @@ ROOT = "/pool/sls/"
 keys = os.listdir(ROOT)
 
 for key in keys:
+    time_index = 0
     real_head = ""
     num_files = 0
     linked_files = []
@@ -25,6 +26,12 @@ for key in keys:
                 f = open(next_file, 'r')
                 archive.ParseFromString(f.read())
                 f.close()
+
+                for v in archive.values:
+                    if (v.time > time_index):
+                        print("Error: " + key + " has misordered data in: " + next_file + " @ " + v.time)
+                    time_index = v.time
+
                 if(archive.HasField("next_archive")):
                     next_file = os.path.realpath(key_dir + archive.next_archive)
                     linked_files.append(archive.next_archive)
