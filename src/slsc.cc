@@ -19,29 +19,10 @@ using namespace std;
 namespace sls{
 
     sls::Response *sls_send(sls::Request request){
-        struct sockaddr_in;
+        auto sockfd = connect_to("127.0.0.1", "6998");
 
         sls::Response *retval = new sls::Response;
         retval->set_success(false);
-
-        struct addrinfo hints, *res;
-        int sockfd;
-
-        // first, load up address structs with getaddrinfo():
-
-        memset(&hints, 0, sizeof hints);
-        hints.ai_family = AF_INET;
-        hints.ai_socktype = SOCK_STREAM;
-
-        getaddrinfo("127.0.0.1", "6998", &hints, &res);
-
-        // make a socket:
-
-        sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-
-        // connect!
-
-        connect(sockfd, res->ai_addr, res->ai_addrlen);
 
         string *rstring = new string;
 
