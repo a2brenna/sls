@@ -1,7 +1,7 @@
 CXX=clang
 CXXFLAGS=-O2 -g -std=c++11 -fPIC -Wall -Wextra
 DESTDIR=/
-PREFIX=/usr/local/
+PREFIX=/usr/
 
 all: sls test_client libsls.so libsls.a src/slsfsck.py src/sls_pb2.py
 
