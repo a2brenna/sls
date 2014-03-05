@@ -40,7 +40,8 @@ namespace sls{
         if (sent > 0){
             if ((unsigned int)sent == rstring->size()){
                 string *returned = new string;
-                if (simple_read(sockfd, returned)){
+                read_sock(sockfd, returned);
+                if (returned->length() != 0){
                     retval->ParseFromString(*returned);
                 }
                 else{
