@@ -27,6 +27,10 @@
 #include <cstdlib>
 #include <signal.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 using namespace std;
 
 map<string, list<sls::Value> > cache;
@@ -137,19 +141,29 @@ struct Lookup{
 };
 
 sls::Archive *_file_lookup(string key, string filename){
-    cerr << "attempting to open: " << (disk_dir + key + "/" + filename) << endl;
-    ifstream in((disk_dir + key + "/" + filename));
-    string *s = new string((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-    if( s->size() == 0 ){
-        delete s;
-        cerr << "String is empty" << endl;
-        return NULL;
-    }
+    string filepath = (disk_dir + key + "/" + filename);
+    cerr << "attempting to open: " << filepath << endl;
+    auto fd = open(filepath.c_str(), O_RDONLY);
+    if( fd > 0){
+        string *s = new string();
+        read_sock(fd, s);
+        if( s->size() == 0 ){
+            delete s;
+            cerr << "String is empty: retrying" << endl;
+            return _file_lookup(key, filename);
+        }
 
-    sls::Archive *archive = new sls::Archive;
-    archive->ParseFromString(*s);
-    delete s;
-    return archive;
+        sls::Archive *archive = new sls::Archive;
+        archive->ParseFromString(*s);
+        delete s;
+        close(fd);
+        return archive;
+    }
+    else{
+        cerr << "Got a bad file descriptor" << endl;
+        cerr << "errno: " << errno << endl;
+        return _file_lookup(key, filename);
+    }
 }
 
 list<sls::Value> *file_lookup(string key, string filename){
