@@ -109,9 +109,16 @@ void _page_out(string key, unsigned int skip){
 }
 
 void *page_out(void *foo){
-    struct Page_Out *bar = (struct Page_Out *)foo;
-    string key = string(bar->key);
-    free(foo);
+    struct Page_Out *bar;
+    string key;
+    try{
+        bar = (struct Page_Out *)foo;
+        key = string(bar->key);
+        free(foo);
+    }
+    catch(...){
+        free(foo);
+    }
     pthread_mutex_lock(&(locks[key]));
     _page_out(key, cache_min);
     pthread_mutex_unlock(&(locks[key]));
@@ -200,10 +207,18 @@ string next_lookup(string key, string filename){
 }
 
 void *lookup(void *foo){
-    struct Lookup *lstruct = (struct Lookup *)(foo);
-    int client_sock = lstruct->sockfd;
-    sls::Request *request = (sls::Request *)(lstruct->request);
-    free(foo);
+    struct Lookup *lstruct;
+    int client_sock;
+    sls::Request *request;
+    try{
+        lstruct = (struct Lookup *)(foo);
+        client_sock = lstruct->sockfd;
+        request = (sls::Request *)(lstruct->request);
+        free(foo);
+    }
+    catch(...){
+        free(foo);
+    }
 
     sls::Response *response = new sls::Response;
     response->set_success(false);
