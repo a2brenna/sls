@@ -111,7 +111,7 @@ void _page_out(string key, unsigned int skip){
 void *page_out(void *foo){
     struct Page_Out *bar = (struct Page_Out *)foo;
     string key = string(bar->key);
-    free(bar);
+    free(foo);
     pthread_mutex_lock(&(locks[key]));
     _page_out(key, cache_min);
     pthread_mutex_unlock(&(locks[key]));
@@ -203,6 +203,7 @@ void *lookup(void *foo){
     struct Lookup *lstruct = (struct Lookup *)(foo);
     int client_sock = lstruct->sockfd;
     sls::Request *request = (sls::Request *)(lstruct->request);
+    free(foo);
 
     sls::Response *response = new sls::Response;
     response->set_success(false);
