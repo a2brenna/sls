@@ -1,4 +1,4 @@
-CXX=clang
+CXX=clang++
 CXXFLAGS=-O2 -g -std=c++11 -fPIC -Wall -Wextra
 DESTDIR=/
 PREFIX=/usr/
