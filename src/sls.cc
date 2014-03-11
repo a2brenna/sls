@@ -321,9 +321,6 @@ int main(int argc, char *argv[]){
     }
 
     signal(SIGINT, shutdown);
-#ifndef DEBUG
-    signal(SIGSEGV, shutdown);
-#endif
 
     while (true){
         struct sockaddr addr;
