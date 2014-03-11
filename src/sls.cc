@@ -365,7 +365,6 @@ int main(int argc, char *argv[]){
                     pthread_t thread;
                     pthread_create(&thread, NULL, page_out, p);
                 }
-                //DEBUG a.key().c_str() << " has " << cache[a.key()].size() << " elements" << endl;
                 close(ready);
                 delete request;
             }
