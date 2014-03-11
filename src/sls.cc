@@ -1,35 +1,24 @@
-#include<iostream>
-
-//For listen_on
+#include "config.h"
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <sys/socket.h>
 #include <netdb.h>
-#include "sls.h"
-
-#include<map>
-#include<list>
-
-#include<pthread.h>
-
-#include"sls.pb.h"
-
+#include <map>
+#include <list>
+#include <pthread.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <dirent.h>
-
 #include <algorithm>
-
 #include <hgutil.h>
-#include "config.h"
-
 #include <cstdlib>
 #include <signal.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "sls.h"
+#include "sls.pb.h"
 
 using namespace std;
 
