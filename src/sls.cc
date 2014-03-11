@@ -70,7 +70,6 @@ void _page_out(string key, unsigned int skip){
 
     string *outfile = new string;
     archive->SerializeToString(outfile);
-    delete archive;
 
     //write new file
     string directory = disk_dir;
@@ -89,7 +88,6 @@ void _page_out(string key, unsigned int skip){
     else{
         DEBUG "Error opening new file" << endl;
     }
-    delete outfile;
 
     //set symlink from directory/head -> new_file_name
     remove(head_link.c_str());
@@ -106,10 +104,8 @@ void *page_out(void *foo){
     try{
         bar = (struct Page_Out *)foo;
         key = string(bar->key);
-        free(foo);
     }
     catch(...){
-        free(foo);
     }
 
     lock_guard<mutex> guard((locks[key]));
@@ -147,14 +143,12 @@ sls::Archive *_file_lookup(string key, string filename){
         string *s = new string();
         read_sock(fd, s);
         if( s->size() == 0 ){
-            delete s;
             DEBUG "String is empty: retrying" << endl;
             return _file_lookup(key, filename);
         }
 
         sls::Archive *archive = new sls::Archive;
         archive->ParseFromString(*s);
-        delete s;
         close(fd);
         return archive;
     }
@@ -175,7 +169,6 @@ list<sls::Value> *file_lookup(string key, string filename){
     for(int i = 0; i < archive->values_size(); i++){
         r->push_back(archive->values(i));
     }
-    delete archive;
 
     return r;
 }
@@ -189,11 +182,9 @@ string next_lookup(string key, string filename){
 
     if(archive->has_next_archive()){
         string next_archive = archive->next_archive();
-        delete archive;
         return next_archive;
     }
     else{
-        delete archive;
         return string("");
     }
 }
@@ -206,10 +197,8 @@ void *lookup(void *foo){
         lstruct = (struct Lookup *)(foo);
         client_sock = lstruct->sockfd;
         request = (sls::Request *)(lstruct->request);
-        free(foo);
     }
     catch(...){
-        free(foo);
     }
 
     sls::Response *response = new sls::Response;
@@ -241,7 +230,6 @@ void *lookup(void *foo){
                 DEBUG "Fetched: " << fetched << endl;
                 if (next_file != "head"){
                     //operating off of a file... need to free it
-                    delete d;
                 }
                 if (next_file == ""){
                     DEBUG "No next file" << endl;
@@ -267,7 +255,6 @@ void *lookup(void *foo){
                 }
                 if (next_file != "head"){
                     //operating off of a file... need to free it
-                    delete d;
                 }
                 if (next_file == ""){
                     DEBUG "No next file" << endl;
@@ -296,10 +283,6 @@ void *lookup(void *foo){
         DEBUG "Failed to send entire response" << endl;
     }
 
-    delete request;
-    free(foo);
-    delete response;
-    delete r;
     close(client_sock);
     pthread_exit(NULL);
 }
@@ -357,7 +340,6 @@ int main(){
                     pthread_create(&thread, NULL, page_out, p);
                 }
                 close(ready);
-                delete request;
             }
             else if (request->has_req_range()){
                 //spawn thread
@@ -370,7 +352,6 @@ int main(){
             }
             else{
                 DEBUG "Cannot handle request" << endl;
-                delete request;
                 close(ready);
             }
         }
