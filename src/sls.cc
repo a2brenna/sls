@@ -21,6 +21,8 @@
 #include "sls.h"
 #include "sls.pb.h"
 
+#define DEBUG if(true) cerr <<
+
 using namespace std;
 
 map<string, list<sls::Value> > cache;
@@ -60,7 +62,7 @@ void _page_out(string key, unsigned int skip){
     head_link.append("/head");
 
     if( readlink(head_link.c_str(), head, 256) < 0 ){
-        cerr << "Could not get current head file" << endl;
+        DEBUG "Could not get current head file" << endl;
     }
     else{
         archive->set_next_archive(head);
@@ -85,7 +87,7 @@ void _page_out(string key, unsigned int skip){
         fs.close();
     }
     else{
-        cerr << "Error opening new file" << endl;
+        DEBUG "Error opening new file" << endl;
     }
     delete outfile;
 
@@ -127,7 +129,7 @@ void shutdown(int signo){
         _page_out((*i).first, 0);
     }
 
-    cerr << "Closing socket" << endl;
+    DEBUG "Closing socket" << endl;
     for(int ret = close(sock); ret != 0; ret = close(sock));
     exit(0);
 }
@@ -139,14 +141,14 @@ struct Lookup{
 
 sls::Archive *_file_lookup(string key, string filename){
     string filepath = (disk_dir + key + "/" + filename);
-    cerr << "attempting to open: " << filepath << endl;
+    DEBUG "attempting to open: " << filepath << endl;
     auto fd = open(filepath.c_str(), O_RDONLY);
     if( fd > 0){
         string *s = new string();
         read_sock(fd, s);
         if( s->size() == 0 ){
             delete s;
-            cerr << "String is empty: retrying" << endl;
+            DEBUG "String is empty: retrying" << endl;
             return _file_lookup(key, filename);
         }
 
@@ -157,8 +159,8 @@ sls::Archive *_file_lookup(string key, string filename){
         return archive;
     }
     else{
-        cerr << "Got a bad file descriptor" << endl;
-        cerr << "errno: " << errno << endl;
+        DEBUG "Got a bad file descriptor" << endl;
+        DEBUG "errno: " << errno << endl;
         return _file_lookup(key, filename);
     }
 }
@@ -236,13 +238,13 @@ void *lookup(void *foo){
                     fetched++;
                 }
 
-                cerr << "Fetched: " << fetched << endl;
+                DEBUG "Fetched: " << fetched << endl;
                 if (next_file != "head"){
                     //operating off of a file... need to free it
                     delete d;
                 }
                 if (next_file == ""){
-                    cerr << "No next file" << endl;
+                    DEBUG "No next file" << endl;
                     break;
                 }
 
@@ -268,7 +270,7 @@ void *lookup(void *foo){
                     delete d;
                 }
                 if (next_file == ""){
-                    cerr << "No next file" << endl;
+                    DEBUG "No next file" << endl;
                     break;
                 }
 
@@ -287,11 +289,11 @@ void *lookup(void *foo){
     string *r = new string;
     response->SerializeToString(r);
 
-    cerr << "Total fetched: " << response->data_size() << endl;
+    DEBUG "Total fetched: " << response->data_size() << endl;
 
     size_t sent = send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
     if( sent != r->length()){
-        cerr << "Failed to send entire response" << endl;
+        DEBUG "Failed to send entire response" << endl;
     }
 
     delete request;
@@ -305,16 +307,16 @@ void *lookup(void *foo){
 int main(int argc, char *argv[]){
     srand(time(0));
     if(argc > 1){
-        cerr << "Unknown arguments:";
+        DEBUG "Unknown arguments:";
         for(int i = 1; i < argc; i++){
-            cerr << " " << argv[i];
+            DEBUG " " << argv[i];
         }
         return -1;
     }
-    cerr << "Starting sls..." << endl;
+    DEBUG "Starting sls..." << endl;
     sock = listen_on(port);
     if (sock < 0){
-        cerr << "Could not open socket" << endl;
+        DEBUG "Could not open socket" << endl;
         return -1;
     }
 
@@ -335,7 +337,7 @@ int main(int argc, char *argv[]){
                 request->ParseFromString(incoming);
             }
             catch(...){
-                cerr << "Malformed request" << endl;
+                DEBUG "Malformed request" << endl;
             }
             sls::Response response;
             response.set_success(false);
@@ -363,7 +365,7 @@ int main(int argc, char *argv[]){
                     pthread_t thread;
                     pthread_create(&thread, NULL, page_out, p);
                 }
-                //cerr << a.key().c_str() << " has " << cache[a.key()].size() << " elements" << endl;
+                //DEBUG a.key().c_str() << " has " << cache[a.key()].size() << " elements" << endl;
                 close(ready);
                 delete request;
             }
@@ -377,7 +379,7 @@ int main(int argc, char *argv[]){
                 pthread_create(&thread, NULL, lookup, job);
             }
             else{
-                cerr << "Cannot handle request" << endl;
+                DEBUG "Cannot handle request" << endl;
                 delete request;
                 close(ready);
             }
