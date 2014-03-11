@@ -304,16 +304,10 @@ void *lookup(void *foo){
     pthread_exit(NULL);
 }
 
-int main(int argc, char *argv[]){
-    srand(time(0));
-    if(argc > 1){
-        DEBUG "Unknown arguments:";
-        for(int i = 1; i < argc; i++){
-            DEBUG " " << argv[i];
-        }
-        return -1;
-    }
+int main(){
     DEBUG "Starting sls..." << endl;
+    srand(time(0));
+
     sock = listen_on(port);
     if (sock < 0){
         DEBUG "Could not open socket" << endl;
