@@ -6,6 +6,7 @@
 #include <netdb.h>
 #include <map>
 #include <list>
+#include <mutex>
 #include <pthread.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -23,7 +24,7 @@
 using namespace std;
 
 map<string, list<sls::Value> > cache;
-map<string, pthread_mutex_t> locks;
+map<string, mutex> locks;
 int sock; //main socket
 
 sls::Value wrap(string payload){
@@ -108,9 +109,9 @@ void *page_out(void *foo){
     catch(...){
         free(foo);
     }
-    pthread_mutex_lock(&(locks[key]));
+
+    lock_guard<mutex> guard((locks[key]));
     _page_out(key, cache_min);
-    pthread_mutex_unlock(&(locks[key]));
     pthread_exit(NULL);
 }
 
@@ -122,7 +123,7 @@ void shutdown(int signo){
     shutdown(sock, 0);
 
     for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
-        pthread_mutex_lock(&(locks[(*i).first]));
+        lock_guard<mutex> guard((locks[(*i).first]));
         _page_out((*i).first, 0);
     }
 
@@ -216,74 +217,72 @@ void *lookup(void *foo){
 
     string key = request->key();
     //acquire lock
-    pthread_mutex_t *lock = &(locks[key]);
-    pthread_mutex_lock(lock);
-    list<sls::Value> *d = &(cache[key]);
-    list<sls::Value>::iterator i = d->begin();
+    {
+        lock_guard<mutex> guard(locks[key]);
+        list<sls::Value> *d = &(cache[key]);
+        list<sls::Value>::iterator i = d->begin();
 
-    string next_file = string("head");
-    if( !request->mutable_req_range()->is_time() ){
-        //advance iterator to start of interval
-        unsigned long long j = 0;
-        unsigned long long fetched = 0;
-        do{
-            for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
-            for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
-                string r;
-                (*i).SerializeToString(&r);
-                response->add_data()->set_data(r);
-                fetched++;
-            }
+        string next_file = string("head");
+        if( !request->mutable_req_range()->is_time() ){
+            //advance iterator to start of interval
+            unsigned long long j = 0;
+            unsigned long long fetched = 0;
+            do{
+                for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
+                for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
+                    string r;
+                    (*i).SerializeToString(&r);
+                    response->add_data()->set_data(r);
+                    fetched++;
+                }
 
-            cerr << "Fetched: " << fetched << endl;
-            if (next_file != "head"){
-                //operating off of a file... need to free it
-                delete d;
-            }
-            if (next_file == ""){
-                cerr << "No next file" << endl;
-                break;
-            }
+                cerr << "Fetched: " << fetched << endl;
+                if (next_file != "head"){
+                    //operating off of a file... need to free it
+                    delete d;
+                }
+                if (next_file == ""){
+                    cerr << "No next file" << endl;
+                    break;
+                }
 
-            d = file_lookup(key, next_file);
-            if( d == NULL){
-                break;
+                d = file_lookup(key, next_file);
+                if( d == NULL){
+                    break;
+                }
+                i = d->begin();
+                next_file = next_lookup(key, next_file);
             }
-            i = d->begin();
-            next_file = next_lookup(key, next_file);
+            while(j < request->mutable_req_range()->end()); //and while we have another file...
         }
-        while(j < request->mutable_req_range()->end()); //and while we have another file...
-    }
-    else{
-        do{
-            for(; ((*i).time() > request->mutable_req_range()->end()) && (i != d->end()); ++i);
-            for(; ((*i).time() > request->mutable_req_range()->start()) && i != d->end(); ++i){
-                string r;
-                (*i).SerializeToString(&r);
-                response->add_data()->set_data(r);
-            }
-            if (next_file != "head"){
-                //operating off of a file... need to free it
-                delete d;
-            }
-            if (next_file == ""){
-                cerr << "No next file" << endl;
-                break;
-            }
+        else{
+            do{
+                for(; ((*i).time() > request->mutable_req_range()->end()) && (i != d->end()); ++i);
+                for(; ((*i).time() > request->mutable_req_range()->start()) && i != d->end(); ++i){
+                    string r;
+                    (*i).SerializeToString(&r);
+                    response->add_data()->set_data(r);
+                }
+                if (next_file != "head"){
+                    //operating off of a file... need to free it
+                    delete d;
+                }
+                if (next_file == ""){
+                    cerr << "No next file" << endl;
+                    break;
+                }
 
-            d = file_lookup(key, next_file);
-            if( d == NULL){
-                break;
+                d = file_lookup(key, next_file);
+                if( d == NULL){
+                    break;
+                }
+                i = d->begin();
+                next_file = next_lookup(key, next_file);
             }
-            i = d->begin();
-            next_file = next_lookup(key, next_file);
+            //replace i with next_file.start()
+            while( (*i).time() > request->mutable_req_range()->start()); //and while we have another file...
         }
-        //replace i with next_file.start()
-        while( (*i).time() > request->mutable_req_range()->start()); //and while we have another file...
     }
-
-    //release lock
-    pthread_mutex_unlock(lock);
 
     string *r = new string;
     response->SerializeToString(r);
@@ -345,13 +344,13 @@ int main(int argc, char *argv[]){
                 sls::Append a = request->req_append();
                 list<sls::Value> *l;
                 //acquire lock
-                pthread_mutex_t *lock = &(locks[a.key()]);
-                pthread_mutex_lock(lock);
-                l = &(cache[a.key()]);
-                string d = a.data();
-                l->push_front(wrap(d));
+                {
+                    lock_guard<mutex> guard(locks[a.key()]);
+                    l = &(cache[a.key()]);
+                    string d = a.data();
+                    l->push_front(wrap(d));
+                }
                 //release lock
-                pthread_mutex_unlock(lock);
 
                 response.set_success(true);
                 string r;
