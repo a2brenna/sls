@@ -38,10 +38,6 @@ sls::Value wrap(string payload){
     return r;
 }
 
-struct Page_Out{
-    char key[256];
-};
-
 void _page_out(string key, unsigned int skip){
     list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
