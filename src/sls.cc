@@ -287,6 +287,64 @@ void *lookup(void *foo){
     pthread_exit(NULL);
 }
 
+void *handle_request(void *foo){
+    int ready = *((int *)foo);
+    free(foo);
+
+    string incoming = read_sock(ready);
+    if (incoming.size() > 0){
+        sls::Request *request = new sls::Request;
+        try{
+            request->ParseFromString(incoming);
+        }
+        catch(...){
+            DEBUG "Malformed request" << endl;
+        }
+        sls::Response response;
+        response.set_success(false);
+
+        if (request->has_req_append()){
+            sls::Append a = request->req_append();
+            list<sls::Value> *l;
+            //acquire lock
+            {
+                lock_guard<mutex> guard(locks[a.key()]);
+                l = &(cache[a.key()]);
+                string d = a.data();
+                l->push_front(wrap(d));
+            }
+            //release lock
+
+            response.set_success(true);
+            string r;
+            response.SerializeToString(&r);
+            send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+
+            if(l->size() > cache_max){
+                struct Page_Out *p = (struct Page_Out *)malloc(sizeof (struct Page_Out));
+                strcpy(p->key, a.key().c_str());
+                pthread_t thread;
+                pthread_create(&thread, NULL, page_out, p);
+            }
+            close(ready);
+        }
+        else if (request->has_req_range()){
+            //spawn thread
+            struct Lookup *job = (struct Lookup *)(malloc (sizeof(Lookup)));
+            job->sockfd = ready;
+            job->request = request;
+
+            pthread_t thread;
+            pthread_create(&thread, NULL, lookup, job);
+        }
+        else{
+            DEBUG "Cannot handle request" << endl;
+            close(ready);
+        }
+    }
+    pthread_exit(NULL);
+}
+
 int main(){
     DEBUG "Starting sls..." << endl;
     srand(time(0));
@@ -300,61 +358,11 @@ int main(){
     signal(SIGINT, shutdown);
 
     while (true){
-        struct sockaddr addr;
-        socklen_t addr_len = sizeof (struct sockaddr);
-        int ready = accept(sock, &addr, &addr_len);
+        int *ready = (int *)(malloc (sizeof(int)));
+        *ready = accept(sock, NULL, NULL);
 
-        string incoming = read_sock(ready);
-        if (incoming.size() > 0){
-            sls::Request *request = new sls::Request;
-            try{
-                request->ParseFromString(incoming);
-            }
-            catch(...){
-                DEBUG "Malformed request" << endl;
-            }
-            sls::Response response;
-            response.set_success(false);
-
-            if (request->has_req_append()){
-                sls::Append a = request->req_append();
-                list<sls::Value> *l;
-                //acquire lock
-                {
-                    lock_guard<mutex> guard(locks[a.key()]);
-                    l = &(cache[a.key()]);
-                    string d = a.data();
-                    l->push_front(wrap(d));
-                }
-                //release lock
-
-                response.set_success(true);
-                string r;
-                response.SerializeToString(&r);
-                send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
-
-                if(l->size() > cache_max){
-                    struct Page_Out *p = (struct Page_Out *)malloc(sizeof (struct Page_Out));
-                    strcpy(p->key, a.key().c_str());
-                    pthread_t thread;
-                    pthread_create(&thread, NULL, page_out, p);
-                }
-                close(ready);
-            }
-            else if (request->has_req_range()){
-                //spawn thread
-                struct Lookup *job = (struct Lookup *)(malloc (sizeof(Lookup)));
-                job->sockfd = ready;
-                job->request = request;
-
-                pthread_t thread;
-                pthread_create(&thread, NULL, lookup, job);
-            }
-            else{
-                DEBUG "Cannot handle request" << endl;
-                close(ready);
-            }
-        }
+        pthread_t thread;
+        pthread_create(&thread, NULL, handle_request, ready);
     }
     return 0;
 }
