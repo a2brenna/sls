@@ -21,6 +21,8 @@
 #include "sls.h"
 #include "sls.pb.h"
 
+#include <memory>
+
 #define DEBUG if(true) cerr <<
 
 using namespace std;
@@ -274,7 +276,7 @@ void *handle_request(void *foo){
 
     string incoming = read_sock(ready);
     if (incoming.size() > 0){
-        sls::Request *request = new sls::Request;
+        unique_ptr<sls::Request> request(new sls::Request);
         try{
             request->ParseFromString(incoming);
         }
@@ -308,7 +310,7 @@ void *handle_request(void *foo){
             }
         }
         else if (request->has_req_range()){
-            _lookup(ready, request);
+            _lookup(ready, request.get());
         }
         else{
             DEBUG "Cannot handle request" << endl;
