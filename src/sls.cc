@@ -189,18 +189,7 @@ string next_lookup(string key, string filename){
     }
 }
 
-void *lookup(void *foo){
-    struct Lookup *lstruct;
-    int client_sock;
-    sls::Request *request;
-    try{
-        lstruct = (struct Lookup *)(foo);
-        client_sock = lstruct->sockfd;
-        request = (sls::Request *)(lstruct->request);
-    }
-    catch(...){
-    }
-
+void _lookup(int client_sock, sls::Request *request){
     sls::Response *response = new sls::Response;
     response->set_success(false);
 
@@ -282,8 +271,13 @@ void *lookup(void *foo){
     if( sent != r->length()){
         DEBUG "Failed to send entire response" << endl;
     }
+}
 
-    close(client_sock);
+void *lookup(void *foo){
+    struct Lookup *lstruct = (struct Lookup *)(foo);
+    _lookup(lstruct->sockfd, (sls::Request *)(lstruct->request));
+
+    close(lstruct->sockfd);
     pthread_exit(NULL);
 }
 
