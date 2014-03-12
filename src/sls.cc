@@ -273,14 +273,6 @@ void _lookup(int client_sock, sls::Request *request){
     }
 }
 
-void *lookup(void *foo){
-    struct Lookup *lstruct = (struct Lookup *)(foo);
-    _lookup(lstruct->sockfd, (sls::Request *)(lstruct->request));
-
-    close(lstruct->sockfd);
-    pthread_exit(NULL);
-}
-
 void *handle_request(void *foo){
     int ready = *((int *)foo);
     free(foo);
@@ -319,22 +311,15 @@ void *handle_request(void *foo){
                 lock_guard<mutex> guard((locks[a.key()]));
                 _page_out(a.key(), cache_min);
             }
-            close(ready);
         }
         else if (request->has_req_range()){
-            //spawn thread
-            struct Lookup *job = (struct Lookup *)(malloc (sizeof(Lookup)));
-            job->sockfd = ready;
-            job->request = request;
-
-            pthread_t thread;
-            pthread_create(&thread, NULL, lookup, job);
+            _lookup(ready, request);
         }
         else{
             DEBUG "Cannot handle request" << endl;
-            close(ready);
         }
     }
+    close(ready);
     pthread_exit(NULL);
 }
 
