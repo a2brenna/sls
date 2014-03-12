@@ -130,11 +130,6 @@ void shutdown(int signo){
     exit(0);
 }
 
-struct Lookup{
-    int sockfd;
-    sls::Request *request;
-};
-
 sls::Archive *_file_lookup(string key, string filename){
     string filepath = (disk_dir + key + "/" + filename);
     DEBUG "attempting to open: " << filepath << endl;
