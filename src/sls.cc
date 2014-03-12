@@ -100,21 +100,6 @@ void _page_out(string key, unsigned int skip){
 
 }
 
-void *page_out(void *foo){
-    struct Page_Out *bar;
-    string key;
-    try{
-        bar = (struct Page_Out *)foo;
-        key = string(bar->key);
-    }
-    catch(...){
-    }
-
-    lock_guard<mutex> guard((locks[key]));
-    _page_out(key, cache_min);
-    pthread_exit(NULL);
-}
-
 void shutdown(int signo){
     if(signo == SIGSEGV){
         for(int ret = close(sock); ret != 0; ret = close(sock));
