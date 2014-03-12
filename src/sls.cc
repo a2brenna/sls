@@ -187,7 +187,7 @@ string next_lookup(string key, string filename){
 }
 
 void _lookup(int client_sock, sls::Request *request){
-    sls::Response *response = new sls::Response;
+    unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
     //need to verify some sanity here...
@@ -259,8 +259,8 @@ void _lookup(int client_sock, sls::Request *request){
         }
     }
 
-    string *r = new string;
-    response->SerializeToString(r);
+    unique_ptr<string> r(new string);
+    response->SerializeToString(r.get());
 
     DEBUG "Total fetched: " << response->data_size() << endl;
 
