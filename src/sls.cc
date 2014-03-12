@@ -113,46 +113,46 @@ void shutdown(int signo){
     exit(0);
 }
 
-sls::Archive *_file_lookup(string key, string filename){
+void _file_lookup(string key, string filename, sls::Archive *archive){
     string filepath = (disk_dir + key + "/" + filename);
     DEBUG "attempting to open: " << filepath << endl;
     auto fd = open(filepath.c_str(), O_RDONLY);
     if( fd > 0){
-        string *s = new string();
-        read_sock(fd, s);
+        unique_ptr<string> s(new string);
+        read_sock(fd, s.get());
         if( s->size() == 0 ){
             DEBUG "String is empty: retrying" << endl;
-            return _file_lookup(key, filename);
+            return _file_lookup(key, filename, archive);
         }
 
-        sls::Archive *archive = new sls::Archive;
-        archive->ParseFromString(*s);
+        archive->ParseFromString(*(s.get()));
         close(fd);
-        return archive;
+        return;
     }
     else{
         DEBUG "Got a bad file descriptor" << endl;
         DEBUG "errno: " << errno << endl;
-        return _file_lookup(key, filename);
+        return _file_lookup(key, filename, archive);
     }
 }
 
-list<sls::Value> *file_lookup(string key, string filename){
-    sls::Archive *archive = _file_lookup(key, filename);
+void file_lookup(string key, string filename, list<sls::Value> *r){
+    unique_ptr<sls::Archive> archive(new sls::Archive);
+    _file_lookup(key, filename, archive.get());
 
-    list<sls::Value> *r = new list<sls::Value>;
     if(archive == NULL){
-        return r;
+        return;
     }
     for(int i = 0; i < archive->values_size(); i++){
         r->push_back(archive->values(i));
     }
 
-    return r;
+    return;
 }
 
 string next_lookup(string key, string filename){
-    sls::Archive *archive = _file_lookup(key, filename);
+    unique_ptr<sls::Archive> archive(new sls::Archive);
+    _file_lookup(key, filename, archive.get());
 
     if(archive == NULL){
         return string("");
@@ -203,7 +203,7 @@ void _lookup(int client_sock, sls::Request *request){
                     break;
                 }
 
-                d = file_lookup(key, next_file);
+                file_lookup(key, next_file, d);
                 if( d == NULL){
                     break;
                 }
@@ -228,7 +228,7 @@ void _lookup(int client_sock, sls::Request *request){
                     break;
                 }
 
-                d = file_lookup(key, next_file);
+                file_lookup(key, next_file, d);
                 if( d == NULL){
                     break;
                 }
