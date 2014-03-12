@@ -46,7 +46,7 @@ void _page_out(string key, unsigned int skip){
     list<sls::Value>::iterator new_end = i;
 
     //pack into archive
-    sls::Archive *archive = new sls::Archive;
+    unique_ptr<sls::Archive> archive(new sls::Archive);
     for(; i != cache[key].end(); ++i){
         sls::Value *v = archive->add_values();
         //maybe can eliminate this copy and use a pointer instead?
@@ -66,8 +66,8 @@ void _page_out(string key, unsigned int skip){
         archive->set_next_archive(head);
     }
 
-    string *outfile = new string;
-    archive->SerializeToString(outfile);
+    unique_ptr<string> outfile(new string);
+    archive->SerializeToString(outfile.get());
 
     //write new file
     string directory = disk_dir;
