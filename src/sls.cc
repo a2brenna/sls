@@ -321,10 +321,9 @@ void *handle_request(void *foo){
             send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
 
             if(l->size() > cache_max){
-                struct Page_Out *p = (struct Page_Out *)malloc(sizeof (struct Page_Out));
-                strcpy(p->key, a.key().c_str());
-                pthread_t thread;
-                pthread_create(&thread, NULL, page_out, p);
+                //page out
+                lock_guard<mutex> guard((locks[a.key()]));
+                _page_out(a.key(), cache_min);
             }
             close(ready);
         }
