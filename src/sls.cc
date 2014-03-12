@@ -20,7 +20,6 @@
 #include <fcntl.h>
 #include "sls.h"
 #include "sls.pb.h"
-
 #include <memory>
 
 #define DEBUG if(true) cerr <<
@@ -38,6 +37,18 @@ sls::Value wrap(string payload){
     return r;
 }
 
+string get_canonical_filename(string path){
+    char head[256];
+    bzero(head, 256);
+
+    if( readlink(path.c_str(), head, 256) < 0 ){
+        DEBUG "Could not get current head file" << endl;
+        return string("");
+    }
+
+    return string(head);
+}
+
 void _page_out(string key, unsigned int skip){
     list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
@@ -53,18 +64,10 @@ void _page_out(string key, unsigned int skip){
         v->CopyFrom(*i);
     }
 
-    char head[256];
-    bzero(head, 256);
     string head_link = disk_dir;
     head_link.append(key);
     head_link.append("/head");
-
-    if( readlink(head_link.c_str(), head, 256) < 0 ){
-        DEBUG "Could not get current head file" << endl;
-    }
-    else{
-        archive->set_next_archive(head);
-    }
+    archive->set_next_archive(get_canonical_filename(head_link));
 
     unique_ptr<string> outfile(new string);
     archive->SerializeToString(outfile.get());
@@ -140,6 +143,8 @@ void file_lookup(string key, string filename, list<sls::Value> *r){
     unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
 
+    r->clear();
+
     if(archive == NULL){
         return;
     }
@@ -167,77 +172,69 @@ string next_lookup(string key, string filename){
     }
 }
 
+unsigned long long pick_time(const list<sls::Value> &d, unsigned long long start, unsigned long long end, list<sls::Value> *result){
+    auto position = d.begin();
+
+    for(; ((*position).time() > end ) && (position != d.end()); position++);
+
+    unsigned long long earliest = ((*position).time());
+    for(; (earliest > start) && (position != d.end()); position++){
+        result->push_front(*position);
+        earliest = ((*position).time());
+    }
+    return earliest;
+}
+
+unsigned long long pick(const list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, list<sls::Value> *result){
+    auto position = d.begin();
+    for(; (current < start) && (position != d.end()); position++, ++current);
+    for(; (current < end) && (position != d.end()); position++, ++current){
+        result->push_back(*position);
+    }
+    return current;
+}
+
 void _lookup(int client_sock, sls::Request *request){
     unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
-    //need to verify some sanity here...
+    unique_ptr<list<sls::Value> > values(new list<sls::Value>);
 
     string key = request->key();
-    //acquire lock
+    unsigned long long start = request->mutable_req_range()->start();
+    unsigned long long end = request->mutable_req_range()->end();
+    string next_file;
+    unique_ptr<list<sls::Value> > d(new list<sls::Value>);
     {
         lock_guard<mutex> guard(locks[key]);
-        list<sls::Value> *d = &(cache[key]);
-        list<sls::Value>::iterator i = d->begin();
+        *(d.get()) = cache[key];
+        next_file = get_canonical_filename(disk_dir + key + string("/head"));
+    }
 
-        string next_file = string("head");
-        if( !request->mutable_req_range()->is_time() ){
-            //advance iterator to start of interval
-            unsigned long long j = 0;
-            unsigned long long fetched = 0;
-            do{
-                for(; (j < request->mutable_req_range()->start()) && (i != d->end()); ++j, ++i);
-                for(; (j < request->mutable_req_range()->end()) && i != d->end(); ++j, ++i){
-                    string r;
-                    (*i).SerializeToString(&r);
-                    response->add_data()->set_data(r);
-                    fetched++;
-                }
+    unsigned long long current = 0;
 
-                DEBUG "Fetched: " << fetched << endl;
-                if (next_file != "head"){
-                    //operating off of a file... need to free it
-                }
-                if (next_file == ""){
-                    DEBUG "No next file" << endl;
-                    break;
-                }
-
-                file_lookup(key, next_file, d);
-                if( d == NULL){
-                    break;
-                }
-                i = d->begin();
-                next_file = next_lookup(key, next_file);
+    do{
+        if( request->mutable_req_range()->is_time() ){
+            auto earliest_seen = pick_time(*(d.get()), start, end, values.get());
+            if( earliest_seen < start ){
+                break;
             }
-            while(j < request->mutable_req_range()->end()); //and while we have another file...
         }
         else{
-            do{
-                for(; ((*i).time() > request->mutable_req_range()->end()) && (i != d->end()); ++i);
-                for(; ((*i).time() > request->mutable_req_range()->start()) && i != d->end(); ++i){
-                    string r;
-                    (*i).SerializeToString(&r);
-                    response->add_data()->set_data(r);
-                }
-                if (next_file != "head"){
-                    //operating off of a file... need to free it
-                }
-                if (next_file == ""){
-                    DEBUG "No next file" << endl;
-                    break;
-                }
-
-                file_lookup(key, next_file, d);
-                if( d == NULL){
-                    break;
-                }
-                i = d->begin();
-                next_file = next_lookup(key, next_file);
+            current = pick(*(d.get()), current, start, end, values.get());
+            if(current >= end ){
+                break;
             }
-            //replace i with next_file.start()
-            while( (*i).time() > request->mutable_req_range()->start()); //and while we have another file...
         }
+        file_lookup(key, next_file, d.get());
+        next_file = next_lookup(key, next_file);
+    }while(true);
+
+    for(sls::Value v: *values){
+        sls::Data *datum = response->add_data();
+        string s;
+        v.SerializeToString(&s);
+        datum->set_data(s);
     }
 
     unique_ptr<string> r(new string);
