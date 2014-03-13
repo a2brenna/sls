@@ -50,6 +50,7 @@ string get_canonical_filename(string path){
 }
 
 void _page_out(string key, unsigned int skip){
+    DEBUG "Attempting to page out: " << key << endl;
     list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
     unsigned int size = cache[key].size();
@@ -270,7 +271,9 @@ void *handle_request(void *foo){
             list<sls::Value> *l;
             //acquire lock
             {
+                DEBUG "Attempting to acquire lock: " << a.key() << endl;
                 lock_guard<mutex> guard(locks[a.key()]);
+                DEBUG "Lock acquired: " << a.key() << endl;
                 l = &(cache[a.key()]);
                 string d = a.data();
                 l->push_front(wrap(d));
@@ -280,11 +283,15 @@ void *handle_request(void *foo){
             response.set_success(true);
             string r;
             response.SerializeToString(&r);
+            DEBUG "Attempting to send response: " << ready << endl;
             send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+            DEBUG "Sent response: " << ready << endl;
 
             if(l->size() > cache_max){
                 //page out
+                DEBUG "Attempting to acquire lock: " << a.key() << endl;
                 lock_guard<mutex> guard((locks[a.key()]));
+                DEBUG "Lock acquired: " << a.key() << endl;
                 _page_out(a.key(), cache_min);
             }
         }
@@ -313,10 +320,14 @@ int main(){
 
     while (true){
         int *ready = (int *)(malloc (sizeof(int)));
+        DEBUG "Calling accept..." << endl;
         *ready = accept(sock, NULL, NULL);
+        DEBUG "Accepted socket.. " << *ready << endl;
 
+        DEBUG "Spawning thread" << endl;
         pthread_t thread;
         pthread_create(&thread, NULL, handle_request, ready);
+        DEBUG "Thread spawned" << endl;
     }
     return 0;
 }
