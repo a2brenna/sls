@@ -251,6 +251,7 @@ void _lookup(int client_sock, sls::Request *request){
 void *handle_request(void *foo){
     int ready = *((int *)foo);
     free(foo);
+    pthread_detach(pthread_self());
 
     string incoming = read_sock(ready);
     if (incoming.size() > 0){
