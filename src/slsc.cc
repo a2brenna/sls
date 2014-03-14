@@ -71,7 +71,7 @@ bool append(const char *key, string data){
 }
 
 list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
-    list<sls::Value> *r = new list<sls::Value>;
+    unique_ptr<list<sls::Value> > r(new list<sls::Value>);
     sls::Request request;
     request.mutable_req_range()->set_start(start);
     request.mutable_req_range()->set_start(start);
@@ -93,7 +93,10 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
         }
     }
     cerr << "sls fetched " << r->size() << endl;
-    return r;
+
+    list<sls::Value> *foo = r.get();
+    r.release();
+    return foo;
 }
 
 list<sls::Value> *lastn(const char *key, unsigned long long num_entries){
