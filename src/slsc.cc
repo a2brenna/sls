@@ -15,10 +15,9 @@ using namespace std;
 
 namespace sls{
 
-sls::Response *sls_send(sls::Request request){
+void sls_send(sls::Request request, sls::Response *retval){
     auto sockfd = connect_to("127.0.0.1", "6998");
 
-    sls::Response *retval = new sls::Response;
     retval->set_success(false);
 
     string *rstring = new string;
@@ -28,7 +27,6 @@ sls::Response *sls_send(sls::Request request){
     }
     catch(...){
         retval->set_success(false);
-        return retval;
     }
 
     //if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
@@ -55,26 +53,24 @@ sls::Response *sls_send(sls::Request request){
     }
     delete rstring;
     close(sockfd);
-
-    return retval;
 }
 
 bool append(const char *key, string data){
-    sls::Response *retval;
+    sls::Response *retval = new sls::Response;
     try{
         unique_ptr<sls::Request> request(new sls::Request);
 
         request->mutable_req_append()->set_key(key);
         request->mutable_req_append()->set_data(data);
 
-        retval = sls_send(*request);
+        sls_send(*request, retval);
     }
     catch(...){
         return false;
     }
 
     bool r = retval->success();
-    free(retval);
+    delete retval;
     return r;
 }
 
@@ -87,7 +83,8 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
 
-    sls::Response *response = sls_send(request);
+    sls::Response *response = new sls::Response;
+    sls_send(request, response);
 
     for(int i = 0; i < response->data_size(); i++){
         try{
@@ -100,7 +97,7 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
         }
     }
     cerr << "sls fetched " << r->size() << endl;
-    free(response);
+    delete response
     return r;
 }
 
