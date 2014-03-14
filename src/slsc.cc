@@ -16,9 +16,13 @@ using namespace std;
 namespace sls{
 
 void sls_send(sls::Request request, sls::Response *retval){
+    retval->set_success(false);
     auto sockfd = connect_to("127.0.0.1", "6998");
 
-    retval->set_success(false);
+    //check to see if we managed to connect to sls instance
+    if( sockfd < 0 ){
+        return;
+    }
 
     unique_ptr<string> rstring(new string);
 
