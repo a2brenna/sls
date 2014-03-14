@@ -81,23 +81,18 @@ void _page_out(string key, unsigned int skip){
     mkdir(directory.c_str(), 0755);
     string new_file_name = RandomString(32);
     string new_file = directory + "/" + new_file_name;
-    std::ofstream fs;
-    fs.open (new_file.c_str(), std::ofstream::in | std::ofstream::out | std::ofstream::trunc);
-    if(fs.is_open()){
-        fs.write(outfile->c_str(), outfile->length());
-        fs.close();
-    }
-    else{
-        DEBUG "Error opening new file" << endl;
-    }
+    if (writefile(new_file, *(outfile.get()))){
 
     //set symlink from directory/head -> new_file_name
-    remove(head_link.c_str());
-    symlink(new_file_name.c_str(), head_link.c_str());
+        remove(head_link.c_str());
+        symlink(new_file_name.c_str(), head_link.c_str());
 
-    //delete from new_end to end()
-    cache[key].erase(new_end, cache[key].end());
-
+        //delete from new_end to end()
+        cache[key].erase(new_end, cache[key].end());
+    }
+    else{
+        DEBUG "Failed to page out: " << key << endl;
+    }
 }
 
 void shutdown(int signo){
