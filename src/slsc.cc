@@ -31,6 +31,8 @@ void sls_send(sls::Request request, sls::Response *retval){
     }
     catch(...){
         retval->set_success(false);
+        close(sockfd);
+        return;
     }
 
     //if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
