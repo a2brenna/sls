@@ -51,6 +51,7 @@ string get_canonical_filename(string path){
 
 void _page_out(string key, unsigned int skip){
     DEBUG "Attempting to page out: " << key << endl;
+    lock_guard<mutex> g(locks[key]);
     list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
     unsigned int size = cache[key].size();
