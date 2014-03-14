@@ -14,6 +14,8 @@
 
 #include <limits.h>
 
+#include <memory>
+
 using namespace std;
 
 namespace sls{
@@ -65,7 +67,7 @@ namespace sls{
     bool append(const char *key, string data){
         sls::Response *retval;
         try{
-            sls::Request *request = new sls::Request;
+            unique_ptr<sls::Request> request(new sls::Request);
 
             request->mutable_req_append()->set_key(key);
             request->mutable_req_append()->set_data(data);
