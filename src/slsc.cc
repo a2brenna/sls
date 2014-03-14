@@ -54,21 +54,19 @@ void sls_send(sls::Request request, sls::Response *retval){
 }
 
 bool append(const char *key, string data){
-    sls::Response *retval = new sls::Response;
+    unique_ptr<sls::Response> retval(new sls::Response);
     try{
         unique_ptr<sls::Request> request(new sls::Request);
 
         request->mutable_req_append()->set_key(key);
         request->mutable_req_append()->set_data(data);
 
-        sls_send(*request, retval);
+        sls_send(*request, retval.get());
     }
     catch(...){
         return false;
     }
-
     bool r = retval->success();
-    delete retval;
     return r;
 }
 
