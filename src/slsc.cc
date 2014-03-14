@@ -20,10 +20,10 @@ void sls_send(sls::Request request, sls::Response *retval){
 
     retval->set_success(false);
 
-    string *rstring = new string;
+    unique_ptr<string> rstring(new string);
 
     try{
-        request.SerializeToString(rstring);
+        request.SerializeToString(rstring.get());
     }
     catch(...){
         retval->set_success(false);
@@ -34,15 +34,14 @@ void sls_send(sls::Request request, sls::Response *retval){
 
     if (sent > 0){
         if ((unsigned int)sent == rstring->size()){
-            string *returned = new string;
-            read_sock(sockfd, returned);
+            unique_ptr<string> returned(new string);
+            read_sock(sockfd, returned.get());
             if (returned->length() != 0){
                 retval->ParseFromString(*returned);
             }
             else{
                 cerr << "Failed to get response" << endl;
             }
-            delete returned;
         }
         else{
             cerr << "Failed to send entire request" << endl;
@@ -51,7 +50,6 @@ void sls_send(sls::Request request, sls::Response *retval){
     else{
         cerr << "Error sending request" << endl;
     }
-    delete rstring;
     close(sockfd);
 }
 
