@@ -116,10 +116,11 @@ void shutdown(int signo){
 void _file_lookup(string key, string filename, sls::Archive *archive){
     string filepath = (disk_dir + key + "/" + filename);
     unique_ptr<string> s(new string);
-    if(readfile(filepath, s)){
+    readfile(filepath, s.get());
+    try{
         archive->ParseFromString(*(s.get()));
     }
-    else{
+    catch(...){
         DEBUG "Could not read from: " << filepath << endl;
     }
     return;
