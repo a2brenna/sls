@@ -115,25 +115,14 @@ void shutdown(int signo){
 
 void _file_lookup(string key, string filename, sls::Archive *archive){
     string filepath = (disk_dir + key + "/" + filename);
-    DEBUG "attempting to open: " << filepath << endl;
-    auto fd = open(filepath.c_str(), O_RDONLY);
-    if( fd > 0){
-        unique_ptr<string> s(new string);
-        read_sock(fd, s.get());
-        if( s->size() == 0 ){
-            DEBUG "String is empty: retrying" << endl;
-            return _file_lookup(key, filename, archive);
-        }
-
+    unique_ptr<string> s(new string);
+    if(readfile(filepath, s)){
         archive->ParseFromString(*(s.get()));
-        close(fd);
-        return;
     }
     else{
-        DEBUG "Got a bad file descriptor" << endl;
-        DEBUG "errno: " << errno << endl;
-        return _file_lookup(key, filename, archive);
+        DEBUG "Could not read from: " << filepath << endl;
     }
+    return;
 }
 
 void file_lookup(string key, string filename, list<sls::Value> *r){
@@ -142,31 +131,25 @@ void file_lookup(string key, string filename, list<sls::Value> *r){
 
     r->clear();
 
-    if(archive == NULL){
-        return;
+    if(archive != NULL){
+        for(int i = 0; i < archive->values_size(); i++){
+            r->push_back(archive->values(i));
+        }
     }
-    for(int i = 0; i < archive->values_size(); i++){
-        r->push_back(archive->values(i));
-    }
-
     return;
 }
 
 string next_lookup(string key, string filename){
     unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
+    string next_archive;
 
-    if(archive == NULL){
-        return string("");
+    if(archive != NULL){
+        if(archive->has_next_archive()){
+            next_archive = archive->next_archive();
+        }
     }
-
-    if(archive->has_next_archive()){
-        string next_archive = archive->next_archive();
-        return next_archive;
-    }
-    else{
-        return string("");
-    }
+    return next_archive;
 }
 
 unsigned long long pick_time(const list<sls::Value> &d, unsigned long long start, unsigned long long end, list<sls::Value> *result){
