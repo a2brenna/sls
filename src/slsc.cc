@@ -79,8 +79,8 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
 
-    sls::Response *response = new sls::Response;
-    sls_send(request, response);
+    unique_ptr<sls::Response> response(new sls::Response);
+    sls_send(request, response.get());
 
     for(int i = 0; i < response->data_size(); i++){
         try{
@@ -93,7 +93,6 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
         }
     }
     cerr << "sls fetched " << r->size() << endl;
-    delete response
     return r;
 }
 
