@@ -44,6 +44,9 @@ void sls_send(sls::Request request, sls::Response *retval){
             read_sock(sockfd, returned.get());
             if (returned->length() != 0){
                 retval->ParseFromString(*returned);
+                if(!retval->success()){
+                    cerr << "Remote failure" << endl;
+                }
             }
             else{
                 cerr << "Failed to get response" << endl;
