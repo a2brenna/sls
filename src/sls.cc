@@ -13,6 +13,7 @@
 #include <dirent.h>
 #include <algorithm>
 #include <hgutil.h>
+#include <hgutil/raii.h>
 #include <cstdlib>
 #include <signal.h>
 #include <sys/types.h>
@@ -231,11 +232,11 @@ void _lookup(int client_sock, sls::Request *request){
 }
 
 void *handle_request(void *foo){
-    int ready = *((int *)foo);
+    raii::FD ready(*((int *)foo));
     free(foo);
     pthread_detach(pthread_self());
 
-    string incoming = read_sock(ready);
+    string incoming = read_sock(ready.get());
     if (incoming.size() > 0){
         unique_ptr<sls::Request> request(new sls::Request);
         try{
@@ -264,9 +265,9 @@ void *handle_request(void *foo){
             response.set_success(true);
             string r;
             response.SerializeToString(&r);
-            DEBUG "Attempting to send response: " << ready << endl;
-            send(ready, (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
-            DEBUG "Sent response: " << ready << endl;
+            DEBUG "Attempting to send response: " << ready.get() << endl;
+            send(ready.get(), (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+            DEBUG "Sent response: " << ready.get() << endl;
 
             if(l->size() > cache_max){
                 //page out
@@ -277,13 +278,12 @@ void *handle_request(void *foo){
             }
         }
         else if (request->has_req_range()){
-            _lookup(ready, request.get());
+            _lookup(ready.get(), request.get());
         }
         else{
             DEBUG "Cannot handle request" << endl;
         }
     }
-    close(ready);
     pthread_exit(NULL);
 }
 
