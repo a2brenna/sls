@@ -10,6 +10,7 @@
 #include "hgutil.h"
 #include <limits.h>
 #include <memory>
+#include <hgutil/raii.h>
 
 using namespace std;
 
@@ -17,12 +18,7 @@ namespace sls{
 
 void sls_send(sls::Request request, sls::Response *retval){
     retval->set_success(false);
-    auto sockfd = connect_to("127.0.0.1", "6998");
-
-    //check to see if we managed to connect to sls instance
-    if( sockfd < 0 ){
-        return;
-    }
+    raii::FD sockfd(connect_to("127.0.0.1", "6998"));
 
     unique_ptr<string> rstring(new string);
 
@@ -31,17 +27,16 @@ void sls_send(sls::Request request, sls::Response *retval){
     }
     catch(...){
         retval->set_success(false);
-        close(sockfd);
         return;
     }
 
     //if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
-    int sent = send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL);
+    int sent = send(sockfd.get(), rstring->c_str(), rstring->size(), MSG_NOSIGNAL);
 
     if (sent > 0){
         if ((unsigned int)sent == rstring->size()){
             unique_ptr<string> returned(new string);
-            read_sock(sockfd, returned.get());
+            read_sock(sockfd.get(), returned.get());
             if (returned->length() != 0){
                 retval->ParseFromString(*returned);
                 if(!retval->success()){
@@ -59,7 +54,6 @@ void sls_send(sls::Request request, sls::Response *retval){
     else{
         cerr << "Error sending request" << endl;
     }
-    close(sockfd);
 }
 
 bool append(const char *key, string data){
