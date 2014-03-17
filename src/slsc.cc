@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <memory>
 #include <hgutil/raii.h>
+#include <hgutil/debug.h>
 
 using namespace std;
 
@@ -40,19 +41,19 @@ void sls_send(sls::Request request, sls::Response *retval){
             if (returned->length() != 0){
                 retval->ParseFromString(*returned);
                 if(!retval->success()){
-                    cerr << "Remote failure" << endl;
+                    ERROR "Remote failure" << endl;
                 }
             }
             else{
-                cerr << "Failed to get response" << endl;
+                ERROR "Failed to get response" << endl;
             }
         }
         else{
-            cerr << "Failed to send entire request" << endl;
+            ERROR "Failed to send entire request" << endl;
         }
     }
     else{
-        cerr << "Error sending request" << endl;
+        ERROR "Error sending request" << endl;
     }
 }
 
@@ -92,10 +93,10 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
             r->push_back(foo);
         }
         catch(...){
-            cerr << "Failed to parse incoming value" << endl;
+            ERROR "Failed to parse incoming value" << endl;
         }
     }
-    cerr << "sls fetched " << r->size() << endl;
+    DEBUG "sls fetched " << r->size() << endl;
 
     return r.release();
 }
