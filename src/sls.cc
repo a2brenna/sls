@@ -224,8 +224,11 @@ void _lookup(int client_sock, sls::Request *request){
 
     unique_ptr<string> r(new string);
     response->SerializeToString(r.get());
-    size_t sent = send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
-    if( sent != r->length()){
+    auto sent = send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
+    if ( sent < 0){
+        ERROR "Could not send response" << endl;
+    }
+    else if( (unsigned long long)sent != r->length()){
         ERROR "Failed to send entire response" << endl;
     }
 }
