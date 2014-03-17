@@ -235,6 +235,7 @@ void *handle_request(void *foo){
     free(foo);
     pthread_detach(pthread_self());
 
+    DEBUG "Attempting to read socket" << endl;
     string incoming = read_sock(ready.get());
     if (incoming.size() > 0){
         unique_ptr<sls::Request> request(new sls::Request);
@@ -290,9 +291,12 @@ void *handle_request(void *foo){
                 ERROR "Cannot handle request" << endl;
             }
         }
+        else{
+            ERROR "Request is not properly initialized" << endl;
+        }
     }
     else{
-        ERROR "Request is not properly initialized" << endl;
+        ERROR "Request is empty" << endl;
     }
     pthread_exit(NULL);
 }
