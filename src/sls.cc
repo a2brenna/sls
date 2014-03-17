@@ -105,10 +105,10 @@ void shutdown(int signo){
     }
     close(sock);
 
-    for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
+    for(auto& cached: cache){
         //we want to "leak" this lock so no more data can be appended... but we don't want to deadlock here, unable to page out to disk because we're stuck in the middle of an append operation
-        locks[(*i).first].try_lock();
-        _page_out((*i).first, 0);
+        locks[cached.first].try_lock();
+        _page_out(cached.first, 0);
     }
 
     exit(0);
@@ -212,7 +212,7 @@ void _lookup(int client_sock, sls::Request *request){
             next_file = next_lookup(key, next_file);
         }while(true);
 
-        for(sls::Value v: *values){
+        for(sls::Value &v: *values){
             sls::Data *datum = response->add_data();
             string s;
             v.SerializeToString(&s);
