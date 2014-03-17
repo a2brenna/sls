@@ -97,9 +97,7 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
     }
     cerr << "sls fetched " << r->size() << endl;
 
-    list<sls::Value> *foo = r.get();
-    r.release();
-    return foo;
+    return r.release();
 }
 
 list<sls::Value> *lastn(const char *key, unsigned long long num_entries){
