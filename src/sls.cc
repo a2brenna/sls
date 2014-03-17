@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <hgutil.h>
 #include <hgutil/raii.h>
+#include <hgutil/debug.h>
 #include <cstdlib>
 #include <signal.h>
 #include <sys/types.h>
@@ -22,9 +23,6 @@
 #include "sls.h"
 #include "sls.pb.h"
 #include <memory>
-
-#define DEBUG if(false) cerr <<
-#define ERROR if(true) cerr <<
 
 using namespace std;
 
@@ -300,6 +298,8 @@ void *handle_request(void *foo){
 }
 
 int main(){
+    debug_set(true);
+    error_set(true);
     DEBUG "Starting sls..." << endl;
     srand(time(0));
 
