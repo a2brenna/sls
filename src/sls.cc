@@ -23,7 +23,8 @@
 #include "sls.pb.h"
 #include <memory>
 
-#define DEBUG if(true) cerr <<
+#define DEBUG if(false) cerr <<
+#define ERROR if(true) cerr <<
 
 using namespace std;
 
@@ -92,7 +93,7 @@ void _page_out(string key, unsigned int skip){
         cache[key].erase(new_end, cache[key].end());
     }
     else{
-        DEBUG "Failed to page out: " << key << endl;
+        ERROR "Failed to page out: " << key << endl;
     }
 }
 
@@ -123,7 +124,7 @@ void _file_lookup(string key, string filename, sls::Archive *archive){
         archive->ParseFromString(*(s.get()));
     }
     catch(...){
-        DEBUG "Could not read from: " << filepath << endl;
+        ERROR "Could not read from: " << filepath << endl;
     }
     return;
 }
@@ -222,14 +223,14 @@ void _lookup(int client_sock, sls::Request *request){
         DEBUG "Total fetched: " << response->data_size() << endl;
     }
     else{
-        DEBUG "Range not initialized" << endl;
+        ERROR "Range not initialized" << endl;
     }
 
     unique_ptr<string> r(new string);
     response->SerializeToString(r.get());
     size_t sent = send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
     if( sent != r->length()){
-        DEBUG "Failed to send entire response" << endl;
+        ERROR "Failed to send entire response" << endl;
     }
 }
 
@@ -245,7 +246,7 @@ void *handle_request(void *foo){
             request->ParseFromString(incoming);
         }
         catch(...){
-            DEBUG "Malformed request" << endl;
+            ERROR "Malformed request" << endl;
         }
         sls::Response response;
         response.set_success(false);
@@ -283,19 +284,19 @@ void *handle_request(void *foo){
                     }
                 }
                 else{
-                    DEBUG "Append request not initialized" << endl;
+                    ERROR "Append request not initialized" << endl;
                 }
             }
             else if (request->has_req_range()){
                 _lookup(ready.get(), request.get());
             }
             else{
-                DEBUG "Cannot handle request" << endl;
+                ERROR "Cannot handle request" << endl;
             }
         }
     }
     else{
-        DEBUG "Request is not properly initialized" << endl;
+        ERROR "Request is not properly initialized" << endl;
     }
     pthread_exit(NULL);
 }
@@ -306,7 +307,7 @@ int main(){
 
     sock = listen_on(port);
     if (sock < 0){
-        DEBUG "Could not open socket" << endl;
+        ERROR "Could not open socket" << endl;
         return -1;
     }
 
