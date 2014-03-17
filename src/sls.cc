@@ -217,6 +217,7 @@ void _lookup(int client_sock, sls::Request *request){
             datum->set_data(s);
         }
         DEBUG "Total fetched: " << response->data_size() << endl;
+        response->set_success(true);
     }
     else{
         ERROR "Range not initialized" << endl;
