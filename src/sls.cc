@@ -100,10 +100,10 @@ void _page_out(string key, unsigned int skip){
 void shutdown(int signo){
     DEBUG "Attempting shutdown" << endl;
     if(signo == SIGSEGV){
-        for(int ret = close(sock); ret != 0; ret = close(sock));
+        close(sock);
         exit(1);
     }
-    shutdown(sock, 0);
+    close(sock);
 
     for(map<string, list<sls::Value> >::iterator i = cache.begin(); i != cache.end(); ++i){
         //we want to "leak" this lock so no more data can be appended... but we don't want to deadlock here, unable to page out to disk because we're stuck in the middle of an append operation
@@ -111,8 +111,6 @@ void shutdown(int signo){
         _page_out((*i).first, 0);
     }
 
-    DEBUG "Closing socket" << endl;
-    for(int ret = close(sock); ret != 0; ret = close(sock));
     exit(0);
 }
 
