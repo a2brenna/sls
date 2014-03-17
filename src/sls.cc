@@ -181,50 +181,52 @@ void _lookup(int client_sock, sls::Request *request){
     unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
-    unique_ptr<list<sls::Value> > values(new list<sls::Value>);
+    if(request->mutable_req_range()->IsInitialized()){
+        unique_ptr<list<sls::Value> > values(new list<sls::Value>);
+        string key = request->key();
+        unsigned long long start = request->mutable_req_range()->start();
+        unsigned long long end = request->mutable_req_range()->end();
+        string next_file;
+        unique_ptr<list<sls::Value> > d(new list<sls::Value>);
+        {
+            lock_guard<mutex> guard(locks[key]);
+            *(d.get()) = cache[key];
+            next_file = get_canonical_filename(disk_dir + key + string("/head"));
+        }
 
-    string key = request->key();
-    unsigned long long start = request->mutable_req_range()->start();
-    unsigned long long end = request->mutable_req_range()->end();
-    string next_file;
-    unique_ptr<list<sls::Value> > d(new list<sls::Value>);
-    {
-        lock_guard<mutex> guard(locks[key]);
-        *(d.get()) = cache[key];
-        next_file = get_canonical_filename(disk_dir + key + string("/head"));
+        unsigned long long current = 0;
+
+        do{
+            if( request->mutable_req_range()->is_time() ){
+                auto earliest_seen = pick_time(*(d.get()), start, end, values.get());
+                if( earliest_seen < start ){
+                    break;
+                }
+            }
+            else{
+                current = pick(*(d.get()), current, start, end, values.get());
+                if(current >= end ){
+                    break;
+                }
+            }
+            file_lookup(key, next_file, d.get());
+            next_file = next_lookup(key, next_file);
+        }while(true);
+
+        for(sls::Value v: *values){
+            sls::Data *datum = response->add_data();
+            string s;
+            v.SerializeToString(&s);
+            datum->set_data(s);
+        }
+        DEBUG "Total fetched: " << response->data_size() << endl;
     }
-
-    unsigned long long current = 0;
-
-    do{
-        if( request->mutable_req_range()->is_time() ){
-            auto earliest_seen = pick_time(*(d.get()), start, end, values.get());
-            if( earliest_seen < start ){
-                break;
-            }
-        }
-        else{
-            current = pick(*(d.get()), current, start, end, values.get());
-            if(current >= end ){
-                break;
-            }
-        }
-        file_lookup(key, next_file, d.get());
-        next_file = next_lookup(key, next_file);
-    }while(true);
-
-    for(sls::Value v: *values){
-        sls::Data *datum = response->add_data();
-        string s;
-        v.SerializeToString(&s);
-        datum->set_data(s);
+    else{
+        DEBUG "Range not initialized" << endl;
     }
 
     unique_ptr<string> r(new string);
     response->SerializeToString(r.get());
-
-    DEBUG "Total fetched: " << response->data_size() << endl;
-
     size_t sent = send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
     if( sent != r->length()){
         DEBUG "Failed to send entire response" << endl;
@@ -248,41 +250,52 @@ void *handle_request(void *foo){
         sls::Response response;
         response.set_success(false);
 
-        if (request->has_req_append()){
-            sls::Append a = request->req_append();
-            list<sls::Value> *l;
-            //acquire lock
-            {
-                DEBUG "Attempting to acquire lock: " << a.key() << endl;
-                lock_guard<mutex> guard(locks[a.key()]);
-                DEBUG "Lock acquired: " << a.key() << endl;
-                l = &(cache[a.key()]);
-                string d = a.data();
-                l->push_front(wrap(d));
-            }
-            //release lock
+        if(request->IsInitialized()){
 
-            response.set_success(true);
-            string r;
-            response.SerializeToString(&r);
-            DEBUG "Attempting to send response: " << ready.get() << endl;
-            send(ready.get(), (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
-            DEBUG "Sent response: " << ready.get() << endl;
+            if (request->has_req_append()){
+                sls::Append a = request->req_append();
+                if(a.IsInitialized()){
+                    list<sls::Value> *l;
+                    //acquire lock
+                    {
+                        DEBUG "Attempting to acquire lock: " << a.key() << endl;
+                        lock_guard<mutex> guard(locks[a.key()]);
+                        DEBUG "Lock acquired: " << a.key() << endl;
+                        l = &(cache[a.key()]);
+                        string d = a.data();
+                        l->push_front(wrap(d));
+                    }
+                    //release lock
 
-            if(l->size() > cache_max){
-                //page out
-                DEBUG "Attempting to acquire lock: " << a.key() << endl;
-                lock_guard<mutex> guard((locks[a.key()]));
-                DEBUG "Lock acquired: " << a.key() << endl;
-                _page_out(a.key(), cache_min);
+                    response.set_success(true);
+                    string r;
+                    response.SerializeToString(&r);
+                    DEBUG "Attempting to send response: " << ready.get() << endl;
+                    send(ready.get(), (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+                    DEBUG "Sent response: " << ready.get() << endl;
+
+                    if(l->size() > cache_max){
+                        //page out
+                        DEBUG "Attempting to acquire lock: " << a.key() << endl;
+                        lock_guard<mutex> guard((locks[a.key()]));
+                        DEBUG "Lock acquired: " << a.key() << endl;
+                        _page_out(a.key(), cache_min);
+                    }
+                }
+                else{
+                    DEBUG "Append request not initialized" << endl;
+                }
+            }
+            else if (request->has_req_range()){
+                _lookup(ready.get(), request.get());
+            }
+            else{
+                DEBUG "Cannot handle request" << endl;
             }
         }
-        else if (request->has_req_range()){
-            _lookup(ready.get(), request.get());
-        }
-        else{
-            DEBUG "Cannot handle request" << endl;
-        }
+    }
+    else{
+        DEBUG "Request is not properly initialized" << endl;
     }
     pthread_exit(NULL);
 }
