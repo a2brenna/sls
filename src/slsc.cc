@@ -75,6 +75,7 @@ bool append(const char *key, string data){
 }
 
 list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
+    DEBUG "Attempting to fetch: " << key << " from " << start << " to " << end << endl;
     unique_ptr<list<sls::Value> > r(new list<sls::Value>);
     sls::Request request;
     request.mutable_req_range()->set_start(start);

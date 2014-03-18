@@ -130,6 +130,7 @@ void _file_lookup(string key, string filename, sls::Archive *archive){
 }
 
 void file_lookup(string key, string filename, list<sls::Value> *r){
+    DEBUG "Performing file lookup: " << filename << endl;
     unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
 
@@ -140,6 +141,7 @@ void file_lookup(string key, string filename, list<sls::Value> *r){
             r->push_back(archive->values(i));
         }
     }
+    DEBUG "Got: " << r->size() << " values" << endl;
     return;
 }
 
@@ -182,6 +184,7 @@ unsigned long long pick(const list<sls::Value> &d, unsigned long long current, u
 }
 
 void _lookup(int client_sock, sls::Request *request){
+    DEBUG "Performing lookup..." << endl;
     unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
@@ -198,18 +201,25 @@ void _lookup(int client_sock, sls::Request *request){
             next_file = get_canonical_filename(disk_dir + key + string("/head"));
         }
 
+        DEBUG "Got: " << d->size() << " from cache..." << endl;
+
         unsigned long long current = 0;
 
         do{
             if( request->mutable_req_range()->is_time() ){
+                DEBUG "Performing time based lookup..." << endl;
                 auto earliest_seen = pick_time(*(d.get()), start, end, values.get());
+                DEBUG "Earliest seen: " << earliest_seen << endl;
                 if( earliest_seen < start ){
+                    DEBUG "Earliest data seen: " << earliest_seen << endl;
                     break;
                 }
             }
             else{
+                DEBUG "Performing interval based lookup..." << endl;
                 current = pick(*(d.get()), current, start, end, values.get());
                 if(current >= end ){
+                    DEBUG "Current data index: " << current << endl;
                     break;
                 }
             }
