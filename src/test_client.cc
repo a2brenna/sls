@@ -1,19 +1,9 @@
 #include "sls.h"
 #include <iostream>
 #include <sys/time.h>
+#include <hgutil.h>
 
 using namespace std;
-unsigned long long hires_time(){
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
-    unsigned long long millisecondsSinceEpoch =
-    (unsigned long long)(tv.tv_sec) * 1000 +
-    (unsigned long long)(tv.tv_usec) / 1000;
-
-    return millisecondsSinceEpoch;
-}
-
 int main(){
     cerr << "Test Client Started... " << endl;
     string test_key = "key";
@@ -37,7 +27,7 @@ int main(){
     r = sls::lastn(test_key.c_str(), 6);
     cerr << "Got: " << r->size() << endl;
    
-    unsigned long long time = hires_time();
+    unsigned long long time = milli_time();
     r = sls::intervalt(test_key.c_str(), time - 60000, time);
     cerr << "Got sls::intervalt: " << r->size() << endl;
     return 0;

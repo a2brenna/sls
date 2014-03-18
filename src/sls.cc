@@ -33,7 +33,7 @@ int sock; //main socket
 
 sls::Value wrap(string payload){
     sls::Value r;
-    r.set_time(hires_time());
+    r.set_time(milli_time());
     r.set_data(payload);
     return r;
 }
