@@ -205,6 +205,7 @@ void _lookup(int client_sock, sls::Request *request){
 
         unsigned long long current = 0;
 
+        bool has_next = true;
         do{
             if( request->mutable_req_range()->is_time() ){
                 DEBUG "Performing time based lookup..." << endl;
@@ -223,9 +224,19 @@ void _lookup(int client_sock, sls::Request *request){
                     break;
                 }
             }
-            file_lookup(key, next_file, d.get());
-            next_file = next_lookup(key, next_file);
-        }while(true);
+            do{
+                DEBUG "Looking in file: " << next_file << endl;
+                file_lookup(key, next_file, d.get());
+                DEBUG next_file << "has: " << d->size() << endl;
+                if(next_file == ""){
+                    has_next = false;
+                    break;
+                }
+                next_file = next_lookup(key, next_file);
+            }
+            while(d->size() == 0);
+
+        }while(has_next);
 
         for(sls::Value &v: *values){
             sls::Data *datum = response->add_data();
