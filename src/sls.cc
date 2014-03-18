@@ -1,4 +1,5 @@
 #include "config.h"
+#include <limits.h>
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
@@ -153,23 +154,26 @@ string next_lookup(string key, string filename){
 }
 
 unsigned long long pick_time(const list<sls::Value> &d, unsigned long long start, unsigned long long end, list<sls::Value> *result){
-    auto position = d.begin();
-
-    for(; ((*position).time() > end ) && (position != d.end()); position++);
-
-    unsigned long long earliest = ((*position).time());
-    for(; (earliest > start) && (position != d.end()); position++){
-        result->push_front(*position);
-        earliest = ((*position).time());
+    DEBUG "In pick_time()" << endl;
+    DEBUG "Picking from: " << d.size() << endl;
+    unsigned long long earliest = ULLONG_MAX;
+    for(auto &value: d){
+        if( (value.time() > start) && (value.time() < end) ){
+            result->push_front(value);
+        }
+        earliest = min(earliest, (unsigned long long)value.time());
     }
     return earliest;
 }
 
 unsigned long long pick(const list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, list<sls::Value> *result){
-    auto position = d.begin();
-    for(; (current < start) && (position != d.end()); position++, ++current);
-    for(; (current < end) && (position != d.end()); position++, ++current){
-        result->push_back(*position);
+    DEBUG "In pick()" << endl;
+    DEBUG "Picking from: " << d.size() << endl;
+    for (auto &value: d){
+        if( (current >= start) && (current <= end) ){
+            result->push_back(value);
+        }
+        current++;
     }
     return current;
 }
