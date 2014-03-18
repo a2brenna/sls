@@ -114,6 +114,9 @@ void shutdown(int signo){
 }
 
 void _file_lookup(string key, string filename, sls::Archive *archive){
+    if(filename == ""){
+        return;
+    }
     string filepath = (disk_dir + key + "/" + filename);
     unique_ptr<string> s(new string);
     readfile(filepath, s.get());
