@@ -51,7 +51,7 @@ string get_canonical_filename(string path){
 }
 
 void _page_out(string key, unsigned int skip){
-    DEBUG "Attempting to page out: " << key << endl;
+    ERROR "Attempting to page out: " << key << endl;
     list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
     unsigned int size = cache[key].size();
@@ -334,7 +334,7 @@ void *handle_request(void *foo){
 }
 
 int main(){
-    debug_set(true);
+    debug_set(false);
     error_set(true);
     DEBUG "Starting sls..." << endl;
     srand(time(0));
