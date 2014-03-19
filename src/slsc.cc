@@ -1,11 +1,6 @@
-#include"sls.h"
+#include "sls.h"
 #include <string>
 #include <list>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netdb.h>
-#include <iostream>
-#include <unistd.h>
 #include "sls.pb.h"
 #include "hgutil.h"
 #include <limits.h>
@@ -31,30 +26,11 @@ void sls_send(sls::Request request, sls::Response *retval){
         return;
     }
 
-    //if (send(sockfd, rstring->c_str(), rstring->size(), MSG_NOSIGNAL) == rstring->size()){
-    int sent = send(sockfd.get(), rstring->c_str(), rstring->size(), MSG_NOSIGNAL);
+    send_string(sockfd.get(), *rstring);
 
-    if (sent > 0){
-        if ((unsigned int)sent == rstring->size()){
-            unique_ptr<string> returned(new string);
-            read_sock(sockfd.get(), returned.get());
-            if (returned->length() != 0){
-                retval->ParseFromString(*returned);
-                if(!retval->success()){
-                    ERROR "Remote failure" << endl;
-                }
-            }
-            else{
-                ERROR "Failed to get response" << endl;
-            }
-        }
-        else{
-            ERROR "Failed to send entire request" << endl;
-        }
-    }
-    else{
-        ERROR "Error sending request" << endl;
-    }
+    unique_ptr<string> returned(new string);
+    recv_string(sockfd.get(), *returned);
+    retval->ParseFromString(*returned);
 }
 
 bool append(const char *key, string data){

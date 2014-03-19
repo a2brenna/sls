@@ -3,14 +3,11 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <map>
 #include <list>
 #include <mutex>
 #include <pthread.h>
 #include <sys/time.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <algorithm>
 #include <hgutil.h>
@@ -24,6 +21,7 @@
 #include "sls.h"
 #include "sls.pb.h"
 #include <memory>
+#include <netdb.h>
 
 using namespace std;
 
@@ -253,11 +251,7 @@ void _lookup(int client_sock, sls::Request *request){
 
     unique_ptr<string> r(new string);
     response->SerializeToString(r.get());
-    auto sent = send(client_sock,r->c_str(), r->length(), MSG_NOSIGNAL);
-    if ( sent < 0){
-        ERROR "Could not send response" << endl;
-    }
-    else if( (unsigned long long)sent != r->length()){
+    if(!send_string(client_sock, *r)){
         ERROR "Failed to send entire response" << endl;
     }
 }
@@ -269,7 +263,8 @@ void *handle_request(void *foo){
         pthread_detach(pthread_self());
 
         DEBUG "Attempting to read socket" << endl;
-        string incoming = read_sock(ready.get());
+        string incoming;
+        recv_string(ready.get(), incoming);
         if (incoming.size() > 0){
             unique_ptr<sls::Request> request(new sls::Request);
             try{
@@ -302,7 +297,7 @@ void *handle_request(void *foo){
                         string r;
                         response.SerializeToString(&r);
                         DEBUG "Attempting to send response: " << ready.get() << endl;
-                        send(ready.get(), (const void *)r.c_str(), r.length(), MSG_NOSIGNAL);
+                        send_string(ready.get(), r);
                         DEBUG "Sent response: " << ready.get() << endl;
 
                         if(l->size() > cache_max){
@@ -339,7 +334,7 @@ void *handle_request(void *foo){
 }
 
 int main(){
-    debug_set(false);
+    debug_set(true);
     error_set(true);
     DEBUG "Starting sls..." << endl;
     srand(time(0));
