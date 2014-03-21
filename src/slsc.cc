@@ -22,14 +22,21 @@ void sls_send(sls::Request request, sls::Response *retval){
         request.SerializeToString(rstring.get());
     }
     catch(...){
+        ERROR "Failed to serialize request" << endl;
         retval->set_success(false);
         return;
     }
 
-    send_string(sockfd.get(), *rstring);
+    if(!send_string(sockfd.get(), *rstring)){
+        ERROR "Failed to sens sls request" << endl;
+        retval->set_success(false);
+        return;
+    }
 
     unique_ptr<string> returned(new string);
-    recv_string(sockfd.get(), *returned);
+    if(!recv_string(sockfd.get(), *returned)){
+        ERROR "Failed to receive sls response" << endl;
+    }
     retval->ParseFromString(*returned);
 }
 

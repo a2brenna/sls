@@ -264,67 +264,71 @@ void *handle_request(void *foo){
 
         DEBUG "Attempting to read socket" << endl;
         string incoming;
-        recv_string(ready.get(), incoming);
-        if (incoming.size() > 0){
-            unique_ptr<sls::Request> request(new sls::Request);
-            try{
-                request->ParseFromString(incoming);
-            }
-            catch(...){
-                ERROR "Malformed request" << endl;
-            }
-            sls::Response response;
-            response.set_success(false);
+        if(recv_string(ready.get(), incoming)){
+            if (incoming.size() > 0){
+                unique_ptr<sls::Request> request(new sls::Request);
+                try{
+                    request->ParseFromString(incoming);
+                }
+                catch(...){
+                    ERROR "Malformed request" << endl;
+                }
+                sls::Response response;
+                response.set_success(false);
 
-            if(request->IsInitialized()){
+                if(request->IsInitialized()){
 
-                if (request->has_req_append()){
-                    sls::Append a = request->req_append();
-                    if(a.IsInitialized()){
-                        list<sls::Value> *l;
-                        //acquire lock
-                        {
-                            DEBUG "Attempting to acquire lock: " << a.key() << endl;
-                            lock_guard<mutex> guard(locks[a.key()]);
-                            DEBUG "Lock acquired: " << a.key() << endl;
-                            l = &(cache[a.key()]);
-                            string d = a.data();
-                            l->push_front(wrap(d));
+                    if (request->has_req_append()){
+                        sls::Append a = request->req_append();
+                        if(a.IsInitialized()){
+                            list<sls::Value> *l;
+                            //acquire lock
+                            {
+                                DEBUG "Attempting to acquire lock: " << a.key() << endl;
+                                lock_guard<mutex> guard(locks[a.key()]);
+                                DEBUG "Lock acquired: " << a.key() << endl;
+                                l = &(cache[a.key()]);
+                                string d = a.data();
+                                l->push_front(wrap(d));
+                            }
+                            //release lock
+
+                            response.set_success(true);
+                            string r;
+                            response.SerializeToString(&r);
+                            if(!send_string(ready.get(), r)){
+                                ERROR "Failed to send response" << endl;
+                            }
+
+                            if(l->size() > cache_max){
+                                //page out
+                                DEBUG "Attempting to acquire lock: " << a.key() << endl;
+                                lock_guard<mutex> guard((locks[a.key()]));
+                                DEBUG "Lock acquired: " << a.key() << endl;
+                                _page_out(a.key(), cache_min);
+                            }
                         }
-                        //release lock
-
-                        response.set_success(true);
-                        string r;
-                        response.SerializeToString(&r);
-                        DEBUG "Attempting to send response: " << ready.get() << endl;
-                        send_string(ready.get(), r);
-                        DEBUG "Sent response: " << ready.get() << endl;
-
-                        if(l->size() > cache_max){
-                            //page out
-                            DEBUG "Attempting to acquire lock: " << a.key() << endl;
-                            lock_guard<mutex> guard((locks[a.key()]));
-                            DEBUG "Lock acquired: " << a.key() << endl;
-                            _page_out(a.key(), cache_min);
+                        else{
+                            ERROR "Append request not initialized" << endl;
                         }
+                    }
+                    else if (request->has_req_range()){
+                        _lookup(ready.get(), request.get());
                     }
                     else{
-                        ERROR "Append request not initialized" << endl;
+                        ERROR "Cannot handle request" << endl;
                     }
                 }
-                else if (request->has_req_range()){
-                    _lookup(ready.get(), request.get());
-                }
                 else{
-                    ERROR "Cannot handle request" << endl;
+                    ERROR "Request is not properly initialized" << endl;
                 }
             }
             else{
-                ERROR "Request is not properly initialized" << endl;
+                ERROR "Request is empty" << endl;
             }
         }
         else{
-            ERROR "Request is empty" << endl;
+            ERROR "Could not get request" << endl;
         }
     }
     catch(...){
