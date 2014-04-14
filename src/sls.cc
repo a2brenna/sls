@@ -27,7 +27,7 @@ using namespace std;
 
 map<string, list<sls::Value> > cache;
 map<string, mutex> locks;
-int sock; //main socket
+int inet_sock; //main socket
 
 sls::Value wrap(string payload){
     sls::Value r;
@@ -97,10 +97,10 @@ void _page_out(string key, unsigned int skip){
 void shutdown(int signo){
     DEBUG "Attempting shutdown" << endl;
     if(signo == SIGSEGV){
-        close(sock);
+        close(inet_sock);
         exit(1);
     }
-    close(sock);
+    close(inet_sock);
 
     for(auto& cached: cache){
         //we want to "leak" this lock so no more data can be appended... but we don't want to deadlock here, unable to page out to disk because we're stuck in the middle of an append operation
@@ -343,8 +343,8 @@ int main(){
     DEBUG "Starting sls..." << endl;
     srand(time(0));
 
-    sock = listen_on(port);
-    if (sock < 0){
+    inet_sock = listen_on(port);
+    if (inet_sock < 0){
         ERROR "Could not open socket" << endl;
         return -1;
     }
@@ -354,7 +354,7 @@ int main(){
     while (true){
         int *ready = (int *)(malloc (sizeof(int)));
         DEBUG "Calling accept..." << endl;
-        *ready = accept(sock, NULL, NULL);
+        *ready = accept(inet_sock, NULL, NULL);
         DEBUG "Accepted socket.. " << *ready << endl;
 
         DEBUG "Spawning thread" << endl;
