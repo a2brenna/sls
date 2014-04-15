@@ -250,6 +250,7 @@ void *handle_request(void *foo){
                 unique_ptr<sls::Request> request(new sls::Request);
                 try{
                     request->ParseFromString(incoming);
+                    std::cout << request->DebugString();
                 }
                 catch(...){
                     std::cerr << "Malformed request" << endl;
