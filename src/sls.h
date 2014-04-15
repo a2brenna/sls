@@ -8,6 +8,7 @@
 
 using namespace std;
 namespace sls{
+    bool local_sls = false;
     bool append(const char *key, string data);
     list<sls::Value> *lastn(const char *key, unsigned long long num_entries);
     list<sls::Value> *all(const char *key);

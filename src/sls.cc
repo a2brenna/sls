@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <hgutil.h>
 #include <hgutil/raii.h>
-#include <hgutil/debug.h>
 #include <cstdlib>
 #include <signal.h>
 #include <sys/types.h>
@@ -42,7 +41,6 @@ string get_canonical_filename(string path){
     bzero(head, 256);
 
     if( readlink(path.c_str(), head, 256) < 0 ){
-        DEBUG "Could not get current head file" << endl;
         return string("");
     }
 
@@ -50,7 +48,7 @@ string get_canonical_filename(string path){
 }
 
 void _page_out(string key, unsigned int skip){
-    ERROR "Attempting to page out: " << key << endl;
+    std::cerr << "Attempting to page out: " << key << endl;
     list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
     unsigned int size = cache[key].size();
@@ -91,12 +89,11 @@ void _page_out(string key, unsigned int skip){
         cache[key].erase(new_end, cache[key].end());
     }
     else{
-        ERROR "Failed to page out: " << key << endl;
+        std::cerr << "Failed to page out: " << key << endl;
     }
 }
 
 void shutdown(int signo){
-    DEBUG "Attempting shutdown" << endl;
     if(signo == SIGSEGV){
         close(inet_sock);
         exit(1);
@@ -123,13 +120,12 @@ void _file_lookup(string key, string filename, sls::Archive *archive){
         archive->ParseFromString(*(s.get()));
     }
     catch(...){
-        ERROR "Could not read from: " << filepath << endl;
+        std::cerr << "Could not read from: " << filepath << endl;
     }
     return;
 }
 
 void file_lookup(string key, string filename, list<sls::Value> *r){
-    DEBUG "Performing file lookup: " << filename << endl;
     unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
 
@@ -140,7 +136,6 @@ void file_lookup(string key, string filename, list<sls::Value> *r){
             r->push_back(archive->values(i));
         }
     }
-    DEBUG "Got: " << r->size() << " values" << endl;
     return;
 }
 
@@ -158,8 +153,6 @@ string next_lookup(string key, string filename){
 }
 
 unsigned long long pick_time(const list<sls::Value> &d, unsigned long long start, unsigned long long end, list<sls::Value> *result){
-    DEBUG "In pick_time()" << endl;
-    DEBUG "Picking from: " << d.size() << endl;
     unsigned long long earliest = ULLONG_MAX;
     for(auto &value: d){
         if( (value.time() > start) && (value.time() < end) ){
@@ -171,8 +164,6 @@ unsigned long long pick_time(const list<sls::Value> &d, unsigned long long start
 }
 
 unsigned long long pick(const list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, list<sls::Value> *result){
-    DEBUG "In pick()" << endl;
-    DEBUG "Picking from: " << d.size() << endl;
     for (auto &value: d){
         if( (current >= start) && (current <= end) ){
             result->push_back(value);
@@ -183,7 +174,6 @@ unsigned long long pick(const list<sls::Value> &d, unsigned long long current, u
 }
 
 void _lookup(int client_sock, sls::Request *request){
-    DEBUG "Performing lookup..." << endl;
     unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
@@ -200,33 +190,25 @@ void _lookup(int client_sock, sls::Request *request){
             next_file = get_canonical_filename(disk_dir + key + string("/head"));
         }
 
-        DEBUG "Got: " << d->size() << " from cache..." << endl;
 
         unsigned long long current = 0;
 
         bool has_next = true;
         do{
             if( request->mutable_req_range()->is_time() ){
-                DEBUG "Performing time based lookup..." << endl;
                 auto earliest_seen = pick_time(*(d.get()), start, end, values.get());
-                DEBUG "Earliest seen: " << earliest_seen << endl;
                 if( earliest_seen < start ){
-                    DEBUG "Earliest data seen: " << earliest_seen << endl;
                     break;
                 }
             }
             else{
-                DEBUG "Performing interval based lookup..." << endl;
                 current = pick(*(d.get()), current, start, end, values.get());
                 if(current >= end ){
-                    DEBUG "Current data index: " << current << endl;
                     break;
                 }
             }
             do{
-                DEBUG "Looking in file: " << next_file << endl;
                 file_lookup(key, next_file, d.get());
-                DEBUG next_file << "has: " << d->size() << endl;
                 if(next_file == ""){
                     has_next = false;
                     break;
@@ -243,17 +225,16 @@ void _lookup(int client_sock, sls::Request *request){
             v.SerializeToString(&s);
             datum->set_data(s);
         }
-        DEBUG "Total fetched: " << response->data_size() << endl;
         response->set_success(true);
     }
     else{
-        ERROR "Range not initialized" << endl;
+        std::cerr << "Range not initialized" << endl;
     }
 
     unique_ptr<string> r(new string);
     response->SerializeToString(r.get());
     if(!send_string(client_sock, *r)){
-        ERROR "Failed to send entire response" << endl;
+        std::cerr << "Failed to send entire response" << endl;
     }
 }
 
@@ -263,7 +244,6 @@ void *handle_request(void *foo){
         free(foo);
         pthread_detach(pthread_self());
 
-        DEBUG "Attempting to read socket" << endl;
         string incoming;
         if(recv_string(ready.get(), incoming)){
             if (incoming.size() > 0){
@@ -272,7 +252,7 @@ void *handle_request(void *foo){
                     request->ParseFromString(incoming);
                 }
                 catch(...){
-                    ERROR "Malformed request" << endl;
+                    std::cerr << "Malformed request" << endl;
                 }
                 sls::Response response;
                 response.set_success(false);
@@ -285,9 +265,7 @@ void *handle_request(void *foo){
                             list<sls::Value> *l;
                             //acquire lock
                             {
-                                DEBUG "Attempting to acquire lock: " << a.key() << endl;
                                 lock_guard<mutex> guard(locks[a.key()]);
-                                DEBUG "Lock acquired: " << a.key() << endl;
                                 l = &(cache[a.key()]);
                                 string d = a.data();
                                 l->push_front(wrap(d));
@@ -298,61 +276,56 @@ void *handle_request(void *foo){
                             string r;
                             response.SerializeToString(&r);
                             if(!send_string(ready.get(), r)){
-                                ERROR "Failed to send response" << endl;
+                                std::cerr << "Failed to send response" << endl;
                             }
 
                             if(l->size() > cache_max){
                                 //page out
-                                DEBUG "Attempting to acquire lock: " << a.key() << endl;
                                 lock_guard<mutex> guard((locks[a.key()]));
-                                DEBUG "Lock acquired: " << a.key() << endl;
                                 _page_out(a.key(), cache_min);
                             }
                         }
                         else{
-                            ERROR "Append request not initialized" << endl;
+                            std::cerr << "Append request not initialized" << endl;
                         }
                     }
                     else if (request->has_req_range()){
                         _lookup(ready.get(), request.get());
                     }
                     else{
-                        ERROR "Cannot handle request" << endl;
+                        std::cerr << "Cannot handle request" << endl;
                     }
                 }
                 else{
-                    ERROR "Request is not properly initialized" << endl;
+                    std::cerr << "Request is not properly initialized" << endl;
                 }
             }
             else{
-                ERROR "Request is empty" << endl;
+                std::cerr << "Request is empty" << endl;
             }
         }
         else{
-            ERROR "Could not get request" << endl;
+            std::cerr << "Could not get request" << endl;
         }
     }
     catch(...){
-        ERROR "Handler thread caught exception, exiting" << endl;
+        std::cerr << "Handler thread caught exception, exiting" << endl;
     }
     pthread_exit(NULL);
 }
 
 int main(){
-    debug_set(true);
-    error_set(true);
-    DEBUG "Starting sls..." << endl;
     srand(time(0));
 
     inet_sock = listen_on(port, false);
     if (inet_sock < 0){
-        ERROR "Could not open network socket" << endl;
+        std::cerr << "Could not open network socket" << endl;
         return -1;
     }
 
     unix_sock = listen_on(unix_domain_file.c_str(), false);
     if (unix_sock < 0){
-        ERROR "Could not open unix domain socket" << endl;
+        std::cerr << "Could not open unix domain socket" << endl;
         return -1;
     }
 
@@ -383,15 +356,11 @@ int main(){
             incoming = unix_sock;
         }
 
-        DEBUG "Calling accept..." << endl;
 
         *ready = accept(incoming, NULL, NULL);
-        DEBUG "Accepted socket.. " << *ready << endl;
 
-        DEBUG "Spawning thread" << endl;
         pthread_t thread;
         pthread_create(&thread, NULL, handle_request, ready);
-        DEBUG "Thread spawned" << endl;
     }
     return 0;
 }

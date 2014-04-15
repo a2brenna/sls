@@ -6,7 +6,7 @@
 #include <limits.h>
 #include <memory>
 #include <hgutil/raii.h>
-#include <hgutil/debug.h>
+#include <iostream>
 
 using namespace std;
 
@@ -29,20 +29,20 @@ void sls_send(sls::Request request, sls::Response *retval){
         request.SerializeToString(rstring.get());
     }
     catch(...){
-        ERROR "Failed to serialize request" << endl;
+        std::cerr << "Failed to serialize request" << endl;
         retval->set_success(false);
         return;
     }
 
     if(!send_string(sockfd.get(), *rstring)){
-        ERROR "Failed to sens sls request" << endl;
+        std::cerr << "Failed to sens sls request" << endl;
         retval->set_success(false);
         return;
     }
 
     unique_ptr<string> returned(new string);
     if(!recv_string(sockfd.get(), *returned)){
-        ERROR "Failed to receive sls response" << endl;
+        std::cerr << "Failed to receive sls response" << endl;
     }
     retval->ParseFromString(*returned);
 }
@@ -65,7 +65,6 @@ bool append(const char *key, string data){
 }
 
 list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
-    DEBUG "Attempting to fetch: " << key << " from " << start << " to " << end << endl;
     unique_ptr<list<sls::Value> > r(new list<sls::Value>);
     sls::Request request;
     request.mutable_req_range()->set_start(start);
@@ -84,10 +83,9 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
             r->push_back(foo);
         }
         catch(...){
-            ERROR "Failed to parse incoming value" << endl;
+            std::cerr << "Failed to parse incoming value" << endl;
         }
     }
-    DEBUG "sls fetched " << r->size() << endl;
 
     return r.release();
 }
