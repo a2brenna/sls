@@ -13,10 +13,15 @@ using namespace std;
 namespace sls{
 
 int _get_socket(){
+    int sockfd = -1;
     if(!local_sls){
-        return connect_to("127.0.0.1", 6998, false);
+        sockfd = connect_to("127.0.0.1", 6998, false);
     }
-    return connect_to("/tmp/sls.sock", false);
+    else{
+        sockfd = connect_to("/tmp/sls.sock", false);
+    }
+    std::cerr << "Socket FD: " << sockfd << std::endl;
+    return sockfd;
 }
 
 void sls_send(sls::Request request, sls::Response *retval){
