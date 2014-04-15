@@ -12,9 +12,16 @@ using namespace std;
 
 namespace sls{
 
+int _get_socket(){
+    if(!local_sls){
+        return connect_to("127.0.0.1", 6998, false);
+    }
+    return connect_to("/tmp/sls.sock", false);
+}
+
 void sls_send(sls::Request request, sls::Response *retval){
     retval->set_success(false);
-    raii::FD sockfd(connect_to("127.0.0.1", 6998, false));
+    raii::FD sockfd(_get_socket());
 
     unique_ptr<string> rstring(new string);
 
