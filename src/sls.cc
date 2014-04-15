@@ -331,15 +331,16 @@ int main(){
 
     signal(SIGINT, shutdown);
 
-    fd_set set;
-    FD_ZERO(&set); //ABSOLUTELY ESSENTIAL
+    fd_set set_prime;
+    FD_ZERO(&set_prime); //ABSOLUTELY ESSENTIAL
 
-    FD_SET(inet_sock, &set);
-    FD_SET(unix_sock, &set);
+    FD_SET(inet_sock, &set_prime);
+    FD_SET(unix_sock, &set_prime);
 
     auto nfds = max(unix_sock, inet_sock) + 1;
 
     while (true){
+        auto set = set_prime;
         int *ready = (int *)(malloc (sizeof(int)));
 
         auto ret = select(nfds, &set, NULL, NULL, NULL);
@@ -355,7 +356,6 @@ int main(){
         else if FD_ISSET(unix_sock, &set){
             incoming = unix_sock;
         }
-
 
         *ready = accept(incoming, NULL, NULL);
 
