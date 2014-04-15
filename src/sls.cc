@@ -317,6 +317,7 @@ void *handle_request(void *foo){
 
 int main(){
     srand(time(0));
+    signal(SIGINT, shutdown);
 
     inet_sock = listen_on(port, false);
     if (inet_sock < 0){
@@ -330,35 +331,13 @@ int main(){
         return -1;
     }
 
-    signal(SIGINT, shutdown);
-
-    fd_set set_prime;
-    FD_ZERO(&set_prime); //ABSOLUTELY ESSENTIAL
-
-    FD_SET(inet_sock, &set_prime);
-    FD_SET(unix_sock, &set_prime);
-
-    auto nfds = max(unix_sock, inet_sock) + 1;
+    Connection_Factory connections;
+    connections.add_socket(inet_sock);
+    connections.add_socket(unix_sock);
 
     while (true){
-        auto set = set_prime;
         int *ready = (int *)(malloc (sizeof(int)));
-
-        auto ret = select(nfds, &set, NULL, NULL, NULL);
-        if(ret < 0){
-            std::cerr << "Could not get next socket to read" << std::endl;
-            return -1;
-        }
-
-        int incoming = -1;
-        if FD_ISSET(inet_sock, &set){
-            incoming = inet_sock;
-        }
-        else if FD_ISSET(unix_sock, &set){
-            incoming = unix_sock;
-        }
-
-        *ready = accept(incoming, NULL, NULL);
+        *ready = connections.next_connection();
 
         pthread_t thread;
         pthread_create(&thread, NULL, handle_request, ready);
