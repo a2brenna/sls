@@ -27,7 +27,8 @@ using namespace std;
 
 map<string, list<sls::Value> > cache;
 map<string, mutex> locks;
-int inet_sock; //main socket
+int inet_sock; //network socket using tcp
+int unix_sock; //unix domain socket using udp
 
 sls::Value wrap(string payload){
     sls::Value r;
@@ -343,18 +344,48 @@ int main(){
     DEBUG "Starting sls..." << endl;
     srand(time(0));
 
-    inet_sock = listen_on(port);
+    inet_sock = listen_on(port, false);
     if (inet_sock < 0){
-        ERROR "Could not open socket" << endl;
+        ERROR "Could not open network socket" << endl;
+        return -1;
+    }
+
+    unix_sock = listen_on(unix_domain_file.c_str(), false);
+    if (unix_sock < 0){
+        ERROR "Could not open unix domain socket" << endl;
         return -1;
     }
 
     signal(SIGINT, shutdown);
 
+    fd_set set;
+    FD_ZERO(&set); //ABSOLUTELY ESSENTIAL
+
+    FD_SET(inet_sock, &set);
+    FD_SET(unix_sock, &set);
+
+    auto nfds = max(unix_sock, inet_sock) + 1;
+
     while (true){
         int *ready = (int *)(malloc (sizeof(int)));
+
+        auto ret = select(nfds, &set, NULL, NULL, NULL);
+        if(ret < 0){
+            std::cerr << "Could not get next socket to read" << std::endl;
+            return -1;
+        }
+
+        int incoming = -1;
+        if FD_ISSET(inet_sock, &set){
+            incoming = inet_sock;
+        }
+        else if FD_ISSET(unix_sock, &set){
+            incoming = unix_sock;
+        }
+
         DEBUG "Calling accept..." << endl;
-        *ready = accept(inet_sock, NULL, NULL);
+
+        *ready = accept(incoming, NULL, NULL);
         DEBUG "Accepted socket.. " << *ready << endl;
 
         DEBUG "Spawning thread" << endl;
