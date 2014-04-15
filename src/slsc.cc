@@ -14,7 +14,7 @@ namespace sls{
 
 void sls_send(sls::Request request, sls::Response *retval){
     retval->set_success(false);
-    raii::FD sockfd(connect_to("127.0.0.1", "6998"));
+    raii::FD sockfd(connect_to("127.0.0.1", 6998, false));
 
     unique_ptr<string> rstring(new string);
 
