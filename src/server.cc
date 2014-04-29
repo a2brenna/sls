@@ -27,14 +27,14 @@ namespace sls{
 std::map<std::string, std::list<sls::Value> > cache;
 std::map<std::string, std::mutex> locks;
 
-sls::Value wrap(std::string payload){
+sls::Value Server::wrap(std::string payload){
     sls::Value r;
     r.set_time(milli_time());
     r.set_data(payload);
     return r;
 }
 
-void _page_out(std::string key, unsigned int skip){
+void Server::_page_out(std::string key, unsigned int skip){
     std::cerr << "Attempting to page out: " << key << std::endl;
     std::list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
@@ -80,7 +80,7 @@ void _page_out(std::string key, unsigned int skip){
     }
 }
 
-void _file_lookup(std::string key, std::string filename, sls::Archive *archive){
+void Server::_file_lookup(std::string key, std::string filename, sls::Archive *archive){
     if(filename == ""){
         return;
     }
@@ -96,7 +96,7 @@ void _file_lookup(std::string key, std::string filename, sls::Archive *archive){
     return;
 }
 
-void file_lookup(std::string key, std::string filename, std::list<sls::Value> *r){
+void Server::file_lookup(std::string key, std::string filename, std::list<sls::Value> *r){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
 
@@ -110,7 +110,7 @@ void file_lookup(std::string key, std::string filename, std::list<sls::Value> *r
     return;
 }
 
-std::string next_lookup(std::string key, std::string filename){
+std::string Server::next_lookup(std::string key, std::string filename){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
     std::string next_archive;
@@ -123,7 +123,7 @@ std::string next_lookup(std::string key, std::string filename){
     return next_archive;
 }
 
-unsigned long long pick_time(const std::list<sls::Value> &d, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
+unsigned long long Server::pick_time(const std::list<sls::Value> &d, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
     unsigned long long earliest = ULLONG_MAX;
     for(auto &value: d){
         if( (value.time() > start) && (value.time() < end) ){
@@ -134,7 +134,7 @@ unsigned long long pick_time(const std::list<sls::Value> &d, unsigned long long 
     return earliest;
 }
 
-unsigned long long pick(const std::list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
+unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
     for (auto &value: d){
         if( (current >= start) && (current <= end) ){
             result->push_back(value);
@@ -144,7 +144,7 @@ unsigned long long pick(const std::list<sls::Value> &d, unsigned long long curre
     return current;
 }
 
-void _lookup(int client_sock, sls::Request *request){
+void Server::_lookup(int client_sock, sls::Request *request){
     std::unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
@@ -209,81 +209,79 @@ void _lookup(int client_sock, sls::Request *request){
     }
 }
 
-void *handle_request(void *foo){
-    try{
-        raii::FD ready(*((int *)foo));
-        free(foo);
-        pthread_detach(pthread_self());
+void Server::handle_next_request(){
+    int fd;
+    {
+        std::lock_guard<std::mutex> r(this->incoming_lock);
+        fd = incoming.top();
+        incoming.pop();
+    }
+    raii::FD ready(fd);
 
-        std::string incoming;
-        if(recv_string(ready.get(), incoming)){
-            if (incoming.size() > 0){
-                std::unique_ptr<sls::Request> request(new sls::Request);
-                try{
-                    request->ParseFromString(incoming);
-                    std::cout << request->DebugString();
-                }
-                catch(...){
-                    std::cerr << "Malformed request" << std::endl;
-                }
-                sls::Response response;
-                response.set_success(false);
+    std::string incoming;
+    if(recv_string(ready.get(), incoming)){
+        if (incoming.size() > 0){
+            std::unique_ptr<sls::Request> request(new sls::Request);
+            try{
+                request->ParseFromString(incoming);
+                std::cout << request->DebugString();
+            }
+            catch(...){
+                std::cerr << "Malformed request" << std::endl;
+            }
+            sls::Response response;
+            response.set_success(false);
 
-                if(request->IsInitialized()){
+            if(request->IsInitialized()){
 
-                    if (request->has_req_append()){
-                        sls::Append a = request->req_append();
-                        if(a.IsInitialized()){
-                            std::list<sls::Value> *l;
-                            //acquire lock
-                            {
-                                std::lock_guard<std::mutex> guard(locks[a.key()]);
-                                l = &(cache[a.key()]);
-                                std::string d = a.data();
-                                l->push_front(wrap(d));
-                            }
-                            //release lock
-
-                            response.set_success(true);
-                            std::string r;
-                            response.SerializeToString(&r);
-                            if(!send_string(ready.get(), r)){
-                                std::cerr << "Failed to send response" << std::endl;
-                            }
-
-                            if(l->size() > cache_max){
-                                //page out
-                                std::lock_guard<std::mutex> guard((locks[a.key()]));
-                                _page_out(a.key(), cache_min);
-                            }
+                if (request->has_req_append()){
+                    sls::Append a = request->req_append();
+                    if(a.IsInitialized()){
+                        std::list<sls::Value> *l;
+                        //acquire lock
+                        {
+                            std::lock_guard<std::mutex> guard(locks[a.key()]);
+                            l = &(cache[a.key()]);
+                            std::string d = a.data();
+                            l->push_front(wrap(d));
                         }
-                        else{
-                            std::cerr << "Append request not initialized" << std::endl;
+                        //release lock
+
+                        response.set_success(true);
+                        std::string r;
+                        response.SerializeToString(&r);
+                        if(!send_string(ready.get(), r)){
+                            std::cerr << "Failed to send response" << std::endl;
                         }
-                    }
-                    else if (request->has_req_range()){
-                        _lookup(ready.get(), request.get());
+
+                        if(l->size() > cache_max){
+                            //page out
+                            std::lock_guard<std::mutex> guard((locks[a.key()]));
+                            _page_out(a.key(), cache_min);
+                        }
                     }
                     else{
-                        std::cerr << "Cannot handle request" << std::endl;
+                        std::cerr << "Append request not initialized" << std::endl;
                     }
                 }
+                else if (request->has_req_range()){
+                    _lookup(ready.get(), request.get());
+                }
                 else{
-                    std::cerr << "Request is not properly initialized" << std::endl;
+                    std::cerr << "Cannot handle request" << std::endl;
                 }
             }
             else{
-                std::cerr << "Request is empty" << std::endl;
+                std::cerr << "Request is not properly initialized" << std::endl;
             }
         }
         else{
-            std::cerr << "Could not get request" << std::endl;
+            std::cerr << "Request is empty" << std::endl;
         }
     }
-    catch(...){
-        std::cerr << "Handler thread caught exception, exiting" << std::endl;
+    else{
+        std::cerr << "Could not get request" << std::endl;
     }
-    pthread_exit(NULL);
 }
 
 Server::Server(){
@@ -292,11 +290,24 @@ Server::Server(){
 Server::~Server(){
 }
 
+void *hn(void *foo){
+    pthread_detach(pthread_self());
+    Server *bar= (Server *)foo;
+    try{
+        bar->handle_next_request();
+    }
+    catch(...){
+        std::cerr << "ohfuck" << std::endl;
+    }
+    pthread_exit(NULL);
+}
+
 void Server::handle(int sockfd){
-    int *ready = (int *)(malloc (sizeof(int)));
-    *ready = sockfd;
+    std::lock_guard<std::mutex> i(this->incoming_lock);
+    this->incoming.push(sockfd);
+
     pthread_t thread;
-    pthread_create(&thread, NULL, handle_request, ready);
+    pthread_create(&thread, NULL, hn, this);
 }
 
 }
