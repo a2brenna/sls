@@ -34,17 +34,6 @@ sls::Value wrap(std::string payload){
     return r;
 }
 
-std::string get_canonical_filename(std::string path){
-    char head[256];
-    bzero(head, 256);
-
-    if( readlink(path.c_str(), head, 256) < 0 ){
-        return std::string("");
-    }
-
-    return std::string(head);
-}
-
 void _page_out(std::string key, unsigned int skip){
     std::cerr << "Attempting to page out: " << key << std::endl;
     std::list<sls::Value>::iterator i = (cache[key]).begin();
