@@ -8,6 +8,11 @@
 
 using namespace std;
 namespace sls{
+    class SLS_Error{
+        public:
+            string msg;
+            SLS_Error(string message);
+    };
     void set_local_sls(bool new_val);
     bool append(const char *key, string data);
     list<sls::Value> *lastn(const char *key, unsigned long long num_entries);

@@ -6,11 +6,14 @@
 #include <limits.h>
 #include <memory>
 #include <hgutil/raii.h>
-#include <iostream>
 
 using namespace std;
 
 namespace sls{
+
+SLS_Error::SLS_Error(string message){
+    msg = message;
+}
 
 bool local_sls = false;
 
@@ -26,36 +29,39 @@ int _get_socket(){
     else{
         sockfd = connect_to("/tmp/sls.sock", false);
     }
-    std::cerr << "Socket FD: " << sockfd << std::endl;
     return sockfd;
 }
 
 void sls_send(sls::Request request, sls::Response *retval){
     retval->set_success(false);
-    raii::FD sockfd(_get_socket());
-
-    unique_ptr<string> rstring(new string);
-
     try{
-        request.SerializeToString(rstring.get());
+        raii::FD sockfd(_get_socket());
+
+        unique_ptr<string> rstring(new string);
+
+        try{
+            request.SerializeToString(rstring.get());
+        }
+        catch(...){
+            retval->set_success(false);
+            throw SLS_Error("Failed to serialize request");
+        }
+
+        if(!send_string(sockfd.get(), *rstring)){
+            retval->set_success(false);
+            throw SLS_Error("Failed to sens sls request");
+        }
+
+        unique_ptr<string> returned(new string);
+        if(!recv_string(sockfd.get(), *returned)){
+            throw SLS_Error("Failed to receive sls response");
+        }
+        retval->ParseFromString(*returned);
     }
     catch(...){
-        std::cerr << "Failed to serialize request" << endl;
-        retval->set_success(false);
-        return;
+        throw SLS_Error("Unknown error in sls_send");
     }
-
-    if(!send_string(sockfd.get(), *rstring)){
-        std::cerr << "Failed to sens sls request" << endl;
-        retval->set_success(false);
-        return;
-    }
-
-    unique_ptr<string> returned(new string);
-    if(!recv_string(sockfd.get(), *returned)){
-        std::cerr << "Failed to receive sls response" << endl;
-    }
-    retval->ParseFromString(*returned);
+    return;
 }
 
 bool append(const char *key, string data){
@@ -94,7 +100,7 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
             r->push_back(foo);
         }
         catch(...){
-            std::cerr << "Failed to parse incoming value" << endl;
+            throw SLS_Error("Failed to parse incoming value");
         }
     }
 
