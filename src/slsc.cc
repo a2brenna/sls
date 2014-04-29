@@ -7,11 +7,9 @@
 #include <memory>
 #include <hgutil/raii.h>
 
-using namespace std;
-
 namespace sls{
 
-SLS_Error::SLS_Error(string message){
+SLS_Error::SLS_Error(std::string message){
     msg = message;
 }
 
@@ -37,7 +35,7 @@ void sls_send(sls::Request request, sls::Response *retval){
     try{
         raii::FD sockfd(_get_socket());
 
-        unique_ptr<string> rstring(new string);
+        std::unique_ptr<std::string> rstring(new std::string);
 
         try{
             request.SerializeToString(rstring.get());
@@ -52,7 +50,7 @@ void sls_send(sls::Request request, sls::Response *retval){
             throw SLS_Error("Failed to sens sls request");
         }
 
-        unique_ptr<string> returned(new string);
+        std::unique_ptr<std::string> returned(new std::string);
         if(!recv_string(sockfd.get(), *returned)){
             throw SLS_Error("Failed to receive sls response");
         }
@@ -64,10 +62,10 @@ void sls_send(sls::Request request, sls::Response *retval){
     return;
 }
 
-bool append(const char *key, string data){
-    unique_ptr<sls::Response> retval(new sls::Response);
+bool append(const char *key, std::string data){
+    std::unique_ptr<sls::Response> retval(new sls::Response);
     try{
-        unique_ptr<sls::Request> request(new sls::Request);
+        std::unique_ptr<sls::Request> request(new sls::Request);
 
         request->mutable_req_append()->set_key(key);
         request->mutable_req_append()->set_data(data);
@@ -81,8 +79,8 @@ bool append(const char *key, string data){
     return r;
 }
 
-list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
-    unique_ptr<list<sls::Value> > r(new list<sls::Value>);
+std::list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
+    std::unique_ptr<std::list<sls::Value> > r(new std::list<sls::Value>);
     sls::Request request;
     request.mutable_req_range()->set_start(start);
     request.mutable_req_range()->set_start(start);
@@ -90,7 +88,7 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
 
-    unique_ptr<sls::Response> response(new sls::Response);
+    std::unique_ptr<sls::Response> response(new sls::Response);
     sls_send(request, response.get());
 
     for(int i = 0; i < response->data_size(); i++){
@@ -107,19 +105,19 @@ list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned 
     return r.release();
 }
 
-list<sls::Value> *lastn(const char *key, unsigned long long num_entries){
+std::list<sls::Value> *lastn(const char *key, unsigned long long num_entries){
     return _interval(key, 0, num_entries, false);
 }
 
-list<sls::Value> *all(const char *key){
+std::list<sls::Value> *all(const char *key){
     return _interval(key, 0, ULONG_MAX, false);
 }
 
-list<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned long long end){
+std::list<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned long long end){
     return _interval(key, start, end, true);
 }
 
-string unwrap(sls::Value value){
+std::string unwrap(sls::Value value){
     return value.data();
 }
 unsigned long long check_time(sls::Value value){
