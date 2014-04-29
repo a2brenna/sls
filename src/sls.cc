@@ -6,6 +6,7 @@
 
 int port = 6998;
 std::string unix_domain_file = "/tmp/sls.sock";
+sls::Server s;
 
 int main(){
     srand(time(0));
@@ -28,8 +29,6 @@ int main(){
         std::cerr << e.msg << " : " << e.error_number << std::endl;
         return -1;
     }
-
-    sls::Server s;
 
     while (true){
         s.handle(connections.next_connection());
