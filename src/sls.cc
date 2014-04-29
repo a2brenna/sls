@@ -26,8 +26,6 @@ using namespace std;
 
 map<string, list<sls::Value> > cache;
 map<string, mutex> locks;
-int inet_sock; //network socket using tcp
-int unix_sock; //unix domain socket using udp
 
 sls::Value wrap(string payload){
     sls::Value r;
@@ -95,10 +93,8 @@ void _page_out(string key, unsigned int skip){
 
 void shutdown(int signo){
     if(signo == SIGSEGV){
-        close(inet_sock);
         exit(1);
     }
-    close(inet_sock);
 
     for(auto& cached: cache){
         //we want to "leak" this lock so no more data can be appended... but we don't want to deadlock here, unable to page out to disk because we're stuck in the middle of an append operation
@@ -319,8 +315,9 @@ int main(){
     srand(time(0));
     signal(SIGINT, shutdown);
 
+    Connection_Factory connections;
     try{
-        inet_sock = listen_on(port, false);
+        connections.add_socket(listen_on(port, false));
     }
     catch(Network_Error e){
         std::cerr << "Could not setup inet domain socket";
@@ -329,18 +326,13 @@ int main(){
     }
 
     try{
-        unix_sock = listen_on(unix_domain_file.c_str(), false);
+        connections.add_socket(listen_on(unix_domain_file.c_str(), false));
     }
     catch(Network_Error e){
         std::cerr << "Could not setup unix domain socket";
         std::cerr << e.msg << " : " << e.error_number << endl;
         return -1;
     }
-
-
-    Connection_Factory connections;
-    connections.add_socket(inet_sock);
-    connections.add_socket(unix_sock);
 
     while (true){
         int *ready = (int *)(malloc (sizeof(int)));
