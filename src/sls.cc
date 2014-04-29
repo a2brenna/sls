@@ -319,17 +319,24 @@ int main(){
     srand(time(0));
     signal(SIGINT, shutdown);
 
-    inet_sock = listen_on(port, false);
-    if (inet_sock < 0){
-        std::cerr << "Could not open network socket" << endl;
+    try{
+        inet_sock = listen_on(port, false);
+    }
+    catch(Network_Error e){
+        std::cerr << "Could not setup inet domain socket";
+        std::cerr << e.msg << " : " << e.error_number << endl;
         return -1;
     }
 
-    unix_sock = listen_on(unix_domain_file.c_str(), false);
-    if (unix_sock < 0){
-        std::cerr << "Could not open unix domain socket" << endl;
+    try{
+        unix_sock = listen_on(unix_domain_file.c_str(), false);
+    }
+    catch(Network_Error e){
+        std::cerr << "Could not setup unix domain socket";
+        std::cerr << e.msg << " : " << e.error_number << endl;
         return -1;
     }
+
 
     Connection_Factory connections;
     connections.add_socket(inet_sock);
