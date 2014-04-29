@@ -80,20 +80,6 @@ void _page_out(std::string key, unsigned int skip){
     }
 }
 
-void shutdown(int signo){
-    if(signo == SIGSEGV){
-        exit(1);
-    }
-
-    for(auto& cached: cache){
-        //we want to "leak" this lock so no more data can be appended... but we don't want to deadlock here, unable to page out to disk because we're stuck in the middle of an append operation
-        locks[cached.first].try_lock();
-        _page_out(cached.first, 0);
-    }
-
-    exit(0);
-}
-
 void _file_lookup(std::string key, std::string filename, sls::Archive *archive){
     if(filename == ""){
         return;
