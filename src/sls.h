@@ -3,6 +3,7 @@
 
 #include<string>
 #include<list>
+#include<mutex>
 
 #include"sls.pb.h"
 
@@ -11,6 +12,15 @@ namespace sls{
         public:
             std::string msg;
             SLS_Error(std::string message);
+    };
+    class Server{
+        public:
+            Server();
+            ~Server();
+            void handle(int sockfd);
+        private:
+            std::map<std::string, std::list<sls::Value> > cache;
+            std::map<std::string, std::mutex> locks;
     };
     void set_local_sls(bool new_val);
     bool append(const char *key, std::string data);
