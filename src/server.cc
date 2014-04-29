@@ -24,9 +24,6 @@
 
 namespace sls{
 
-std::map<std::string, std::list<sls::Value> > cache;
-std::map<std::string, std::mutex> locks;
-
 sls::Value Server::wrap(std::string payload){
     sls::Value r;
     r.set_time(milli_time());

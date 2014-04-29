@@ -21,10 +21,10 @@ namespace sls{
             void handle(int sockfd);
             void handle_next_request();
         private:
-            std::mutex incoming_lock;
-            std::stack<int> incoming;
             std::map<std::string, std::list<sls::Value> > cache;
             std::map<std::string, std::mutex> locks;
+            std::mutex incoming_lock;
+            std::stack<int> incoming;
             sls::Value wrap(std::string payload);
             void _page_out(std::string key, unsigned int skip);
             void _file_lookup(std::string key, std::string filename, sls::Archive *archive);
