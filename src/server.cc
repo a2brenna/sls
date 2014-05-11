@@ -286,6 +286,14 @@ Server::Server(){
 }
 
 Server::~Server(){
+    sync();
+}
+
+void Server::sync(){
+    for(auto c: cache){
+        std::lock_guard<std::mutex> l(locks[c.first]);
+        _page_out(c.first, 0);
+    }
 }
 
 void *hn(void *foo){

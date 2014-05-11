@@ -20,6 +20,7 @@ namespace sls{
             ~Server();
             void handle(int sockfd);
             void handle_next_request();
+            void sync();
         private:
             std::map<std::string, std::list<sls::Value> > cache;
             std::map<std::string, std::mutex> locks;
