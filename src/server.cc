@@ -21,6 +21,7 @@
 #include "sls.pb.h"
 #include <memory>
 #include <netdb.h>
+#include <syslog.h>
 
 namespace sls{
 
@@ -32,7 +33,7 @@ sls::Value Server::wrap(std::string payload){
 }
 
 void Server::_page_out(std::string key, unsigned int skip){
-    std::cerr << "Attempting to page out: " << key << std::endl;
+    syslog(LOG_INFO, "Attempting to page out: %s", key.c_str());
     std::list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
     unsigned int size = cache[key].size();
@@ -73,7 +74,7 @@ void Server::_page_out(std::string key, unsigned int skip){
         cache[key].erase(new_end, cache[key].end());
     }
     else{
-        std::cerr << "Failed to page out: " << key << std::endl;
+        syslog(LOG_ERR, "Failed to page out: %s", key.c_str());
     }
 }
 
@@ -83,12 +84,12 @@ void Server::_file_lookup(std::string key, std::string filename, sls::Archive *a
     }
     std::string filepath = (disk_dir + key + "/" + filename);
     std::unique_ptr<std::string> s(new std::string);
-    readfile(filepath, s.get());
     try{
+        readfile(filepath, s.get());
         archive->ParseFromString(*(s.get()));
     }
     catch(...){
-        std::cerr << "Could not read from: " << filepath << std::endl;
+        syslog(LOG_ERR, "Could not read from: %s", filepath.c_str());
     }
     return;
 }
@@ -196,13 +197,13 @@ void Server::_lookup(int client_sock, sls::Request *request){
         response->set_success(true);
     }
     else{
-        std::cerr << "Range not initialized" << std::endl;
+        syslog(LOG_ERR, "Range not initialized");
     }
 
     std::unique_ptr<std::string> r(new std::string);
     response->SerializeToString(r.get());
     if(!send_string(client_sock, *r)){
-        std::cerr << "Failed to send entire response" << std::endl;
+        syslog(LOG_ERR, "Failed to send entire response");
     }
 }
 
@@ -224,7 +225,7 @@ void Server::handle_next_request(){
                 std::cout << request->DebugString();
             }
             catch(...){
-                std::cerr << "Malformed request" << std::endl;
+                syslog(LOG_ERR, "Malformed request");
             }
             sls::Response response;
             response.set_success(false);
@@ -248,7 +249,7 @@ void Server::handle_next_request(){
                         std::string r;
                         response.SerializeToString(&r);
                         if(!send_string(ready.get(), r)){
-                            std::cerr << "Failed to send response" << std::endl;
+                            syslog(LOG_ERR, "Failed to send response");
                         }
 
                         if(l->size() > cache_max){
@@ -258,26 +259,26 @@ void Server::handle_next_request(){
                         }
                     }
                     else{
-                        std::cerr << "Append request not initialized" << std::endl;
+                        syslog(LOG_ERR, "Append request not initialized");
                     }
                 }
                 else if (request->has_req_range()){
                     _lookup(ready.get(), request.get());
                 }
                 else{
-                    std::cerr << "Cannot handle request" << std::endl;
+                    syslog(LOG_ERR, "Cannot handle request");
                 }
             }
             else{
-                std::cerr << "Request is not properly initialized" << std::endl;
+                syslog(LOG_ERR, "Request is not properly initialized");
             }
         }
         else{
-            std::cerr << "Request is empty" << std::endl;
+            syslog(LOG_ERR, "Request is empty");
         }
     }
     else{
-        std::cerr << "Could not get request" << std::endl;
+        syslog(LOG_ERR, "Could not get request");
     }
 }
 
@@ -294,7 +295,7 @@ void *hn(void *foo){
         bar->handle_next_request();
     }
     catch(...){
-        std::cerr << "ohfuck" << std::endl;
+        syslog(LOG_ERR, "Unknown Error");
     }
     pthread_exit(NULL);
 }
