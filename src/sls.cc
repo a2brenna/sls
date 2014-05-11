@@ -3,17 +3,32 @@
 #include "sls.h"
 #include "sls.pb.h"
 #include <string>
+#include <signal.h>
 
 int port = 6998;
 std::string unix_domain_file = "/tmp/sls.sock";
-sls::Server s;
+sls::Server *s;
+Connection_Factory *connections;
+
+void shutdown(int signal){
+    //shutdown connections
+    delete connections;
+    //shutdown backend server
+    delete s;
+    //exit gracefully
+    exit(0);
+}
 
 int main(){
     srand(time(0));
 
-    Connection_Factory connections;
+    s = new sls::Server();
+    connections = new Connection_Factory();
+
+    signal(SIGINT, shutdown);
+
     try{
-        connections.add_socket(listen_on(port, false));
+        connections->add_socket(listen_on(port, false));
     }
     catch(Network_Error e){
         std::cerr << "Could not setup inet domain socket";
@@ -22,7 +37,7 @@ int main(){
     }
 
     try{
-        connections.add_socket(listen_on(unix_domain_file.c_str(), false));
+        connections->add_socket(listen_on(unix_domain_file.c_str(), false));
     }
     catch(Network_Error e){
         std::cerr << "Could not setup unix domain socket";
@@ -31,7 +46,7 @@ int main(){
     }
 
     while (true){
-        s.handle(connections.next_connection());
+        s->handle(connections->next_connection());
     }
     return 0;
 }
