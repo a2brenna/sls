@@ -4,9 +4,8 @@
 #include "sls.pb.h"
 #include <string>
 #include <signal.h>
+#include "config.h"
 
-int port = 6998;
-std::string unix_domain_file = "/tmp/sls.sock";
 sls::Server *s;
 Connection_Factory *connections;
 
@@ -22,7 +21,7 @@ void shutdown(int signal){
 int main(){
     srand(time(0));
 
-    s = new sls::Server();
+    s = new sls::Server(disk_dir, cache_min, cache_max);
     connections = new Connection_Factory();
 
     signal(SIGINT, shutdown);

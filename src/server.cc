@@ -1,4 +1,3 @@
-#include "config.h"
 #include <limits.h>
 #include <unistd.h>
 #include <iostream>
@@ -282,7 +281,10 @@ void Server::handle_next_request(){
     }
 }
 
-Server::Server(){
+Server::Server(std::string dd, unsigned long min, unsigned long max){
+    disk_dir = dd;
+    cache_min = min;
+    cache_max = max;
 }
 
 Server::~Server(){

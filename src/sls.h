@@ -16,7 +16,7 @@ namespace sls{
     };
     class Server{
         public:
-            Server();
+            Server(std::string dd, unsigned long min, unsigned long max);
             ~Server();
             void handle(int sockfd);
             void handle_next_request();
@@ -34,6 +34,9 @@ namespace sls{
             unsigned long long pick_time(const std::list<sls::Value> &d, unsigned long long start, unsigned long long end, std::list<sls::Value> *result);
             unsigned long long pick(const std::list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, std::list<sls::Value> *result);
             void _lookup(int client_sock, sls::Request *request);
+            unsigned long cache_min;
+            unsigned long cache_max;
+            std::string disk_dir;
     };
     void set_local_sls(bool new_val);
     bool append(const char *key, std::string data);
