@@ -1,6 +1,5 @@
 #include <limits.h>
 #include <unistd.h>
-#include <iostream>
 #include <fstream>
 #include <map>
 #include <list>
@@ -221,7 +220,6 @@ void Server::handle_next_request(){
             std::unique_ptr<sls::Request> request(new sls::Request);
             try{
                 request->ParseFromString(incoming);
-                std::cout << request->DebugString();
             }
             catch(...){
                 syslog(LOG_ERR, "Malformed request");
