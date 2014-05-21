@@ -5,6 +5,7 @@
 #include <string>
 #include <signal.h>
 #include "config.h"
+#include <syslog.h>
 
 sls::Server *s;
 Connection_Factory *connections;
@@ -19,6 +20,8 @@ void shutdown(int signal){
 }
 
 int main(){
+    openlog("sls", LOG_NDELAY, LOG_LOCAL1);
+    setlogmask(LOG_UPTO(LOG_INFO));
     srand(time(0));
 
     s = new sls::Server(disk_dir, cache_min, cache_max);
