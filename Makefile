@@ -50,6 +50,7 @@ src/sls_pb2.py: sls.proto
 clean:
 	rm -f *.o
 	rm -f *.so *.a
+	rm -f test_client
 	rm -rf sls
 	rm -rf src/*.pb.cc
 	rm -rf src/*.pb.h
