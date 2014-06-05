@@ -11,6 +11,7 @@ sls::Server *s;
 Connection_Factory *connections;
 
 void shutdown(int signal){
+    (void)signal;
     //shutdown connections
     delete connections;
     //shutdown backend server
