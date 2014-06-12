@@ -15,11 +15,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "sls.h"
-#include "sls.pb.h"
 #include <memory>
 #include <netdb.h>
 #include <syslog.h>
+
+#include "sls.h"
+#include "sls.pb.h"
 
 namespace sls{
 

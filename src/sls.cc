@@ -1,11 +1,12 @@
 #include <hgutil.h>
 #include <iostream>
-#include "sls.h"
-#include "sls.pb.h"
 #include <string>
 #include <signal.h>
-#include "config.h"
 #include <syslog.h>
+
+#include "sls.h"
+#include "sls.pb.h"
+#include "config.h"
 
 sls::Server *s;
 Connection_Factory *connections;

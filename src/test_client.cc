@@ -1,7 +1,8 @@
-#include "sls.h"
 #include <iostream>
 #include <sys/time.h>
 #include <hgutil.h>
+
+#include "sls.h"
 
 int main(){
     std::cerr << "Test Client Started... " << std::endl;

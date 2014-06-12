@@ -1,11 +1,12 @@
-#include "sls.h"
 #include <string>
 #include <list>
-#include "sls.pb.h"
-#include "hgutil.h"
 #include <limits.h>
 #include <memory>
 #include <hgutil/raii.h>
+#include <hgutil/network.h>
+
+#include "sls.h"
+#include "sls.pb.h"
 
 namespace sls{
 
