@@ -1,7 +1,10 @@
+INCLUDE_DIR=$(shell echo ~)/local/include
+LIBRARY_DIR=$(shell echo ~)/local/lib
+DESDTIR=/
+PREFIX=/usr
+
 CXX=clang++
-CXXFLAGS=-O2 -g -std=c++11 -fPIC -Wall -Wextra
-DESTDIR=/
-PREFIX=/usr/
+CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra
 
 all: sls test_client libsls.so libsls.a src/slsfsck.py src/sls_pb2.py
 
