@@ -22,10 +22,10 @@ uninstall:
 
 
 sls: src/sls.cc sls.pb.o server.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o sls.pb.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++
+	${CXX} ${CXXFLAGS} src/sls.cc server.o sls.pb.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls
 
 test_client: src/test_client.cc sls.pb.o
-	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lsls
+	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lsls -lgnutls
 
 libsls.so: slsc.o sls.pb.o
 	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o sls.pb.o
