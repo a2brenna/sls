@@ -7,17 +7,27 @@
 #include <mutex>
 #include <list>
 
+#include <hgutil/server.h>
+
 #include "sls.pb.h"
 
 namespace sls{
 
-    class Server{
+    class Incoming_Connection : public Task{
+        public:
+            Socket *sock;
+            Incoming_connection(Socket *s) { sock = s; };
+            ~Incoming_Connection() { delete sock; };
+    };
+
+    class Server : public Handler {
         public:
             Server(std::string dd, unsigned long min, unsigned long max);
             ~Server();
-            void handle(int sockfd);
-            void handle_next_request();
+
+            void handle(Task *t);
             void sync();
+
         private:
             unsigned long cache_min;
             unsigned long cache_max;
