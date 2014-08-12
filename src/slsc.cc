@@ -10,10 +10,6 @@
 
 namespace sls{
 
-SLS_Error::SLS_Error(std::string message){
-    msg = message;
-}
-
 bool local_sls = false;
 
 void set_local_sls(bool new_val){
