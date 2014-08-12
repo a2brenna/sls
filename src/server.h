@@ -43,6 +43,7 @@ namespace sls{
             std::string next_lookup(std::string key, std::string filename);
             unsigned long long pick_time(const std::list<sls::Value> &d, unsigned long long start, unsigned long long end, std::list<sls::Value> *result);
             unsigned long long pick(const std::list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, std::list<sls::Value> *result);
+            void handle_next_request(Socket *sock);
             void _lookup(Socket *sock, sls::Request *request);
     };
 
