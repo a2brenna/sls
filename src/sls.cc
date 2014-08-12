@@ -2,7 +2,10 @@
 #include <string>
 #include <signal.h>
 #include <syslog.h>
+#include <hgutil/socket.h>
+#include <hgutil/fd.h>
 
+#include "server.h"
 #include "sls.h"
 #include "sls.pb.h"
 #include "config.h"
@@ -49,7 +52,9 @@ int main(){
     }
 
     while (true){
-        s->handle(connections->next_connection());
+        std::shared_ptr<Task> t(new Incoming_Connection(connections->next_connection()));
+        s->queue_task(t);
+        p->handle_next();
     }
     return 0;
 }
