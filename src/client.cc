@@ -1,6 +1,7 @@
 #include "client.h"
+#include "error.h"
+#include "sls.h"
 
-#include <hgutil/address.h>
 #include <hgutil/socket.h>
 #include <hgutil/fd.h>
 #include <limits.h>
@@ -23,20 +24,20 @@ sls::Client::Client(Address *server){
     server_connection = std::unique_ptr<Socket>(new Raw_Socket(connect_to(server)));
 }
 
-void Client::request(const sls::Request &request, sls::Response *retval){
+void sls::Client::_request(const sls::Request &request, sls::Response *retval){
     std::unique_ptr<std::string> request_string(new std::string);
-    request.SerializeToString(*request_string);
+    request.SerializeToString(request_string.get());
 
-    server_connection->send_string();
+    send_string(server_connection.get(), *request_string);
 
     std::unique_ptr<std::string> returned(new std::string);
-    server_connection->recv_string(returned.get());
+    recv_string(server_connection.get(), *returned);
 
     retval->ParseFromString(*returned);
     return;
 }
 
-std::list<sls::Value>* Client::_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
+std::list<sls::Value>* sls::Client::_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
     std::unique_ptr<std::list<sls::Value> > r(new std::list<sls::Value>);
     sls::Request request;
     request.mutable_req_range()->set_start(start);
@@ -46,7 +47,7 @@ std::list<sls::Value>* Client::_interval(const char *key, unsigned long long sta
     request.set_key(key);
 
     std::unique_ptr<sls::Response> response(new sls::Response);
-    request(request, response.get());
+    _request(request, response.get());
 
     for(int i = 0; i < response->data_size(); i++){
         try{
@@ -62,28 +63,28 @@ std::list<sls::Value>* Client::_interval(const char *key, unsigned long long sta
     return r.release();
 }
 
-bool Client::append(const char *key, std::string data){
+bool sls::Client::append(const char *key, std::string data){
     sls::Response retval;
 
     std::unique_ptr<sls::Request> request(new sls::Request);
 
     //TODO: Can do this in one step?
     request->mutable_req_append()->set_key(key);
-    request->mutable_req_append()->set_data(key);
+    request->mutable_req_append()->set_data(data);
 
-    request(*request, &retval);
+    _request(*request, &retval);
 
-    return retval->success();
+    return retval.success();
 }
 
-std::list<sls::Value>* Client::lastn(const char *key, unsigned long long num_entries){
+std::list<sls::Value>* sls::Client::lastn(const char *key, unsigned long long num_entries){
     return _interval(key, 0, num_entries, false);
 }
 
-std::list<sls::Value>* Client::all(const char *key){
+std::list<sls::Value>* sls::Client::all(const char *key){
     return _interval(key, 0, ULONG_MAX, false);
 }
 
-std::list<sls::Value>* Client::intervalt(const char *key, unsigned long long start, unsigned long long end){
+std::list<sls::Value>* sls::Client::intervalt(const char *key, unsigned long long start, unsigned long long end){
     return _interval(key, start, end, true);
 }

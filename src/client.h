@@ -1,10 +1,10 @@
 #ifndef __SLS_CLIENT_H__
 #define __SLS_CLIENT_H__
 
-#include <hgutil/address.h>
 #include <hgutil/socket.h>
 #include <memory>
 
+#include "sls.h"
 #include "sls.pb.h"
 
 namespace sls{
@@ -12,7 +12,7 @@ namespace sls{
     class Client{
         private:
             std::unique_ptr<Socket> server_connection;
-            void request(const sls::Request &request, sls::Response *retva);
+            void _request(const sls::Request &request, sls::Response *retva);
             std::list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool ist_time);
 
         public:

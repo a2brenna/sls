@@ -1,4 +1,3 @@
-#include <hgutil/raii.h>
 #include <list>
 #include <string>
 

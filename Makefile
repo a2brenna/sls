@@ -27,14 +27,20 @@ sls: src/sls.cc sls.pb.o server.o src/config.h
 test_client: src/test_client.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lsls -lgnutls
 
-libsls.so: slsc.o sls.pb.o
-	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o sls.pb.o
+libsls.so: slsc.o client.o error.o sls.pb.o
+	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o
 
-libsls.a: slsc.o sls.pb.o
-	ar rcs libsls.a slsc.o sls.pb.o
+libsls.a: slsc.o client.o error.o sls.pb.o
+	ar rcs libsls.a slsc.o client.o error.o sls.pb.o
 
 server.o: src/server.cc
 	${CXX} ${CXXFLAGS} -c src/server.cc -o server.o
+
+client.o: src/client.cc
+	${CXX} ${CXXFLAGS} -c src/client.cc -o client.o
+
+error.o: src/error.cc
+	${CXX} ${CXXFLAGS} -c src/error.cc -o error.o
 
 slsc.o: src/slsc.cc
 	${CXX} ${CXXFLAGS} -c src/slsc.cc -o slsc.o
