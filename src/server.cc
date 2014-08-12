@@ -150,7 +150,7 @@ unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long lo
     return current;
 }
 
-void Server::_lookup(int client_sock, sls::Request *request){
+void Server::_lookup(Socket *sock, sls::Request *request){
     std::unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
@@ -210,22 +210,15 @@ void Server::_lookup(int client_sock, sls::Request *request){
 
     std::unique_ptr<std::string> r(new std::string);
     response->SerializeToString(r.get());
-    if(!send_string(client_sock, *r)){
+    if(!send_string(sock, *r)){
         syslog(LOG_ERR, "Failed to send entire response");
     }
 }
 
-void Server::handle_next_request(){
-    int fd;
-    {
-        std::lock_guard<std::mutex> r(this->incoming_lock);
-        fd = incoming.top();
-        incoming.pop();
-    }
-    raii::FD ready(fd);
+void Server::handle_next_request(Socket *sock){
 
     std::string incoming;
-    if(recv_string(ready.get(), incoming)){
+    if(recv_string(sock, incoming)){
         if (incoming.size() > 0){
             std::unique_ptr<sls::Request> request(new sls::Request);
             try{
@@ -255,7 +248,7 @@ void Server::handle_next_request(){
                         response.set_success(true);
                         std::string r;
                         response.SerializeToString(&r);
-                        if(!send_string(ready.get(), r)){
+                        if(!send_string(sock, r)){
                             syslog(LOG_ERR, "Failed to send response");
                         }
 
@@ -270,7 +263,7 @@ void Server::handle_next_request(){
                     }
                 }
                 else if (request->has_req_range()){
-                    _lookup(ready.get(), request.get());
+                    _lookup(sock, request.get());
                 }
                 else{
                     syslog(LOG_ERR, "Cannot handle request");
@@ -304,26 +297,6 @@ void Server::sync(){
         std::lock_guard<std::mutex> l(locks[c.first]);
         _page_out(c.first, 0);
     }
-}
-
-void *hn(void *foo){
-    pthread_detach(pthread_self());
-    Server *bar= (Server *)foo;
-    try{
-        bar->handle_next_request();
-    }
-    catch(...){
-        syslog(LOG_ERR, "Unknown Error");
-    }
-    pthread_exit(NULL);
-}
-
-void Server::handle(int sockfd){
-    std::lock_guard<std::mutex> i(this->incoming_lock);
-    this->incoming.push(sockfd);
-
-    pthread_t thread;
-    pthread_create(&thread, NULL, hn, this);
 }
 
 }
