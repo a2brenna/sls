@@ -33,14 +33,14 @@ void Server::handle(Task *t){
     }
 }
 
-sls::Value Server::wrap(std::string payload){
+sls::Value Server::wrap(const std::string &payload){
     sls::Value r;
     r.set_time(milli_time());
     r.set_data(payload);
     return r;
 }
 
-void Server::_page_out(std::string key, unsigned int skip){
+void Server::_page_out(const std::string &key, const unsigned int &skip){
     syslog(LOG_INFO, "Attempting to page out: %s", key.c_str());
     std::list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
@@ -86,7 +86,7 @@ void Server::_page_out(std::string key, unsigned int skip){
     }
 }
 
-void Server::_file_lookup(std::string key, std::string filename, sls::Archive *archive){
+void Server::_file_lookup(const std::string &key, const std::string &filename, sls::Archive *archive){
     if(filename == ""){
         return;
     }
@@ -102,7 +102,7 @@ void Server::_file_lookup(std::string key, std::string filename, sls::Archive *a
     return;
 }
 
-void Server::file_lookup(std::string key, std::string filename, std::list<sls::Value> *r){
+void Server::file_lookup(const std::string &key, const std::string &filename, std::list<sls::Value> *r){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
 
@@ -116,7 +116,7 @@ void Server::file_lookup(std::string key, std::string filename, std::list<sls::V
     return;
 }
 
-std::string Server::next_lookup(std::string key, std::string filename){
+std::string Server::next_lookup(const std::string &key, const std::string &filename){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
     std::string next_archive;
@@ -129,7 +129,7 @@ std::string Server::next_lookup(std::string key, std::string filename){
     return next_archive;
 }
 
-unsigned long long Server::pick_time(const std::list<sls::Value> &d, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
+unsigned long long Server::pick_time(const std::list<sls::Value> &d, const unsigned long long &start, const unsigned long long &end, std::list<sls::Value> *result){
     unsigned long long earliest = ULLONG_MAX;
     for(auto &value: d){
         if( (value.time() > start) && (value.time() < end) ){
@@ -140,7 +140,7 @@ unsigned long long Server::pick_time(const std::list<sls::Value> &d, unsigned lo
     return earliest;
 }
 
-unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
+unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, const unsigned long long &start, const unsigned long long &end, std::list<sls::Value> *result){
     for (auto &value: d){
         if( (current >= start) && (current <= end) ){
             result->push_back(value);
