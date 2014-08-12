@@ -52,9 +52,9 @@ int main(){
     }
 
     while (true){
-        std::shared_ptr<Task> t(new Incoming_Connection(connections->next_connection()));
+        std::shared_ptr<Task> t(new sls::Incoming_Connection(connections->next_connection()));
         s->queue_task(t);
-        p->handle_next();
+        s->handle_next();
     }
     return 0;
 }

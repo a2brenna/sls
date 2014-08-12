@@ -16,7 +16,7 @@ namespace sls{
     class Incoming_Connection : public Task{
         public:
             Socket *sock;
-            Incoming_connection(Socket *s) { sock = s; };
+            Incoming_Connection(Socket *s) { sock = s; };
             ~Incoming_Connection() { delete sock; };
     };
 
