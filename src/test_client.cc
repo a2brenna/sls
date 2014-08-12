@@ -1,6 +1,6 @@
 #include <iostream>
 #include <sys/time.h>
-#include <hgutil.h>
+#include <hgutil/time.h>
 
 #include "sls.h"
 
