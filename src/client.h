@@ -2,18 +2,21 @@
 #define __SLS_CLIENT_H__
 
 #include <hgutil/address.h>
+#include <hgutil/socket.h>
+#include <memory>
 
 namespace sls{
 
+    //TODO: Maybe use unique_ptr here
     Address *global_server = NULL;
 
     class Client{
         private:
+            std::unique_ptr<Socket> server_connection;
 
         public:
             Client();
             Client(Address *server);
-            ~Client();
 
             bool append(const char *key, std::string data);
             std::list<sls::Value> *lastn(const char *key, unsigned long long num_entries);
