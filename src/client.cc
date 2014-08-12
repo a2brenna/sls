@@ -3,6 +3,7 @@
 #include <hgutil/address.h>
 #include <hgutil/socket.h>
 #include <hgutil/fd.h>
+#include <limits.h>
 
 Client::Client(){
 
