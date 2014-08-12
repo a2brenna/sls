@@ -5,6 +5,8 @@
 #include <hgutil/socket.h>
 #include <memory>
 
+#include "sls.pb.h"
+
 namespace sls{
 
     //TODO: Maybe use unique_ptr here
@@ -13,6 +15,8 @@ namespace sls{
     class Client{
         private:
             std::unique_ptr<Socket> server_connection;
+            void request(const sls::Request &request, sls::Response *retva);
+            std::list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool ist_time);
 
         public:
             Client();
