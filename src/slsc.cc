@@ -10,12 +10,6 @@
 
 namespace sls{
 
-bool local_sls = false;
-
-void set_local_sls(bool new_val){
-    local_sls = new_val;
-}
-
 int _get_socket(){
     int sockfd = -1;
     if(!local_sls){

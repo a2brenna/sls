@@ -10,7 +10,6 @@
 
 namespace sls{
 
-    void set_local_sls(bool new_val);
     bool append(const char *key, std::string data);
     std::list<sls::Value> *lastn(const char *key, unsigned long long num_entries);
     std::list<sls::Value> *all(const char *key);
