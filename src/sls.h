@@ -9,11 +9,6 @@
 #include"sls.pb.h"
 
 namespace sls{
-    class SLS_Error{
-        public:
-            std::string msg;
-            SLS_Error(std::string message);
-    };
 
     void set_local_sls(bool new_val);
     bool append(const char *key, std::string data);
@@ -22,6 +17,7 @@ namespace sls{
     std::list<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned long long end);
     std::string unwrap(sls::Value value);
     unsigned long long check_time(sls::Value value);
+
 }
 
 #endif
