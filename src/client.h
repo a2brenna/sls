@@ -1,9 +1,11 @@
 #ifndef __SLS_CLIENT_H__
 #define __SLS_CLIENT_H__
 
+#include <hgutil/address.h>
+
 namespace sls{
 
-    Address *global_server;
+    Address *global_server = NULL;
 
     class Client{
         private:
