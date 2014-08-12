@@ -24,6 +24,15 @@
 
 namespace sls{
 
+void Server::handle(Task *t){
+    if(Incoming_Connection *i = dynamic_cast<Incoming_Connection *>(t)){
+        handle_next_request(i->sock);
+    }
+    else{
+        throw Handler_Exception("Bad task");
+    }
+}
+
 sls::Value Server::wrap(std::string payload){
     sls::Value r;
     r.set_time(milli_time());
