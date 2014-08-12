@@ -9,9 +9,6 @@
 
 namespace sls{
 
-    //TODO: Maybe use unique_ptr here
-    Address *global_server = NULL;
-
     class Client{
         private:
             std::unique_ptr<Socket> server_connection;

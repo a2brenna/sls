@@ -5,7 +5,9 @@
 #include <hgutil/fd.h>
 #include <limits.h>
 
-Client::Client(){
+Address* sls::global_server = NULL;
+
+sls::Client::Client(){
 
     //TODO: Maybe use unique_ptr for this and avoid this check?
     if(global_server != NULL){
