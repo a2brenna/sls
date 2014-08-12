@@ -10,8 +10,8 @@ Address* sls::global_server = NULL;
 sls::Client::Client(){
 
     //TODO: Maybe use unique_ptr for this and avoid this check?
-    if(global_server != NULL){
-        server_connection(new Raw_Socket(connect_to(global_server)));
+    if(sls::global_server != NULL){
+        server_connection = std::unique_ptr<Socket>(new Raw_Socket(connect_to(sls::global_server)));
     }
     else{
         throw SLS_No_Server();
@@ -19,8 +19,8 @@ sls::Client::Client(){
 
 }
 
-Client::Client(Address *server){
-    server_connection(new Raw_Socket(connect_to(global_server)));
+sls::Client::Client(Address *server){
+    server_connection = std::unique_ptr<Socket>(new Raw_Socket(connect_to(server)));
 }
 
 void Client::request(const sls::Request &request, sls::Response *retval){
