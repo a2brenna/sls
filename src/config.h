@@ -9,4 +9,6 @@ extern std::string disk_dir;
 extern int port;
 extern std::string unix_domain_file;
 
+void get_config(int argc, char *argv[]);
+
 #endif
