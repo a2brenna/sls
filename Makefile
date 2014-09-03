@@ -21,8 +21,8 @@ uninstall:
 	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
 
 
-sls: src/sls.cc sls.pb.o server.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o sls.pb.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls
+sls: src/sls.cc sls.pb.o server.o config.o src/config.h
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls
 
 test_client: src/test_client.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lsls -lgnutls
@@ -44,6 +44,9 @@ error.o: src/error.cc
 
 slsc.o: src/slsc.cc
 	${CXX} ${CXXFLAGS} -c src/slsc.cc -o slsc.o
+
+config.o: src/config.cc
+	${CXX} ${CXXFLAGS} -c src/config.cc -o config.o
 
 sls.pb.o: src/sls.pb.cc
 	${CXX} ${CXXFLAGS} -c src/sls.pb.cc -o sls.pb.o

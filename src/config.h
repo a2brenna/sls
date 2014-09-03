@@ -3,10 +3,10 @@
 
 #include <string>
 
-unsigned long cache_min = 3600 * 2;
-unsigned long cache_max = 3600 * 4;
-std::string disk_dir = "/pool/sls/";
-int port = 6998;
-std::string unix_domain_file = "/tmp/sls.sock";
+extern unsigned long cache_min;
+extern unsigned long cache_max;
+extern std::string disk_dir;
+extern int port;
+extern std::string unix_domain_file;
 
 #endif
