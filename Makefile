@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra
 
-all: sls test_client libsls.so libsls.a src/slsfsck.py src/sls_pb2.py
+all: sls libsls.so libsls.a src/slsfsck.py src/sls_pb2.py
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
@@ -22,7 +22,7 @@ uninstall:
 
 
 sls: src/sls.cc sls.pb.o server.o config.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls -lboost_program_options
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls -lboost_program_options -lcurl -ljsoncpp
 
 test_client: src/test_client.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lsls -lgnutls
