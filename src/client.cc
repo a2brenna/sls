@@ -6,12 +6,12 @@
 #include <hgutil/fd.h>
 #include <limits.h>
 
-Address* sls::global_server = NULL;
+Address* sls::global_server = nullptr;
 
 sls::Client::Client(){
 
     //TODO: Maybe use unique_ptr for this and avoid this check?
-    if(sls::global_server != NULL){
+    if(sls::global_server != nullptr){
         server_connection = std::unique_ptr<Socket>(new Raw_Socket(connect_to(sls::global_server)));
     }
     else{

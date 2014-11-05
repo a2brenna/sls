@@ -108,7 +108,7 @@ void Server::file_lookup(const std::string &key, const std::string &filename, st
 
     r->clear();
 
-    if(archive != NULL){
+    if(archive != nullptr){
         for(int i = 0; i < archive->values_size(); i++){
             r->push_back(archive->values(i));
         }
@@ -121,7 +121,7 @@ std::string Server::next_lookup(const std::string &key, const std::string &filen
     _file_lookup(key, filename, archive.get());
     std::string next_archive;
 
-    if(archive != NULL){
+    if(archive != nullptr){
         if(archive->has_next_archive()){
             next_archive = archive->next_archive();
         }
