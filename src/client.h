@@ -9,6 +9,8 @@
 
 namespace sls{
 
+    extern Address* global_server;
+
     class Client{
         private:
             std::unique_ptr<Socket> server_connection;
