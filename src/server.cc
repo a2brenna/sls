@@ -151,12 +151,14 @@ unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long lo
 }
 
 void Server::_lookup(Socket *sock, sls::Request *request){
+    syslog(LOG_DEBUG, "Got lookup request");
     std::unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
     if(request->mutable_req_range()->IsInitialized()){
         std::unique_ptr<std::list<sls::Value> > values(new std::list<sls::Value>);
         std::string key = request->key();
+        //TODO: this differently?
         unsigned long long start = request->mutable_req_range()->start();
         unsigned long long end = request->mutable_req_range()->end();
         std::string next_file;
@@ -191,8 +193,10 @@ void Server::_lookup(Socket *sock, sls::Request *request){
                     break;
                 }
                 next_file = next_lookup(key, next_file);
+                syslog(LOG_DEBUG, "Currently have %zu elements", d->size());
             }
             while(d->size() == 0);
+            syslog(LOG_DEBUG, "Currently have %zu elements", d->size());
 
         }while(has_next);
 
@@ -231,8 +235,10 @@ void Server::handle_next_request(Socket *sock){
             response.set_success(false);
 
             if(request->IsInitialized()){
+                syslog(LOG_DEBUG, "Got initialized request");
 
                 if (request->has_req_append()){
+                    syslog(LOG_DEBUG, "Got append request");
                     sls::Append a = request->req_append();
                     if(a.IsInitialized()){
                         std::list<sls::Value> *l;
@@ -257,6 +263,7 @@ void Server::handle_next_request(Socket *sock){
                             std::lock_guard<std::mutex> guard((locks[a.key()]));
                             _page_out(a.key(), cache_min);
                         }
+                        syslog(LOG_DEBUG, "Append successfull");
                     }
                     else{
                         syslog(LOG_ERR, "Append request not initialized");

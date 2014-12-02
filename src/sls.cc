@@ -25,7 +25,7 @@ void shutdown(int signal){
 
 int main(){
     openlog("sls", LOG_NDELAY, LOG_LOCAL1);
-    setlogmask(LOG_UPTO(LOG_INFO));
+    setlogmask(LOG_UPTO(LOG_DEBUG));
     srand(time(0));
 
     s = new sls::Server(disk_dir, cache_min, cache_max);
@@ -52,6 +52,7 @@ int main(){
     }
 
     while (true){
+        syslog(LOG_DEBUG, "Got new connection");
         std::shared_ptr<Task> t(new sls::Incoming_Connection(connections->next_connection()));
         s->queue_task(t);
         s->handle_next();
