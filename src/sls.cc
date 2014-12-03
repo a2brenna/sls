@@ -1,11 +1,14 @@
-#include <hgutil.h>
 #include <iostream>
-#include "sls.h"
-#include "sls.pb.h"
 #include <string>
 #include <signal.h>
-#include "config.h"
 #include <syslog.h>
+#include <hgutil/socket.h>
+#include <hgutil/fd.h>
+
+#include "server.h"
+#include "sls.h"
+#include "sls.pb.h"
+#include "config.h"
 
 sls::Server *s;
 Connection_Factory *connections;
@@ -22,7 +25,7 @@ void shutdown(int signal){
 
 int main(){
     openlog("sls", LOG_NDELAY, LOG_LOCAL1);
-    setlogmask(LOG_UPTO(LOG_INFO));
+    setlogmask(LOG_UPTO(LOG_DEBUG));
     srand(time(0));
 
     s = new sls::Server(disk_dir, cache_min, cache_max);
@@ -49,7 +52,10 @@ int main(){
     }
 
     while (true){
-        s->handle(connections->next_connection());
+        syslog(LOG_DEBUG, "Got new connection");
+        std::shared_ptr<Task> t(new sls::Incoming_Connection(connections->next_connection()));
+        s->queue_task(t);
+        s->handle_next();
     }
     return 0;
 }

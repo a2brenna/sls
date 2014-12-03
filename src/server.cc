@@ -1,36 +1,46 @@
 #include <limits.h>
-#include <unistd.h>
-#include <fstream>
-#include <map>
-#include <list>
-#include <mutex>
 #include <pthread.h>
-#include <sys/time.h>
-#include <dirent.h>
-#include <algorithm>
-#include <hgutil.h>
-#include <hgutil/raii.h>
-#include <cstdlib>
-#include <signal.h>
-#include <sys/types.h>
+#include <stdio.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include "sls.h"
-#include "sls.pb.h"
-#include <memory>
-#include <netdb.h>
 #include <syslog.h>
+#include <unistd.h>
+#include <algorithm>
+#include <cstdlib>
+#include <list>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <stack>
+#include <string>
+#include <utility>
+
+#include "hgutil/files.h"
+#include "hgutil/socket.h"
+#include "hgutil/strings.h"
+#include "hgutil/time.h"
+#include "sls.h"
+#include "server.h"
+#include "sls.pb.h"
 
 namespace sls{
 
-sls::Value Server::wrap(std::string payload){
+void Server::handle(Task *t){
+    if(Incoming_Connection *i = dynamic_cast<Incoming_Connection *>(t)){
+        handle_next_request(i->sock);
+    }
+    else{
+        throw Handler_Exception("Bad task");
+    }
+}
+
+sls::Value Server::wrap(const std::string &payload){
     sls::Value r;
     r.set_time(milli_time());
     r.set_data(payload);
     return r;
 }
 
-void Server::_page_out(std::string key, unsigned int skip){
+void Server::_page_out(const std::string &key, const unsigned int &skip){
     syslog(LOG_INFO, "Attempting to page out: %s", key.c_str());
     std::list<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
@@ -76,7 +86,7 @@ void Server::_page_out(std::string key, unsigned int skip){
     }
 }
 
-void Server::_file_lookup(std::string key, std::string filename, sls::Archive *archive){
+void Server::_file_lookup(const std::string &key, const std::string &filename, sls::Archive *archive){
     if(filename == ""){
         return;
     }
@@ -92,13 +102,13 @@ void Server::_file_lookup(std::string key, std::string filename, sls::Archive *a
     return;
 }
 
-void Server::file_lookup(std::string key, std::string filename, std::list<sls::Value> *r){
+void Server::file_lookup(const std::string &key, const std::string &filename, std::list<sls::Value> *r){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
 
     r->clear();
 
-    if(archive != NULL){
+    if(archive != nullptr){
         for(int i = 0; i < archive->values_size(); i++){
             r->push_back(archive->values(i));
         }
@@ -106,12 +116,12 @@ void Server::file_lookup(std::string key, std::string filename, std::list<sls::V
     return;
 }
 
-std::string Server::next_lookup(std::string key, std::string filename){
+std::string Server::next_lookup(const std::string &key, const std::string &filename){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
     std::string next_archive;
 
-    if(archive != NULL){
+    if(archive != nullptr){
         if(archive->has_next_archive()){
             next_archive = archive->next_archive();
         }
@@ -119,7 +129,7 @@ std::string Server::next_lookup(std::string key, std::string filename){
     return next_archive;
 }
 
-unsigned long long Server::pick_time(const std::list<sls::Value> &d, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
+unsigned long long Server::pick_time(const std::list<sls::Value> &d, const unsigned long long &start, const unsigned long long &end, std::list<sls::Value> *result){
     unsigned long long earliest = ULLONG_MAX;
     for(auto &value: d){
         if( (value.time() > start) && (value.time() < end) ){
@@ -130,7 +140,7 @@ unsigned long long Server::pick_time(const std::list<sls::Value> &d, unsigned lo
     return earliest;
 }
 
-unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, unsigned long long start, unsigned long long end, std::list<sls::Value> *result){
+unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, const unsigned long long &start, const unsigned long long &end, std::list<sls::Value> *result){
     for (auto &value: d){
         if( (current >= start) && (current <= end) ){
             result->push_back(value);
@@ -140,13 +150,15 @@ unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long lo
     return current;
 }
 
-void Server::_lookup(int client_sock, sls::Request *request){
+void Server::_lookup(Socket *sock, sls::Request *request){
+    syslog(LOG_DEBUG, "Got lookup request");
     std::unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
 
     if(request->mutable_req_range()->IsInitialized()){
         std::unique_ptr<std::list<sls::Value> > values(new std::list<sls::Value>);
         std::string key = request->key();
+        //TODO: this differently?
         unsigned long long start = request->mutable_req_range()->start();
         unsigned long long end = request->mutable_req_range()->end();
         std::string next_file;
@@ -181,8 +193,10 @@ void Server::_lookup(int client_sock, sls::Request *request){
                     break;
                 }
                 next_file = next_lookup(key, next_file);
+                syslog(LOG_DEBUG, "Currently have %zu elements", d->size());
             }
             while(d->size() == 0);
+            syslog(LOG_DEBUG, "Currently have %zu elements", d->size());
 
         }while(has_next);
 
@@ -200,22 +214,15 @@ void Server::_lookup(int client_sock, sls::Request *request){
 
     std::unique_ptr<std::string> r(new std::string);
     response->SerializeToString(r.get());
-    if(!send_string(client_sock, *r)){
+    if(!send_string(sock, *r)){
         syslog(LOG_ERR, "Failed to send entire response");
     }
 }
 
-void Server::handle_next_request(){
-    int fd;
-    {
-        std::lock_guard<std::mutex> r(this->incoming_lock);
-        fd = incoming.top();
-        incoming.pop();
-    }
-    raii::FD ready(fd);
+void Server::handle_next_request(Socket *sock){
 
     std::string incoming;
-    if(recv_string(ready.get(), incoming)){
+    if(recv_string(sock, incoming)){
         if (incoming.size() > 0){
             std::unique_ptr<sls::Request> request(new sls::Request);
             try{
@@ -228,8 +235,10 @@ void Server::handle_next_request(){
             response.set_success(false);
 
             if(request->IsInitialized()){
+                syslog(LOG_DEBUG, "Got initialized request");
 
                 if (request->has_req_append()){
+                    syslog(LOG_DEBUG, "Got append request");
                     sls::Append a = request->req_append();
                     if(a.IsInitialized()){
                         std::list<sls::Value> *l;
@@ -245,7 +254,7 @@ void Server::handle_next_request(){
                         response.set_success(true);
                         std::string r;
                         response.SerializeToString(&r);
-                        if(!send_string(ready.get(), r)){
+                        if(!send_string(sock, r)){
                             syslog(LOG_ERR, "Failed to send response");
                         }
 
@@ -254,13 +263,14 @@ void Server::handle_next_request(){
                             std::lock_guard<std::mutex> guard((locks[a.key()]));
                             _page_out(a.key(), cache_min);
                         }
+                        syslog(LOG_DEBUG, "Append successfull");
                     }
                     else{
                         syslog(LOG_ERR, "Append request not initialized");
                     }
                 }
                 else if (request->has_req_range()){
-                    _lookup(ready.get(), request.get());
+                    _lookup(sock, request.get());
                 }
                 else{
                     syslog(LOG_ERR, "Cannot handle request");
@@ -294,26 +304,6 @@ void Server::sync(){
         std::lock_guard<std::mutex> l(locks[c.first]);
         _page_out(c.first, 0);
     }
-}
-
-void *hn(void *foo){
-    pthread_detach(pthread_self());
-    Server *bar= (Server *)foo;
-    try{
-        bar->handle_next_request();
-    }
-    catch(...){
-        syslog(LOG_ERR, "Unknown Error");
-    }
-    pthread_exit(NULL);
-}
-
-void Server::handle(int sockfd){
-    std::lock_guard<std::mutex> i(this->incoming_lock);
-    this->incoming.push(sockfd);
-
-    pthread_t thread;
-    pthread_create(&thread, NULL, hn, this);
 }
 
 }
