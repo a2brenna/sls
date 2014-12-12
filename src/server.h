@@ -23,7 +23,7 @@ namespace sls{
     class Server : public Handler {
         public:
             Server(std::string dd, unsigned long min, unsigned long max);
-            ~Server();
+            virtual ~Server();
 
             void handle(Task *t);
             void sync();

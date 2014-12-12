@@ -214,7 +214,10 @@ void Server::_lookup(Socket *sock, sls::Request *request){
 
     std::unique_ptr<std::string> r(new std::string);
     response->SerializeToString(r.get());
-    if(!send_string(sock, *r)){
+    try{
+        send_string(sock, *r);
+    }
+    catch(...){
         syslog(LOG_ERR, "Failed to send entire response");
     }
 }
@@ -222,7 +225,8 @@ void Server::_lookup(Socket *sock, sls::Request *request){
 void Server::handle_next_request(Socket *sock){
 
     std::string incoming;
-    if(recv_string(sock, incoming)){
+    try{
+        recv_string(sock, incoming);
         if (incoming.size() > 0){
             std::unique_ptr<sls::Request> request(new sls::Request);
             try{
@@ -254,7 +258,10 @@ void Server::handle_next_request(Socket *sock){
                         response.set_success(true);
                         std::string r;
                         response.SerializeToString(&r);
-                        if(!send_string(sock, r)){
+                        try{
+                            send_string(sock, r);
+                        }
+                        catch(...){
                             syslog(LOG_ERR, "Failed to send response");
                         }
 
@@ -284,7 +291,7 @@ void Server::handle_next_request(Socket *sock){
             syslog(LOG_ERR, "Request is empty");
         }
     }
-    else{
+    catch(...){
         syslog(LOG_ERR, "Could not get request");
     }
 }
