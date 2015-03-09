@@ -9,3 +9,5 @@ sls
 *_pb2.py
 *.pyc
 *.png
+*.swp
+*.swo
