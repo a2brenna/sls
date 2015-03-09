@@ -1,4 +1,5 @@
 test_client
+fsck
 sls
 *.a
 *.so
