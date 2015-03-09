@@ -24,7 +24,7 @@ uninstall:
 sls: src/sls.cc sls.pb.o server.o config.o src/config.h
 	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls -lboost_program_options -lcurl -ljsoncpp
 
-fsck: src/fsck.cc
+fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls -lboost_program_options -lcurl -ljsoncpp
 
 test_client: src/test_client.cc sls.pb.o
