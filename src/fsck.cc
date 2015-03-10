@@ -9,10 +9,12 @@
 #include <boost/program_options.hpp>
 #include <stdio.h>
 #include <fstream>
+#include <regex>
 #include "sls.pb.h"
 
 std::string CONFIG_ROOT_DIR = "/pool/sls";
 bool CONFIG_FIX = false;
+std::string CONFIG_FILTER = ".*";
 
 size_t total_discards = 0;
 size_t fix = 0;
@@ -28,6 +30,7 @@ void config(int argc, char *argv[]){
         desc.add_options()
             ("help", "Produce help message")
             ("root_dir", po::value<std::string>(&CONFIG_ROOT_DIR), "Absolute PATH to root of sls storage directory")
+            ("filter", po::value<std::string>(&CONFIG_FILTER), "Regex filter")
             ("fix", po::bool_switch(&CONFIG_FIX), "Attempt to fix problems")
             ;
     }
@@ -190,14 +193,25 @@ std::vector<std::string> traverse_chain( const std::string &root, const std::str
 int main(int argc, char *argv[]){
     config(argc, argv);
 
-    std::vector<std::string> keys;
+    std::vector<std::string> raw_keys;
 
     try{
-        getdir( CONFIG_ROOT_DIR, keys );
+        getdir( CONFIG_ROOT_DIR, raw_keys );
     }
     catch(...){
         std::cerr << "Could not list keys in " << CONFIG_ROOT_DIR << std::endl;
         exit(-1);
+    }
+
+    std::regex f(CONFIG_FILTER);
+    std::vector<std::string> keys;
+    for(const auto &rk: raw_keys){
+        if(std::regex_match(rk, f)){
+            keys.push_back(rk);
+        }
+        else{
+            std::cerr << "Rejecting: " << rk << std::endl;
+        }
     }
 
     for(const auto &k: keys){
