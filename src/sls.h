@@ -5,13 +5,13 @@
 #include<list>
 #include<mutex>
 #include<stack>
-#include<hgutil/address.h>
+#include<smpl.h>
 
 #include"sls.pb.h"
 
 namespace sls{
 
-    extern Address *global_server;
+    extern smpl::Remote_Address *global_server;
 
     bool append(const char *key, std::string data);
     std::list<sls::Value> *lastn(const char *key, unsigned long long num_entries);

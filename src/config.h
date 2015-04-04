@@ -7,7 +7,7 @@ extern unsigned long cache_min;
 extern unsigned long cache_max;
 extern std::string disk_dir;
 extern int port;
-extern std::string unix_domain_file;
+extern std::string CONFIG_UNIX_DOMAIN_FILE;
 
 void get_config(int argc, char *argv[]);
 

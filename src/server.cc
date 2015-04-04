@@ -15,12 +15,12 @@
 #include <utility>
 
 #include "hgutil/files.h"
-#include "hgutil/socket.h"
 #include "hgutil/strings.h"
 #include "hgutil/time.h"
 #include "sls.h"
 #include "server.h"
 #include "sls.pb.h"
+#include <smpl.h>
 
 namespace sls{
 
@@ -150,7 +150,7 @@ unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long lo
     return current;
 }
 
-void Server::_lookup(Socket *sock, sls::Request *request){
+void Server::_lookup(std::shared_ptr<smpl::Channel> sock, sls::Request *request){
     syslog(LOG_DEBUG, "Got lookup request");
     std::unique_ptr<sls::Response> response(new sls::Response);
     response->set_success(false);
@@ -215,18 +215,18 @@ void Server::_lookup(Socket *sock, sls::Request *request){
     std::unique_ptr<std::string> r(new std::string);
     response->SerializeToString(r.get());
     try{
-        send_string(sock, *r);
+        sock->send(*r);
     }
     catch(...){
         syslog(LOG_ERR, "Failed to send entire response");
     }
 }
 
-void Server::handle_next_request(Socket *sock){
+void Server::handle_next_request(std::shared_ptr<smpl::Channel> sock){
 
     std::string incoming;
     try{
-        recv_string(sock, incoming);
+        incoming = sock->recv();
         if (incoming.size() > 0){
             std::unique_ptr<sls::Request> request(new sls::Request);
             try{
@@ -259,7 +259,7 @@ void Server::handle_next_request(Socket *sock){
                         std::string r;
                         response.SerializeToString(&r);
                         try{
-                            send_string(sock, r);
+                            sock->send(r);
                         }
                         catch(...){
                             syslog(LOG_ERR, "Failed to send response");

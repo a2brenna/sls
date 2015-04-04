@@ -2,17 +2,16 @@
 #include "error.h"
 #include "sls.h"
 
-#include <hgutil/socket.h>
-#include <hgutil/fd.h>
+#include <smpl.h>
 #include <limits.h>
 
-Address* sls::global_server = nullptr;
+smpl::Remote_Address* sls::global_server = nullptr;
 
 sls::Client::Client(){
 
     //TODO: Maybe use unique_ptr for this and avoid this check?
     if(sls::global_server != nullptr){
-        server_connection = std::unique_ptr<Socket>(new Raw_Socket(connect_to(sls::global_server)));
+        server_connection = std::unique_ptr<smpl::Channel>(sls::global_server->connect());
     }
     else{
         throw SLS_No_Server();
@@ -20,18 +19,18 @@ sls::Client::Client(){
 
 }
 
-sls::Client::Client(Address *server){
-    server_connection = std::unique_ptr<Socket>(new Raw_Socket(connect_to(server)));
+sls::Client::Client(smpl::Remote_Address *server){
+    server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 
 void sls::Client::_request(const sls::Request &request, sls::Response *retval){
     std::unique_ptr<std::string> request_string(new std::string);
     request.SerializeToString(request_string.get());
 
-    send_string(server_connection.get(), *request_string);
+    server_connection->send(*request_string);
 
     std::unique_ptr<std::string> returned(new std::string);
-    recv_string(server_connection.get(), *returned);
+    *returned = server_connection->recv();
 
     retval->ParseFromString(*returned);
     return;

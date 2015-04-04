@@ -2,21 +2,19 @@
 #include <string>
 #include <signal.h>
 #include <syslog.h>
-#include <hgutil/socket.h>
-#include <hgutil/fd.h>
 
 #include "server.h"
 #include "sls.h"
 #include "sls.pb.h"
 #include "config.h"
 
+#include <smpl.h>
+#include <smplsocket.h>
+
 sls::Server *s;
-Connection_Factory *connections;
 
 void shutdown(int signal){
     (void)signal;
-    //shutdown connections
-    delete connections;
     //shutdown backend server
     delete s;
     //exit gracefully
@@ -29,31 +27,22 @@ int main(){
     srand(time(0));
 
     s = new sls::Server(disk_dir, cache_min, cache_max);
-    connections = new Connection_Factory();
 
     signal(SIGINT, shutdown);
-
-    try{
-        connections->add_socket(listen_on(port, false));
+/*
+    connections->add_socket(listen_on(port, false));
     }
     catch(Network_Error e){
         std::cerr << "Could not setup inet domain socket";
         std::cerr << e.msg << " : " << e.error_number << std::endl;
         return -1;
     }
+*/
 
-    try{
-        connections->add_socket(listen_on(unix_domain_file.c_str(), false));
-    }
-    catch(Network_Error e){
-        std::cerr << "Could not setup unix domain socket";
-        std::cerr << e.msg << " : " << e.error_number << std::endl;
-        return -1;
-    }
+    std::unique_ptr<smpl::Local_Address> incoming(new smpl::Local_UDS(CONFIG_UNIX_DOMAIN_FILE));
 
     while (true){
-        syslog(LOG_DEBUG, "Got new connection");
-        std::shared_ptr<Task> t(new sls::Incoming_Connection(connections->next_connection()));
+        std::shared_ptr<Task> t(new sls::Incoming_Connection( std::shared_ptr<smpl::Channel>(incoming->listen()) ));
         s->queue_task(t);
         s->handle_next();
     }

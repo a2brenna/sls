@@ -10,13 +10,13 @@ unsigned long cache_min = 3600 * 1;
 unsigned long cache_max = 3600 * 2;
 std::string disk_dir = "/pool/sls/";
 int port = 6998;
-std::string unix_domain_file = "/tmp/sls.sock";
+std::string CONFIG_UNIX_DOMAIN_FILE = "/tmp/sls.sock";
 
 void get_config(int argc, char *argv[]){
     po::options_description desc("Options");
     desc.add_options()
         ("port", po::value<int>(&port), "Specify network port to listen on")
-        ("unix_domain_file", po::value<std::string>(&unix_domain_file), "Path to open unix domain socket on")
+        ("unix_domain_file", po::value<std::string>(&CONFIG_UNIX_DOMAIN_FILE), "Path to open unix domain socket on")
         ("cache_min", po::value<unsigned long>(&cache_min), "Minimum number of most recent elements to keep in cache")
         ("cache_max", po::value<unsigned long>(&cache_max), "Maximum number of elements to store in ram before flushing to disk")
         ("dir", po::value<std::string>(&disk_dir), "Root directory of bargckend file storage")

@@ -1,7 +1,7 @@
 #ifndef __SLS_CLIENT_H__
 #define __SLS_CLIENT_H__
 
-#include <hgutil/socket.h>
+#include <smpl.h>
 #include <memory>
 
 #include "sls.h"
@@ -9,17 +9,17 @@
 
 namespace sls{
 
-    extern Address* global_server;
+    extern smpl::Remote_Address* global_server;
 
     class Client{
         private:
-            std::unique_ptr<Socket> server_connection;
+            std::unique_ptr<smpl::Channel> server_connection;
             void _request(const sls::Request &request, sls::Response *retva);
             std::list<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool ist_time);
 
         public:
             Client();
-            Client(Address *server);
+            Client(smpl::Remote_Address *server);
 
             bool append(const char *key, std::string data);
             std::list<sls::Value> *lastn(const char *key, unsigned long long num_entries);
