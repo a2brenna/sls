@@ -24,15 +24,6 @@
 
 namespace sls{
 
-void Server::handle(Task *t){
-    if(Incoming_Connection *i = dynamic_cast<Incoming_Connection *>(t)){
-        handle_next_request(i->sock);
-    }
-    else{
-        throw Handler_Exception("Bad task");
-    }
-}
-
 sls::Value Server::wrap(const std::string &payload){
     sls::Value r;
     r.set_time(milli_time());
@@ -218,80 +209,6 @@ void Server::append(const std::string &key, const std::string &data){
         _page_out( key, cache_min );
     }
 
-}
-
-void Server::handle_next_request(std::shared_ptr<smpl::Channel> sock){
-
-    std::string incoming;
-    try{
-        incoming = sock->recv();
-        if (incoming.size() > 0){
-            std::unique_ptr<sls::Request> request(new sls::Request);
-            try{
-                request->ParseFromString(incoming);
-            }
-            catch(...){
-                syslog(LOG_ERR, "Malformed request");
-            }
-            sls::Response response;
-            response.set_success(false);
-
-            if(request->IsInitialized()){
-                syslog(LOG_DEBUG, "Got initialized request");
-
-                if (request->has_req_append()){
-                    syslog(LOG_DEBUG, "Got append request");
-                    sls::Append a = request->req_append();
-                    if(a.IsInitialized()){
-                        std::list<sls::Value> *l;
-                        //acquire lock
-                        {
-                            std::lock_guard<std::mutex> guard(locks[a.key()]);
-                            l = &(cache[a.key()]);
-                            std::string d = a.data();
-                            l->push_front(wrap(d));
-                        }
-                        //release lock
-
-                        response.set_success(true);
-                        std::string r;
-                        response.SerializeToString(&r);
-                        try{
-                            sock->send(r);
-                        }
-                        catch(...){
-                            syslog(LOG_ERR, "Failed to send response");
-                        }
-
-                        if(l->size() > cache_max){
-                            //page out
-                            std::lock_guard<std::mutex> guard((locks[a.key()]));
-                            _page_out(a.key(), cache_min);
-                        }
-                        syslog(LOG_DEBUG, "Append successfull");
-                    }
-                    else{
-                        syslog(LOG_ERR, "Append request not initialized");
-                    }
-                }
-                else if (request->has_req_range()){
-                    _lookup(sock, request.get());
-                }
-                else{
-                    syslog(LOG_ERR, "Cannot handle request");
-                }
-            }
-            else{
-                syslog(LOG_ERR, "Request is not properly initialized");
-            }
-        }
-        else{
-            syslog(LOG_ERR, "Request is empty");
-        }
-    }
-    catch(...){
-        syslog(LOG_ERR, "Could not get request");
-    }
 }
 
 Server::Server(std::string dd, unsigned long min, unsigned long max){

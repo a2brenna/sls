@@ -123,11 +123,6 @@ int main(){
         std::shared_ptr<smpl::Channel> new_client(incoming->listen());
         auto t = std::thread(std::bind(handle_channel, new_client));
         t.detach();
-        /*
-        std::shared_ptr<Task> t(new sls::Incoming_Connection( std::shared_ptr<smpl::Channel>(incoming->listen()) ));
-        s->queue_task(t);
-        s->handle_next();
-        */
     }
     return 0;
 }
