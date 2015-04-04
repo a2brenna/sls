@@ -17,8 +17,8 @@ void get_config(int argc, char *argv[]){
     desc.add_options()
         ("port", po::value<int>(&port), "Specify network port to listen on")
         ("unix_domain_file", po::value<std::string>(&unix_domain_file), "Path to open unix domain socket on")
-        ("cargche_min", po::value<unsigned long>(&cache_min), "Minimum number of most recent elements to keep in cache")
-        ("cargche_max", po::value<unsigned long>(&cache_max), "Maximum number of elements to store in ram before flushing to disk")
+        ("cache_min", po::value<unsigned long>(&cache_min), "Minimum number of most recent elements to keep in cache")
+        ("cache_max", po::value<unsigned long>(&cache_max), "Maximum number of elements to store in ram before flushing to disk")
         ("dir", po::value<std::string>(&disk_dir), "Root directory of bargckend file storage")
         ;
 
