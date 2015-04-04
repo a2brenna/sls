@@ -129,9 +129,9 @@ std::string Server::next_lookup(const std::string &key, const std::string &filen
     return next_archive;
 }
 
-unsigned long long Server::pick_time(const std::list<sls::Value> &d, const unsigned long long &start, const unsigned long long &end, std::list<sls::Value> *result){
+unsigned long long Server::pick_time(const std::list<sls::Value> &d, const unsigned long long &start, const unsigned long long &end, std::deque<sls::Value> *result){
     unsigned long long earliest = ULLONG_MAX;
-    for(auto &value: d){
+    for(const auto &value: d){
         if( (value.time() > start) && (value.time() < end) ){
             result->push_front(value);
         }
@@ -140,8 +140,8 @@ unsigned long long Server::pick_time(const std::list<sls::Value> &d, const unsig
     return earliest;
 }
 
-unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, const unsigned long long &start, const unsigned long long &end, std::list<sls::Value> *result){
-    for (auto &value: d){
+unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, const unsigned long long &start, const unsigned long long &end, std::deque<sls::Value> *result){
+    for (const auto &value: d){
         if( (current >= start) && (current <= end) ){
             result->push_back(value);
         }
@@ -150,76 +150,74 @@ unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long lo
     return current;
 }
 
-void Server::_lookup(std::shared_ptr<smpl::Channel> sock, sls::Request *request){
-    syslog(LOG_DEBUG, "Got lookup request");
-    std::unique_ptr<sls::Response> response(new sls::Response);
-    response->set_success(false);
+std::deque<sls::Value> Server::_lookup(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &time_lookup){
+    std::deque<sls::Value> results;
 
-    if(request->mutable_req_range()->IsInitialized()){
-        std::unique_ptr<std::list<sls::Value> > values(new std::list<sls::Value>);
-        std::string key = request->key();
-        //TODO: this differently?
-        unsigned long long start = request->mutable_req_range()->start();
-        unsigned long long end = request->mutable_req_range()->end();
-        std::string next_file;
-        std::unique_ptr<std::list<sls::Value> > d(new std::list<sls::Value>);
-        {
-            std::lock_guard<std::mutex> guard(locks[key]);
-            *(d.get()) = cache[key];
-            next_file = get_canonical_filename(disk_dir + key + std::string("/head"));
+    std::string next_file;
+    std::list<sls::Value> d;
+    {
+        std::lock_guard<std::mutex> guard(locks[key]);
+        d = cache[key];
+        next_file = get_canonical_filename(disk_dir + key + std::string("/head"));
+    }
+
+
+    unsigned long long current = 0;
+
+    bool has_next = true;
+    do{
+        if( time_lookup ){
+            auto earliest_seen = pick_time(d, start, end, &results);
+            if( earliest_seen < start ){
+                break;
+            }
         }
-
-
-        unsigned long long current = 0;
-
-        bool has_next = true;
+        else{
+            current = pick(d, current, start, end, &results);
+            if(current >= end ){
+                break;
+            }
+        }
         do{
-            if( request->mutable_req_range()->is_time() ){
-                auto earliest_seen = pick_time(*(d.get()), start, end, values.get());
-                if( earliest_seen < start ){
-                    break;
-                }
+            file_lookup(key, next_file, &d);
+            if(next_file == ""){
+                has_next = false;
+                break;
             }
-            else{
-                current = pick(*(d.get()), current, start, end, values.get());
-                if(current >= end ){
-                    break;
-                }
-            }
-            do{
-                file_lookup(key, next_file, d.get());
-                if(next_file == ""){
-                    has_next = false;
-                    break;
-                }
-                next_file = next_lookup(key, next_file);
-                syslog(LOG_DEBUG, "Currently have %zu elements", d->size());
-            }
-            while(d->size() == 0);
-            syslog(LOG_DEBUG, "Currently have %zu elements", d->size());
-
-        }while(has_next);
-
-        for(sls::Value &v: *values){
-            sls::Data *datum = response->add_data();
-            std::string s;
-            v.SerializeToString(&s);
-            datum->set_data(s);
+            next_file = next_lookup(key, next_file);
+            syslog(LOG_DEBUG, "Currently have %zu elements", d.size());
         }
-        response->set_success(true);
-    }
-    else{
-        syslog(LOG_ERR, "Range not initialized");
+        while(d.size() == 0);
+        syslog(LOG_DEBUG, "Currently have %zu elements", d.size());
+
+    }while(has_next);
+
+    return results;
+}
+
+std::deque<sls::Value> Server::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+    const auto s = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch());
+    const auto e = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch());
+    return _lookup(key, s.count(), e.count(), true);
+}
+
+std::deque<sls::Value> Server::index_lookup(const std::string &key, const size_t &start, const size_t &end){
+    return _lookup(key, start, end, false);
+}
+
+void Server::_lookup(std::shared_ptr<smpl::Channel> sock, sls::Request *request){
+}
+
+void Server::append(const std::string &key, const std::string &data){
+
+    std::unique_lock<std::mutex> l( locks[key] );
+    auto c = &( cache[key] );
+    c->push_front( wrap(data) );
+
+    if( c->size() > cache_max ){
+        _page_out( key, cache_min );
     }
 
-    std::unique_ptr<std::string> r(new std::string);
-    response->SerializeToString(r.get());
-    try{
-        sock->send(*r);
-    }
-    catch(...){
-        syslog(LOG_ERR, "Failed to send entire response");
-    }
 }
 
 void Server::handle_next_request(std::shared_ptr<smpl::Channel> sock){
