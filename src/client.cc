@@ -36,7 +36,7 @@ void sls::Client::_request(const sls::Request &request, sls::Response *retval){
     return;
 }
 
-std::deque<sls::Value>* sls::Client::_interval(const char *key, unsigned long long start, unsigned long long end, bool is_time){
+std::deque<sls::Value>* sls::Client::_interval(const char *key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
     std::unique_ptr<std::deque<sls::Value> > r(new std::deque<sls::Value>);
     sls::Request request;
     request.mutable_req_range()->set_start(start);
@@ -62,7 +62,7 @@ std::deque<sls::Value>* sls::Client::_interval(const char *key, unsigned long lo
     return r.release();
 }
 
-bool sls::Client::append(const char *key, std::string data){
+bool sls::Client::append(const char *key, const std::string &data){
     sls::Response retval;
 
     std::unique_ptr<sls::Request> request(new sls::Request);
@@ -76,7 +76,7 @@ bool sls::Client::append(const char *key, std::string data){
     return retval.success();
 }
 
-std::deque<sls::Value>* sls::Client::lastn(const char *key, unsigned long long num_entries){
+std::deque<sls::Value>* sls::Client::lastn(const char *key, const unsigned long long &num_entries){
     return _interval(key, 0, num_entries, false);
 }
 
@@ -84,6 +84,6 @@ std::deque<sls::Value>* sls::Client::all(const char *key){
     return _interval(key, 0, ULONG_MAX, false);
 }
 
-std::deque<sls::Value>* sls::Client::intervalt(const char *key, unsigned long long start, unsigned long long end){
+std::deque<sls::Value>* sls::Client::intervalt(const char *key, const unsigned long long &start, const unsigned long long &end){
     return _interval(key, start, end, true);
 }

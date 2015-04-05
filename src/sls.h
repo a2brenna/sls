@@ -16,7 +16,7 @@ namespace sls{
     bool append(const char *key, const std::string &data);
     std::deque<sls::Value> *lastn(const char *key, const unsigned long long &num_entries);
     std::deque<sls::Value> *all(const char *key);
-    std::deque<sls::Value> *intervalt(const char *key, const unsigned long long start, const unsigned long long &end);
+    std::deque<sls::Value> *intervalt(const char *key, const unsigned long long &start, const unsigned long long &end);
     std::string unwrap(const sls::Value &value);
     unsigned long long check_time(const sls::Value &value);
 

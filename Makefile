@@ -26,9 +26,9 @@ sls: src/sls.cc sls.pb.o server.o config.o src/config.h
 
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lgnutls -lboost_program_options -lcurl -ljsoncpp
-
-test_client: src/test_client.cc sls.pb.o
-	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lsls -lgnutls -lcurl -ljsoncpp -lboost_program_options -lsmplsocket
+ 
+test_client: src/test_client.cc sls.pb.o slsc.o client.o
+	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lsls -lgnutls -lcurl -ljsoncpp -lboost_program_options -lsmplsocket
 
 libsls.so: slsc.o client.o error.o sls.pb.o
 	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o

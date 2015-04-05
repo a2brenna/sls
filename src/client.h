@@ -14,18 +14,18 @@ namespace sls{
     class Client{
         private:
             std::unique_ptr<smpl::Channel> server_connection;
-            void _request(const sls::Request &request, sls::Response *retva);
-            std::deque<sls::Value> *_interval(const char *key, unsigned long long start, unsigned long long end, bool ist_time);
+            void _request(const sls::Request &request, sls::Response *retval);
+            std::deque<sls::Value> *_interval(const char *key, const unsigned long long &start, const unsigned long long &end, const bool &is_time);
 
         public:
             Client();
             Client(smpl::Remote_Address *server);
 
-            bool append(const char *key, std::string data);
-            std::deque<sls::Value> *lastn(const char *key, unsigned long long num_entries);
+            bool append(const char *key, const std::string &data);
+            std::deque<sls::Value> *lastn(const char *key, const unsigned long long &num_entries);
             std::deque<sls::Value> *all(const char *key);
-            std::deque<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned long long end);
-            unsigned long long check_time(sls::Value value);
+            std::deque<sls::Value> *intervalt(const char *key, const unsigned long long &start, const unsigned long long &end);
+            unsigned long long check_time(const sls::Value &value);
     };
 }
 

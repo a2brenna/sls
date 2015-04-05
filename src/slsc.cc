@@ -13,7 +13,6 @@ bool append(const char *key, const std::string &data){
     return c.append(key, data);
 }
 
-
 std::deque<sls::Value> *lastn(const char *key, const unsigned long long &num_entries){
     Client c(global_server);
     return c.lastn(key, num_entries);
