@@ -4,9 +4,6 @@
 #include <string>
 #include <mutex>
 #include <deque>
-
-#include <smpl.h>
-
 #include "sls.pb.h"
 
 namespace sls{

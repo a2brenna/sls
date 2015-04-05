@@ -1,4 +1,4 @@
-#include <list>
+#include <deque>
 #include <string>
 
 #include "client.h"
@@ -14,17 +14,17 @@ bool append(const char *key, std::string data){
 }
 
 
-std::list<sls::Value> *lastn(const char *key, unsigned long long num_entries){
+std::deque<sls::Value> *lastn(const char *key, unsigned long long num_entries){
     Client c(global_server);
     return c.lastn(key, num_entries);
 }
 
-std::list<sls::Value> *all(const char *key){
+std::deque<sls::Value> *all(const char *key){
     Client c(global_server);
     return c.all(key);
 }
 
-std::list<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned long long end){
+std::deque<sls::Value> *intervalt(const char *key, unsigned long long start, unsigned long long end){
     Client c(global_server);
     return c.intervalt(key, start, end);
 }
