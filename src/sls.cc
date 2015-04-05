@@ -11,7 +11,10 @@
 #include <smpl.h>
 #include <smplsocket.h>
 
-sls::Server *s;
+#include <thread>
+#include <memory>
+
+sls::SLS *s;
 
 //TODO: THIS IS NOT SAFE
 void shutdown(int signal){
@@ -104,7 +107,7 @@ int main(){
     setlogmask(LOG_UPTO(LOG_INFO));
     srand(time(0));
 
-    s = new sls::Server(CONFIG_DISK_DIR, CONFIG_CACHE_MIN, CONFIG_CACHE_MAX);
+    s = new sls::SLS(CONFIG_DISK_DIR, CONFIG_CACHE_MIN, CONFIG_CACHE_MAX);
 
     signal(SIGINT, shutdown);
 /*

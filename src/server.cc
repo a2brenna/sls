@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <algorithm>
 #include <cstdlib>
-#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -24,20 +23,20 @@
 
 namespace sls{
 
-sls::Value Server::wrap(const std::string &payload){
+sls::Value SLS::wrap(const std::string &payload){
     sls::Value r;
     r.set_time(milli_time());
     r.set_data(payload);
     return r;
 }
 
-void Server::_page_out(const std::string &key, const unsigned int &skip){
+void SLS::_page_out(const std::string &key, const unsigned int &skip){
     syslog(LOG_INFO, "Attempting to page out: %s", key.c_str());
-    std::list<sls::Value>::iterator i = (cache[key]).begin();
+    std::deque<sls::Value>::iterator i = (cache[key]).begin();
     unsigned int j = 0;
     unsigned int size = cache[key].size();
     for(; (j < size) && (j < skip); ++j, ++i);
-    std::list<sls::Value>::iterator new_end = i;
+    std::deque<sls::Value>::iterator new_end = i;
 
     //pack into archive
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
@@ -77,7 +76,7 @@ void Server::_page_out(const std::string &key, const unsigned int &skip){
     }
 }
 
-void Server::_file_lookup(const std::string &key, const std::string &filename, sls::Archive *archive){
+void SLS::_file_lookup(const std::string &key, const std::string &filename, sls::Archive *archive){
     if(filename == ""){
         return;
     }
@@ -93,7 +92,7 @@ void Server::_file_lookup(const std::string &key, const std::string &filename, s
     return;
 }
 
-void Server::file_lookup(const std::string &key, const std::string &filename, std::list<sls::Value> *r){
+void SLS::file_lookup(const std::string &key, const std::string &filename, std::deque<sls::Value> *r){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
 
@@ -107,7 +106,7 @@ void Server::file_lookup(const std::string &key, const std::string &filename, st
     return;
 }
 
-std::string Server::next_lookup(const std::string &key, const std::string &filename){
+std::string SLS::next_lookup(const std::string &key, const std::string &filename){
     std::unique_ptr<sls::Archive> archive(new sls::Archive);
     _file_lookup(key, filename, archive.get());
     std::string next_archive;
@@ -120,7 +119,7 @@ std::string Server::next_lookup(const std::string &key, const std::string &filen
     return next_archive;
 }
 
-unsigned long long Server::pick_time(const std::list<sls::Value> &d, const unsigned long long &start, const unsigned long long &end, std::deque<sls::Value> *result){
+unsigned long long SLS::pick_time(const std::deque<sls::Value> &d, const unsigned long long &start, const unsigned long long &end, std::deque<sls::Value> *result){
     unsigned long long earliest = ULLONG_MAX;
     for(const auto &value: d){
         if( (value.time() > start) && (value.time() < end) ){
@@ -131,7 +130,7 @@ unsigned long long Server::pick_time(const std::list<sls::Value> &d, const unsig
     return earliest;
 }
 
-unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long long current, const unsigned long long &start, const unsigned long long &end, std::deque<sls::Value> *result){
+unsigned long long SLS::pick(const std::deque<sls::Value> &d, unsigned long long current, const unsigned long long &start, const unsigned long long &end, std::deque<sls::Value> *result){
     for (const auto &value: d){
         if( (current >= start) && (current <= end) ){
             result->push_back(value);
@@ -141,11 +140,11 @@ unsigned long long Server::pick(const std::list<sls::Value> &d, unsigned long lo
     return current;
 }
 
-std::deque<sls::Value> Server::_lookup(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &time_lookup){
+std::deque<sls::Value> SLS::_lookup(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &time_lookup){
     std::deque<sls::Value> results;
 
     std::string next_file;
-    std::list<sls::Value> d;
+    std::deque<sls::Value> d;
     {
         std::lock_guard<std::mutex> guard(locks[key]);
         d = cache[key];
@@ -186,20 +185,17 @@ std::deque<sls::Value> Server::_lookup(const std::string &key, const unsigned lo
     return results;
 }
 
-std::deque<sls::Value> Server::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+std::deque<sls::Value> SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
     const auto s = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch());
     const auto e = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch());
     return _lookup(key, s.count(), e.count(), true);
 }
 
-std::deque<sls::Value> Server::index_lookup(const std::string &key, const size_t &start, const size_t &end){
+std::deque<sls::Value> SLS::index_lookup(const std::string &key, const size_t &start, const size_t &end){
     return _lookup(key, start, end, false);
 }
 
-void Server::_lookup(std::shared_ptr<smpl::Channel> sock, sls::Request *request){
-}
-
-void Server::append(const std::string &key, const std::string &data){
+void SLS::append(const std::string &key, const std::string &data){
 
     std::unique_lock<std::mutex> l( locks[key] );
     auto c = &( cache[key] );
@@ -211,17 +207,17 @@ void Server::append(const std::string &key, const std::string &data){
 
 }
 
-Server::Server(std::string dd, unsigned long min, unsigned long max){
+SLS::SLS(const std::string &dd, const unsigned long &min, const unsigned long &max){
     disk_dir = dd;
     cache_min = min;
     cache_max = max;
 }
 
-Server::~Server(){
+SLS::~SLS(){
     sync();
 }
 
-void Server::sync(){
+void SLS::sync(){
     for(auto c: cache){
         std::lock_guard<std::mutex> l(locks[c.first]);
         _page_out(c.first, 0);
