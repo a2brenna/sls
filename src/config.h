@@ -3,9 +3,9 @@
 
 #include <string>
 
-extern unsigned long cache_min;
-extern unsigned long cache_max;
-extern std::string disk_dir;
+extern unsigned long CONFIG_CACHE_MIN;
+extern unsigned long CONFIG_CACHE_MAX;
+extern std::string CONFIG_DISK_DIR;
 extern int port;
 extern std::string CONFIG_UNIX_DOMAIN_FILE;
 
