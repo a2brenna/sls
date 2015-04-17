@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
     std::cerr << "Test Client Started... " << std::endl;
     get_config(argc, argv);
 
-    sls::global_server = new smpl::Remote_UDS(unix_domain_file);
+    sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(unix_domain_file));
     sls::append("TEST", "VALUE");
 
     auto r = std::minstd_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());

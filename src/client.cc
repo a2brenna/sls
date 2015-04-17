@@ -5,7 +5,7 @@
 #include <smpl.h>
 #include <limits.h>
 
-smpl::Remote_Address* sls::global_server = nullptr;
+std::shared_ptr<smpl::Remote_Address> sls::global_server = nullptr;
 
 sls::Client::Client(){
 
@@ -19,7 +19,7 @@ sls::Client::Client(){
 
 }
 
-sls::Client::Client(smpl::Remote_Address *server){
+sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server){
     server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 

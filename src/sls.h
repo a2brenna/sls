@@ -5,13 +5,14 @@
 #include<deque>
 #include<mutex>
 #include<stack>
+#include<memory>
 #include<smpl.h>
 
 #include"sls.pb.h"
 
 namespace sls{
 
-    extern smpl::Remote_Address *global_server;
+    extern std::shared_ptr<smpl::Remote_Address> global_server;
 
     bool append(const char *key, const std::string &data);
     std::deque<sls::Value> *lastn(const char *key, const unsigned long long &num_entries);

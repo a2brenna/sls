@@ -9,7 +9,7 @@
 
 namespace sls{
 
-    extern smpl::Remote_Address* global_server;
+    extern std::shared_ptr<smpl::Remote_Address> global_server;
 
     class Client{
         private:
@@ -19,7 +19,7 @@ namespace sls{
 
         public:
             Client();
-            Client(smpl::Remote_Address *server);
+            Client(std::shared_ptr<smpl::Remote_Address> server);
 
             bool append(const char *key, const std::string &data);
             std::deque<sls::Value> *lastn(const char *key, const unsigned long long &num_entries);
