@@ -13,17 +13,17 @@ bool append(const char *key, const std::string &data){
     return c.append(key, data);
 }
 
-std::deque<sls::Value> *lastn(const char *key, const unsigned long long &num_entries){
+std::shared_ptr< std::deque<sls::Value> > lastn(const char *key, const unsigned long long &num_entries){
     Client c(global_server);
     return c.lastn(key, num_entries);
 }
 
-std::deque<sls::Value> *all(const char *key){
+std::shared_ptr< std::deque<sls::Value> > all(const char *key){
     Client c(global_server);
     return c.all(key);
 }
 
-std::deque<sls::Value> *intervalt(const char *key, const unsigned long long &start, const unsigned long long &end){
+std::shared_ptr< std::deque<sls::Value> > intervalt(const char *key, const unsigned long long &start, const unsigned long long &end){
     Client c(global_server);
     return c.intervalt(key, start, end);
 }

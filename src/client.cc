@@ -23,21 +23,21 @@ sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server){
     server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 
-void sls::Client::_request(const sls::Request &request, sls::Response *retval){
-    std::unique_ptr<std::string> request_string(new std::string);
-    request.SerializeToString(request_string.get());
+sls::Response sls::Client::_request(const sls::Request &request){
+    std::string  request_string;
+    request.SerializeToString(&request_string);
 
-    server_connection->send(*request_string);
+    server_connection->send(request_string);
+    std::string returned = server_connection->recv();
 
-    std::unique_ptr<std::string> returned(new std::string);
-    *returned = server_connection->recv();
-
-    retval->ParseFromString(*returned);
-    return;
+    sls::Response retval;
+    retval.ParseFromString(returned);
+    return retval;
 }
 
-std::deque<sls::Value>* sls::Client::_interval(const char *key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
-    std::unique_ptr<std::deque<sls::Value> > r(new std::deque<sls::Value>);
+std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const char *key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
+    std::shared_ptr<std::deque<sls::Value> > r(new std::deque<sls::Value>);
+
     sls::Request request;
     request.mutable_req_range()->set_start(start);
     request.mutable_req_range()->set_start(start);
@@ -45,13 +45,12 @@ std::deque<sls::Value>* sls::Client::_interval(const char *key, const unsigned l
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
 
-    std::unique_ptr<sls::Response> response(new sls::Response);
-    _request(request, response.get());
+    sls::Response response = _request(request);
 
-    for(int i = 0; i < response->data_size(); i++){
+    for(int i = 0; i < response.data_size(); i++){
         try{
             sls::Value foo;
-            foo.ParseFromString((response->data(i)).data());
+            foo.ParseFromString((response.data(i)).data());
             r->push_back(foo);
         }
         catch(...){
@@ -59,31 +58,29 @@ std::deque<sls::Value>* sls::Client::_interval(const char *key, const unsigned l
         }
     }
 
-    return r.release();
+    return r;
 }
 
 bool sls::Client::append(const char *key, const std::string &data){
-    sls::Response retval;
-
-    std::unique_ptr<sls::Request> request(new sls::Request);
+    sls::Request request;
 
     //TODO: Can do this in one step?
-    request->mutable_req_append()->set_key(key);
-    request->mutable_req_append()->set_data(data);
+    request.mutable_req_append()->set_key(key);
+    request.mutable_req_append()->set_data(data);
 
-    _request(*request, &retval);
+    sls::Response retval = _request(request);
 
     return retval.success();
 }
 
-std::deque<sls::Value>* sls::Client::lastn(const char *key, const unsigned long long &num_entries){
+std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const char *key, const unsigned long long &num_entries){
     return _interval(key, 0, num_entries, false);
 }
 
-std::deque<sls::Value>* sls::Client::all(const char *key){
+std::shared_ptr< std::deque<sls::Value> > sls::Client::all(const char *key){
     return _interval(key, 0, ULONG_MAX, false);
 }
 
-std::deque<sls::Value>* sls::Client::intervalt(const char *key, const unsigned long long &start, const unsigned long long &end){
+std::shared_ptr< std::deque<sls::Value> > sls::Client::intervalt(const char *key, const unsigned long long &start, const unsigned long long &end){
     return _interval(key, start, end, true);
 }
