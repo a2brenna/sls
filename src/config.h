@@ -5,6 +5,7 @@
 
 extern unsigned long CONFIG_CACHE_MIN;
 extern unsigned long CONFIG_CACHE_MAX;
+extern size_t CONFIG_MAX_RESPONSE_SIZE;
 extern std::string CONFIG_DISK_DIR;
 extern int port;
 extern std::string CONFIG_UNIX_DOMAIN_FILE;

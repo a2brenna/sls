@@ -38,55 +38,57 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
         sls::Request request;
         request.ParseFromString(request_string);
 
-        sls::Response response;
+        std::vector<sls::Response> responses;
 
         if(request.IsInitialized()){
             const auto key = request.key();
             if(request.has_req_append()){
+                sls::Response response;
+                response.set_success(false);
                 //decode values
                 sls::Append a = request.req_append();
                 const auto key = a.key();
                 const auto data = a.data();
 
-                //s->append(...);
-                try{
-                    s->append(key, data);
-                    response.set_success(true);
-                }
-                catch(...){
-                    response.set_success(false);
-                }
+                s->append(key, data);
+                response.set_success(true);
+                responses.push_back(response);
             }
             else if(request.has_req_range()){
-                try{
-                    //decode values
-                    const unsigned long long start = request.mutable_req_range()->start();
-                    const unsigned long long end = request.mutable_req_range()->end();
-                    const bool is_time = request.mutable_req_range()->is_time();
+                //decode values
+                const unsigned long long start = request.mutable_req_range()->start();
+                const unsigned long long end = request.mutable_req_range()->end();
+                const bool is_time = request.mutable_req_range()->is_time();
 
-                    std::deque<sls::Value> r;
-                    if(is_time){
-                        auto start_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(start));
-                        auto end_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(end));
-                        r = s->time_lookup(key, start_time, end_time);
-                    }
-                    else{
-                        r = s->index_lookup(key, start, end);
-                    }
+                std::deque<sls::Value> r;
+                if(is_time){
+                    auto start_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(start));
+                    auto end_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(end));
+                    r = s->time_lookup(key, start_time, end_time);
+                }
+                else{
+                    r = s->index_lookup(key, start, end);
+                }
 
-                    for(const auto &d: r){
+                auto index = r.begin();
+                for(;;){
+                    sls::Response response;
+                    response.set_success(false);
+                    for(size_t i = 0; ( (i < CONFIG_MAX_RESPONSE_SIZE) && (index != r.end()) ); i++, index++){
                         auto datum = response.add_data();
                         std::string s;
-                        d.SerializeToString(&s);
+                        index->SerializeToString(&s);
                         datum->set_data(s);
                     }
-
                     response.set_success(true);
+                    responses.push_back(response);
+                    if(index == r.end() ){
+                        break;
+                    }
+                    else{
+                        continue;
+                    }
                 }
-                catch(...){
-                    response.set_success(false);
-                }
-
             }
             else{
                 syslog(LOG_ERR, "Cannot handle request");
@@ -96,9 +98,13 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
             syslog(LOG_ERR, "Got invalid request");
         }
 
-        std::string response_string;
-        response.SerializeToString(&response_string);
-        client->send(response_string);
+        responses.back().set_end_of_response(true);
+
+        for(const auto &response: responses){
+            std::string response_string;
+            response.SerializeToString(&response_string);
+            client->send(response_string);
+        }
     }
 }
 
