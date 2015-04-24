@@ -30,6 +30,11 @@ void get_config(int argc, char* argv[]){
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
+    if (unix_domain_file == ""){
+        std::cerr << "No socket to connect on" << std::endl;
+        return;
+    }
+
     return;
 }
 
@@ -39,14 +44,13 @@ int main(int argc, char* argv[]){
     get_config(argc, argv);
 
     sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(unix_domain_file));
-    sls::append("TEST", "VALUE");
 
     auto r = std::minstd_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    const size_t alphabet_size = key_alphabet.size();
+
     std::map<std::string, std::vector<std::string>> test_data;
 
     const unsigned long long num_keys = r() % CONFIG_MAX_KEYS; //up to 100 random keys
-
-    const size_t alphabet_size = key_alphabet.size();
 
     size_t total_elements = 0;
     for(unsigned long long i = 0; i < num_keys; i++){
@@ -77,10 +81,39 @@ int main(int argc, char* argv[]){
     }
     const auto end_time = std::chrono::high_resolution_clock::now();
 
-    std::cerr << "TEST_COMPLETE"
+    std::cerr << "RANDOM_TEST_COMPLETE"
         << " nanos " << (end_time - start_time).count()
         << " elements " << total_elements
         << std::endl;
+
+    {
+        std::string key;
+        std::vector<std::string> data;
+        for(size_t i = 0; i < ( r() % 64 ); i++){
+            key.append(1, key_alphabet[ r() & alphabet_size ]);
+        }
+
+        for(size_t i = 0; i < 1000; i++){
+            data.push_back( std::to_string(r()) );
+        }
+
+        for(const auto &d: data){
+            const bool success = sls::append( key.c_str(), d );
+            if( !success ){
+                std::cerr << "ERROR APPENDING!" << std::endl;
+            }
+            else{
+                std::cerr << "Appended" << std::endl;
+            }
+        }
+
+        std::cout << "Test Data Stored" << std::endl;
+
+        auto l = sls::lastn(key.c_str(), 4000000);
+
+        std::cout << "Retrieved: " << l->size() << std::endl;
+    }
+
 
     return 0;
 }
