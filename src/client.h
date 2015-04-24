@@ -2,6 +2,7 @@
 #define __SLS_CLIENT_H__
 
 #include <smpl.h>
+#include <vector>
 #include <memory>
 
 #include "sls.h"
@@ -14,7 +15,7 @@ namespace sls{
     class Client{
         private:
             std::unique_ptr<smpl::Channel> server_connection;
-            sls::Response _request(const sls::Request &request);
+            std::vector<sls::Response> _request(const sls::Request &request);
             std::shared_ptr< std::deque<sls::Value> > _interval(const char *key, const unsigned long long &start, const unsigned long long &end, const bool &is_time);
 
         public:

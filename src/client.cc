@@ -23,16 +23,25 @@ sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server){
     server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 
-sls::Response sls::Client::_request(const sls::Request &request){
+std::vector<sls::Response> sls::Client::_request(const sls::Request &request){
+    std::vector<sls::Response> responses;
     std::string  request_string;
     request.SerializeToString(&request_string);
 
     server_connection->send(request_string);
-    std::string returned = server_connection->recv();
-
-    sls::Response retval;
-    retval.ParseFromString(returned);
-    return retval;
+    for(;;){
+        std::string returned = server_connection->recv();
+        sls::Response retval;
+        retval.ParseFromString(returned);
+        responses.push_back(retval);
+        if(retval.end_of_response()){
+            break;
+        }
+        else{
+            continue;
+        }
+    }
+    return responses;
 }
 
 std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const char *key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
@@ -45,16 +54,18 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const char *key
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
 
-    sls::Response response = _request(request);
+    std::vector<sls::Response> responses = _request(request);
 
-    for(int i = 0; i < response.data_size(); i++){
-        try{
-            sls::Value foo;
-            foo.ParseFromString((response.data(i)).data());
-            r->push_back(foo);
-        }
-        catch(...){
-            throw SLS_Error("Failed to parse incoming value");
+    for(const auto &response: responses){
+        for(int i = 0; i < response.data_size(); i++){
+            try{
+                sls::Value foo;
+                foo.ParseFromString((response.data(i)).data());
+                r->push_back(foo);
+            }
+            catch(...){
+                throw SLS_Error("Failed to parse incoming value");
+            }
         }
     }
 
@@ -68,7 +79,7 @@ bool sls::Client::append(const char *key, const std::string &data){
     request.mutable_req_append()->set_key(key);
     request.mutable_req_append()->set_data(data);
 
-    sls::Response retval = _request(request);
+    sls::Response retval = _request(request).front();
 
     return retval.success();
 }
