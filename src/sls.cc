@@ -31,7 +31,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
         try{
             request_string = client->recv();
         }
-        catch(smpl::Error e){
+        catch(smpl::Transport_Failed e){
             break;
         }
 
