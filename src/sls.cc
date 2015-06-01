@@ -116,15 +116,6 @@ int main(){
     s = new sls::SLS(CONFIG_DISK_DIR, CONFIG_CACHE_MIN, CONFIG_CACHE_MAX);
 
     signal(SIGINT, shutdown);
-/*
-    connections->add_socket(listen_on(port, false));
-    }
-    catch(Network_Error e){
-        std::cerr << "Could not setup inet domain socket";
-        std::cerr << e.msg << " : " << e.error_number << std::endl;
-        return -1;
-    }
-*/
 
     std::unique_ptr<smpl::Local_Address> incoming(new smpl::Local_UDS(CONFIG_UNIX_DOMAIN_FILE));
 
