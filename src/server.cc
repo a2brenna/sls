@@ -21,7 +21,11 @@
 #include "sls.pb.h"
 #include <smpl.h>
 
+#include <fstream>
+
 namespace sls{
+
+uint64_t MAX_STACK_ALLOCATION = 1024000;
 
 sls::Value SLS::wrap(const std::string &payload){
     sls::Value r;
@@ -195,15 +199,48 @@ std::deque<sls::Value> SLS::index_lookup(const std::string &key, const size_t &s
     return _lookup(key, start, end, false);
 }
 
-void SLS::append(const std::string &key, const std::string &data){
+void _write_data( const std::string &key, const std::string &data, const std::string &disk_dir){
+    const uint64_t current_time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    const uint64_t data_length = data.size();
 
-    std::unique_lock<std::mutex> l( locks[key] );
-    auto c = &( cache[key] );
-    c->push_front( wrap(data) );
+    std::string head_link = disk_dir;
+    head_link.append(key);
+    head_link.append("/head");
 
-    if( c->size() > cache_max ){
-        _page_out( key, cache_min );
+    std::ofstream o(head_link, std::ofstream::app | std::ofstream::binary);
+    o.write((char *)&current_time, sizeof(uint64_t));
+    o.write((char *)&data_length, sizeof(uint64_t));
+    o.write(data.c_str(), data_length);
+    o.close();
+
+}
+
+std::vector<std::pair<uint64_t, std::string>> _read_file(const std::string &path){
+    std::vector<std::pair<uint64_t, std::string>> data;
+    std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
+    uint64_t timestamp = 0;
+    while(i.read((char *)&timestamp, sizeof(uint64_t))){
+        uint64_t data_length = 0;
+        i.read((char *)&data_length, sizeof(uint64_t));
+
+        char datagram[data_length];
+        i.read(datagram, data_length);
+
+        if(i){
+            const std::pair<uint64_t, std::string> d(timestamp, std::string(datagram, data_leng
+            data.push_back(d);
+        }
+        else{
+            assert(false);
+        }
     }
+    return data;
+}
+
+void SLS::append(const std::string &key, const std::string &data){
+    std::unique_lock<std::mutex> l( locks[key] );
+
+    _write_data(key, data, disk_dir);
 
 }
 
