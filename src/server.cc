@@ -205,7 +205,6 @@ void _write_data( const std::string &key, const std::string &data, const std::st
 
     std::string head_link = disk_dir;
     head_link.append(key);
-    head_link.append("/head");
 
     std::ofstream o(head_link, std::ofstream::app | std::ofstream::binary);
     o.write((char *)&current_time, sizeof(uint64_t));
