@@ -20,6 +20,7 @@ namespace sls{
 
         private:
             std::string disk_dir;
+            std::mutex locks_lock;
             std::map<std::string, std::mutex> locks;
 
     };

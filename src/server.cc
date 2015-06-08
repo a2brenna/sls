@@ -54,7 +54,6 @@ std::vector<std::pair<uint64_t, std::string>> _read_file(const std::string &path
 }
 
 void _write_data( const std::string &key, const std::string &data, const std::string &disk_dir){
-    std::unique_lock<std::mutex> l( locks[key] );
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     const uint64_t data_length = data.size();
 
@@ -70,16 +69,25 @@ void _write_data( const std::string &key, const std::string &data, const std::st
 }
 
 void SLS::append(const std::string &key, const std::string &data){
-    std::unique_lock<std::mutex> l( locks[key] );
+    std::unique_lock<std::mutex> fine_lock;
+    {
+        std::unique_lock<std::mutex> coarse_lock( locks_lock );
+        fine_lock = std::unique_lock<std::mutex>(locks[key]);
+    }
     _write_data(key, data, disk_dir);
 }
 
 std::deque<sls::Value> SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
     assert(start < end);
 
-    const auto dataset = _read_file(disk_dir + key);
     const auto start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch());
     const auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch());
+
+    std::unique_lock<std::mutex> coarse_lock( locks_lock );
+    std::unique_lock<std::mutex> fine_lock( locks[key] );
+    coarse_lock.unlock();
+    const std::vector<std::pair<uint64_t, std::string>> dataset = _read_file(disk_dir + key);
+    fine_lock.unlock();
 
     std::deque<sls::Value> result;
 
@@ -101,11 +109,16 @@ std::deque<sls::Value> SLS::index_lookup(const std::string &key, const size_t &s
     assert(start > 0);
     assert(start < end);
 
-    std::deque<sls::Value> result;
+    std::unique_lock<std::mutex> coarse_lock( locks_lock );
+    std::unique_lock<std::mutex> fine_lock( locks[key] );
+    coarse_lock.unlock();
+    const std::vector<std::pair<uint64_t, std::string>> dataset = _read_file(disk_dir + key);
+    fine_lock.unlock();
 
-    const auto dataset = _read_file(disk_dir + key);
     size_t i = start - 1;
     size_t e = std::min(dataset.size(), end);
+
+    std::deque<sls::Value> result;
 
     for(; i < e; i++){
         sls::Value v;
