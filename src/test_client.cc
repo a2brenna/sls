@@ -56,11 +56,13 @@ int main(int argc, char* argv[]){
     for(unsigned long long i = 0; i < num_keys; i++){
 
         std::string key;
-        for(size_t i = 0; i < ( r() % 64 ); i++){
+        for(size_t i = 0; i < ( (r() % 63) + 1 ); i++){
             key.append(1, key_alphabet[ r() & alphabet_size ]);
         }
 
-        for(size_t i = 0; i < ( r() % CONFIG_MAX_ELEMENTS ); i++){
+        assert(key.size() > 0);
+
+        for(size_t i = 0; i < ( (r() % CONFIG_MAX_ELEMENTS) + 1 ); i++){
             test_data[key].push_back( std::to_string(r()) );
         }
 
@@ -75,7 +77,7 @@ int main(int argc, char* argv[]){
         const std::vector<std::string> data = k.second;
 
         for(const auto &d: data){
-            sls::append(key.c_str(), d);
+            sls::append(key, d);
         }
 
     }
@@ -98,18 +100,17 @@ int main(int argc, char* argv[]){
         }
 
         for(const auto &d: data){
-            const bool success = sls::append( key.c_str(), d );
+            const bool success = sls::append( key, d );
             if( !success ){
                 std::cerr << "ERROR APPENDING!" << std::endl;
             }
             else{
-                std::cerr << "Appended" << std::endl;
             }
         }
 
         std::cout << "Test Data Stored" << std::endl;
 
-        auto l = sls::lastn(key.c_str(), 4000000);
+        auto l = sls::lastn(key, 4000000);
 
         std::cout << "Retrieved: " << l->size() << std::endl;
     }

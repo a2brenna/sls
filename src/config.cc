@@ -9,7 +9,7 @@ std::string global_config_file = "/etc/sls.conf";
 unsigned long CONFIG_CACHE_MIN = 3600 * 1;
 unsigned long CONFIG_CACHE_MAX = 3600 * 2;
 size_t CONFIG_MAX_RESPONSE_SIZE = 1000000;
-std::string CONFIG_DISK_DIR = "/pool/sls/";
+std::string CONFIG_DISK_DIR = "/tmp/sls/";
 int port = 6998;
 std::string CONFIG_UNIX_DOMAIN_FILE = "/tmp/sls.sock";
 

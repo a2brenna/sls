@@ -41,14 +41,14 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
         std::vector<sls::Response> responses;
 
         if(request.IsInitialized()){
-            const auto key = request.key();
+            const std::string key = request.key();
+            assert(key.size() > 0);
             if(request.has_req_append()){
                 sls::Response response;
                 response.set_success(false);
                 //decode values
                 sls::Append a = request.req_append();
-                const auto key = a.key();
-                const auto data = a.data();
+                const std::string data = a.data();
 
                 s->append(key, data);
                 response.set_success(true);
@@ -89,6 +89,8 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                         continue;
                     }
                 }
+
+                std::cerr << "Response values: " << r.size() << std::endl;
             }
             else{
                 syslog(LOG_ERR, "Cannot handle request");

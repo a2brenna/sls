@@ -24,8 +24,10 @@ sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server){
 }
 
 std::vector<sls::Response> sls::Client::_request(const sls::Request &request){
+    assert(request.key().size() > 0);
+
     std::vector<sls::Response> responses;
-    std::string  request_string;
+    std::string request_string;
     request.SerializeToString(&request_string);
 
     server_connection->send(request_string);
@@ -44,7 +46,8 @@ std::vector<sls::Response> sls::Client::_request(const sls::Request &request){
     return responses;
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const char *key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
+std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
+    assert(key.size() > 0);
     std::shared_ptr<std::deque<sls::Value> > r(new std::deque<sls::Value>);
 
     sls::Request request;
@@ -72,26 +75,31 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const char *key
     return r;
 }
 
-bool sls::Client::append(const char *key, const std::string &data){
+bool sls::Client::append(const std::string &key, const std::string &data){
+    assert(key.size() > 0);
     sls::Request request;
+    request.set_key(key);
 
     //TODO: Can do this in one step?
-    request.mutable_req_append()->set_key(key);
-    request.mutable_req_append()->set_data(data);
+    auto r = request.mutable_req_append();
+    r->set_data(data);
 
     sls::Response retval = _request(request).front();
 
     return retval.success();
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const char *key, const unsigned long long &num_entries){
-    return _interval(key, 0, num_entries, false);
+std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const std::string &key, const unsigned long long &num_entries){
+    assert(key.size() > 0);
+    return _interval(key, 1, num_entries, false);
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::all(const char *key){
-    return _interval(key, 0, ULONG_MAX, false);
+std::shared_ptr< std::deque<sls::Value> > sls::Client::all(const std::string &key){
+    assert(key.size() > 0);
+    return _interval(key, 1, ULONG_MAX, false);
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::intervalt(const char *key, const unsigned long long &start, const unsigned long long &end){
+std::shared_ptr< std::deque<sls::Value> > sls::Client::intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
+    assert(key.size() > 0);
     return _interval(key, start, end, true);
 }

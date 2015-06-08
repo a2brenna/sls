@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a src/slsfsck.py src/sls_pb2.py fsck
+all: sls libsls.so libsls.a src/slsfsck.py src/sls_pb2.py fsck test_client
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
@@ -26,7 +26,7 @@ sls: src/sls.cc sls.pb.o server.o config.o src/config.h
 
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
- 
+
 test_client: src/test_client.cc sls.pb.o slsc.o client.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
 
