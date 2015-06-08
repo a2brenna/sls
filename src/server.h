@@ -9,12 +9,11 @@
 namespace sls{
 
     class SLS {
+
         public:
-            SLS(const std::string &dd, const unsigned long &min, const unsigned long &max);
             SLS(const std::string &d);
             virtual ~SLS();
 
-            void sync();
             void append(const std::string &key, const std::string &value);
             std::deque<sls::Value> index_lookup(const std::string &key, const size_t &start, const size_t &end);
             std::deque<sls::Value> time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &begin, const std::chrono::high_resolution_clock::time_point &end);

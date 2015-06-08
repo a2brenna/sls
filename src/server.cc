@@ -27,8 +27,6 @@
 
 namespace sls{
 
-uint64_t MAX_STACK_ALLOCATION = 1024000;
-
 std::vector<std::pair<uint64_t, std::string>> _read_file(const std::string &path){
     std::vector<std::pair<uint64_t, std::string>> data;
 
@@ -120,21 +118,11 @@ std::deque<sls::Value> SLS::index_lookup(const std::string &key, const size_t &s
 
 }
 
-SLS::SLS(const std::string &dd, const unsigned long &min, const unsigned long &max){
-    (void)min;
-    (void)max;
-    disk_dir = dd;
-}
-
 SLS::SLS(const std::string &dd){
     disk_dir = dd;
 }
 
 SLS::~SLS(){
-    sync();
-}
-
-void SLS::sync(){
 }
 
 }
