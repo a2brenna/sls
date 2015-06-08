@@ -19,10 +19,10 @@ namespace sls{
             std::shared_ptr< std::deque<sls::Value> > _interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time);
 
         public:
-            /* Create a client connected to the server accepting connections
-             * smpl::Remote_Address global_server.
-             */
-            Client();
+
+            // IMPORTANT
+            // All of the following transactions occur with respect to the set
+            // of lists stored on the Server as indicated by server_connection
 
             /* Create a client connected to the server accepting connections
              * smpl::Remote_Address server .

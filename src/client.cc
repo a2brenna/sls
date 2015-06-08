@@ -7,18 +7,6 @@
 
 std::shared_ptr<smpl::Remote_Address> sls::global_server = nullptr;
 
-sls::Client::Client(){
-
-    //TODO: Maybe use unique_ptr for this and avoid this check?
-    if(sls::global_server != nullptr){
-        server_connection = std::unique_ptr<smpl::Channel>(sls::global_server->connect());
-    }
-    else{
-        throw SLS_No_Server();
-    }
-
-}
-
 sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server){
     server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
