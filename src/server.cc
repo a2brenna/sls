@@ -54,6 +54,7 @@ std::vector<std::pair<uint64_t, std::string>> _read_file(const std::string &path
 }
 
 void _write_data( const std::string &key, const std::string &data, const std::string &disk_dir){
+    std::unique_lock<std::mutex> l( locks[key] );
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     const uint64_t data_length = data.size();
 
