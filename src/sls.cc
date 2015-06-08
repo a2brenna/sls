@@ -115,7 +115,7 @@ int main(){
     setlogmask(LOG_UPTO(LOG_INFO));
     srand(time(0));
 
-    s = new sls::SLS(CONFIG_DISK_DIR, CONFIG_CACHE_MIN, CONFIG_CACHE_MAX);
+    s = new sls::SLS(CONFIG_DISK_DIR);
 
     signal(SIGINT, shutdown);
 
