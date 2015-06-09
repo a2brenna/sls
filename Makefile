@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a src/sls_pb2.py test_client convert fsck
+all: sls libsls.so libsls.a test_client convert fsck
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
@@ -67,11 +67,6 @@ src/legacy.pb.cc: legacy.proto
 
 src/sls.pb.cc: sls.proto
 	protoc --cpp_out=src/ sls.proto
-
-src/slsfsck.py: src/sls_pb2.py
-
-src/sls_pb2.py: sls.proto
-	protoc --python_out=src/ sls.proto
 
 clean:
 	rm -f *.o
