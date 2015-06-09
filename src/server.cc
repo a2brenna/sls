@@ -154,7 +154,7 @@ std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high
 
         do{
             if(timestamp > end_time){
-                break;
+                return result;
             }
             else{
                 result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
@@ -176,7 +176,6 @@ std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high
             }
         } while(i.read((char *)&timestamp, sizeof(uint64_t)));
     }
-    fine_lock.unlock();
 
     return result;
 }
@@ -211,7 +210,7 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
 
         do{
             if(index > end){
-                break;
+                return result;
             }
             else{
                 result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
@@ -234,7 +233,6 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
             index++;
         } while(i.read((char *)&timestamp, sizeof(uint64_t)));
     }
-    fine_lock.unlock();
 
     return result;
 
