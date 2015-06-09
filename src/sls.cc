@@ -61,24 +61,16 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 const unsigned long long end = request.mutable_req_range()->end();
                 const bool is_time = request.mutable_req_range()->is_time();
 
-                std::deque<std::pair<uint64_t, std::string>> r;
+                //std::deque<std::pair<uint64_t, std::string>> r;
                 if(is_time){
                     auto start_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(start));
                     auto end_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(end));
-                    r = s->time_lookup(key, start_time, end_time);
+                    data_string = s->raw_time_lookup(key, start_time, end_time);
                 }
                 else{
-                    r = s->index_lookup(key, start, end);
+                    data_string = s->raw_index_lookup(key, start, end);
                 }
 
-                for(const auto &p: r){
-                    data_string.append( (char *)(&p.first), sizeof(uint64_t));
-
-                    uint64_t size = p.second.size();
-                    data_string.append( (char *)(&size), sizeof(uint64_t));
-
-                    data_string.append(p.second);
-                }
                 if(!data_string.empty()){
                     response.set_data_to_follow(true);
                 }
