@@ -22,8 +22,7 @@ message Data{
 
 message Response{
     required bool success = 1;
-    repeated Data data = 2;
-    optional bool end_of_response = 3;
+    optional bool data_to_follow = 2;
 }
 
 message Value{
