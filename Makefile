@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a src/sls_pb2.py test_client
+all: sls libsls.so libsls.a src/sls_pb2.py test_client convert fsck
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
@@ -25,6 +25,9 @@ sls: src/sls.cc sls.pb.o server.o config.o serialize.o src/config.h
 
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+
+convert: src/convert.cc legacy.pb.o
+	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o -o convert -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
 test_client: src/test_client.cc sls.pb.o slsc.o client.o serialize.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o serialize.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
@@ -55,6 +58,12 @@ config.o: src/config.cc
 
 sls.pb.o: src/sls.pb.cc
 	${CXX} ${CXXFLAGS} -c src/sls.pb.cc -o sls.pb.o
+
+legacy.pb.o: src/legacy.pb.cc
+	${CXX} ${CXXFLAGS} -c src/legacy.pb.cc -o legacy.pb.o
+
+src/legacy.pb.cc: legacy.proto
+	protoc --cpp_out=src/ legacy.proto
 
 src/sls.pb.cc: sls.proto
 	protoc --cpp_out=src/ sls.proto

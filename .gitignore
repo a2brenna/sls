@@ -1,5 +1,6 @@
 test_client
 fsck
+convert
 sls
 *.a
 *.so

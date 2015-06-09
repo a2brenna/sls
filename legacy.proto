@@ -1,0 +1,11 @@
+package legacy;
+
+message Value{
+    required uint64 time = 1;
+    required bytes data = 2;
+}
+
+message Archive{
+    repeated Value values = 1;
+    optional string next_archive = 2;
+}
