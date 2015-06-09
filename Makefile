@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a src/slsfsck.py src/sls_pb2.py fsck test_client
+all: sls libsls.so libsls.a src/sls_pb2.py test_client
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
