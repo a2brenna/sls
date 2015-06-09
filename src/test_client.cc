@@ -88,6 +88,7 @@ int main(int argc, char* argv[]){
         << " elements " << total_elements
         << std::endl;
 
+    total_elements = 0;
     {
         std::string key;
         std::vector<std::string> data;
@@ -95,7 +96,7 @@ int main(int argc, char* argv[]){
             key.append(1, key_alphabet[ r() & alphabet_size ]);
         }
 
-        for(size_t i = 0; i < 1000; i++){
+        for(size_t i = 0; i < 5000000; i++){
             data.push_back( std::to_string(r()) );
         }
 
@@ -110,9 +111,17 @@ int main(int argc, char* argv[]){
 
         std::cout << "Test Data Stored" << std::endl;
 
-        auto l = sls::lastn(key, 4000000);
+        const auto retrieve_start = std::chrono::high_resolution_clock::now();
+        auto l = sls::lastn(key, 5000000);
+        const auto retrieve_end = std::chrono::high_resolution_clock::now();
 
         std::cout << "Retrieved: " << l->size() << std::endl;
+        total_elements+=l->size();
+
+        std::cerr << "RETRIEVAL_TEST_COMPLETE"
+            << " nanos " << (retrieve_end - retrieve_start).count()
+            << " elements " << total_elements
+            << std::endl;
     }
 
 
