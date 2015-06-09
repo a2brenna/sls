@@ -1,6 +1,7 @@
 #include "client.h"
 #include "error.h"
 #include "sls.h"
+#include "serialize.h"
 
 #include <smpl.h>
 #include <limits.h>
@@ -26,23 +27,8 @@ std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> sls::Cli
     std::vector<std::pair<uint64_t, std::string>> data_vector;
 
     if(response.data_to_follow()){
-        std::string data = server_connection->recv();
-        const char *i = data.c_str();
-        const char *end = i + data.size();
-
-        while( i < end ){
-            uint64_t timestamp;
-            timestamp = *( (uint64_t *)(i) );
-            i += sizeof(uint64_t);
-
-            uint64_t blob_length;
-            blob_length = *( (uint64_t *)(i) );
-            i += sizeof(uint64_t);
-
-            data_vector.push_back(std::pair<uint64_t, std::string>(timestamp, std::string(i, blob_length)));
-            i += blob_length;
-        }
-
+        const std::string data = server_connection->recv();
+        data_vector = de_serialize(data);
     }
     return std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>>(response, data_vector);
 }
