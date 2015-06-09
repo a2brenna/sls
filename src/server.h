@@ -18,6 +18,10 @@ namespace sls{
             std::deque<std::pair<uint64_t, std::string>> index_lookup(const std::string &key, const size_t &start, const size_t &end);
             std::deque<std::pair<uint64_t, std::string>> time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &begin, const std::chrono::high_resolution_clock::time_point &end);
 
+            //Raw lookups
+            std::string raw_index_lookup(const std::string &key, const size_t &start, const size_t &end);
+            std::string raw_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &begin, const std::chrono::high_resolution_clock::time_point &end);
+
         private:
             std::string disk_dir;
             std::mutex locks_lock;

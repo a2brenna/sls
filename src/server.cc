@@ -124,6 +124,122 @@ std::deque<std::pair<uint64_t, std::string>> SLS::index_lookup(const std::string
 
 }
 
+std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+    assert(start < end);
+
+    std::string result;
+
+    const uint64_t start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
+    const uint64_t end_time = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch()).count();
+
+    std::unique_lock<std::mutex> coarse_lock( locks_lock );
+    std::unique_lock<std::mutex> fine_lock( locks[key] );
+    coarse_lock.unlock();
+    {
+        const std::string path = disk_dir + key;
+        std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
+        assert(i);
+
+        uint64_t timestamp = 0;
+        while(i.read((char *)&timestamp, sizeof(uint64_t))){
+            if(timestamp > start_time){
+                break;
+            }
+            else{
+                uint64_t data_length = 0;
+                i.read((char *)&data_length, sizeof(uint64_t));
+                i.seekg(data_length, std::ios::cur);
+            }
+        }
+
+        do{
+            if(timestamp > end_time){
+                break;
+            }
+            else{
+                result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
+
+                uint64_t data_length = 0;
+                i.read((char *)&data_length, sizeof(uint64_t));
+
+                result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
+
+                char datagram[data_length];
+                i.read(datagram, data_length);
+
+                if(i){
+                    result.append(std::string( datagram, data_length ));
+                }
+                else{
+                    assert(false);
+                }
+            }
+        } while(i.read((char *)&timestamp, sizeof(uint64_t)));
+    }
+    fine_lock.unlock();
+
+    return result;
+}
+
+std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, const size_t &end){
+    assert(start > 0);
+    assert(start < end);
+
+    std::string result;
+
+    std::unique_lock<std::mutex> coarse_lock( locks_lock );
+    std::unique_lock<std::mutex> fine_lock( locks[key] );
+    coarse_lock.unlock();
+    {
+        const std::string path = disk_dir + key;
+        std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
+        assert(i);
+
+        size_t index = 0;
+        uint64_t timestamp = 0;
+        while(i.read((char *)&timestamp, sizeof(uint64_t))){
+            index++;
+            if(index >= start){
+                break;
+            }
+            else{
+                uint64_t data_length = 0;
+                i.read((char *)&data_length, sizeof(uint64_t));
+                i.seekg(data_length, std::ios::cur);
+            }
+        }
+
+        do{
+            if(index > end){
+                break;
+            }
+            else{
+                result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
+
+                uint64_t data_length = 0;
+                i.read((char *)&data_length, sizeof(uint64_t));
+
+                result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
+
+                char datagram[data_length];
+                i.read(datagram, data_length);
+
+                if(i){
+                    result.append(std::string( datagram, data_length ));
+                }
+                else{
+                    assert(false);
+                }
+            }
+            index++;
+        } while(i.read((char *)&timestamp, sizeof(uint64_t)));
+    }
+    fine_lock.unlock();
+
+    return result;
+
+}
+
 SLS::SLS(const std::string &dd){
     disk_dir = dd;
 }
