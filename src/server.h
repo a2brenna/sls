@@ -15,8 +15,8 @@ namespace sls{
             virtual ~SLS();
 
             void append(const std::string &key, const std::string &value);
-            std::deque<sls::Value> index_lookup(const std::string &key, const size_t &start, const size_t &end);
-            std::deque<sls::Value> time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &begin, const std::chrono::high_resolution_clock::time_point &end);
+            std::deque<std::pair<uint64_t, std::string>> index_lookup(const std::string &key, const size_t &start, const size_t &end);
+            std::deque<std::pair<uint64_t, std::string>> time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &begin, const std::chrono::high_resolution_clock::time_point &end);
 
         private:
             std::string disk_dir;

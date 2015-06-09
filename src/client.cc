@@ -11,32 +11,45 @@ sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server){
     server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 
-std::vector<sls::Response> sls::Client::_request(const sls::Request &request){
+std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> sls::Client::_request(const sls::Request &request){
     assert(request.key().size() > 0);
 
-    std::vector<sls::Response> responses;
     std::string request_string;
     request.SerializeToString(&request_string);
 
     server_connection->send(request_string);
-    for(;;){
-        std::string returned = server_connection->recv();
-        sls::Response retval;
-        retval.ParseFromString(returned);
-        responses.push_back(retval);
-        if(retval.end_of_response()){
-            break;
+    std::string returned = server_connection->recv();
+
+    sls::Response response;
+    response.ParseFromString(returned);
+
+    std::vector<std::pair<uint64_t, std::string>> data_vector;
+
+    if(response.data_to_follow()){
+        std::string data = server_connection->recv();
+        const char *i = data.c_str();
+        const char *end = i + data.size();
+
+        while( i < end ){
+            uint64_t timestamp;
+            timestamp = *( (uint64_t *)(i) );
+            i += sizeof(uint64_t);
+
+            uint64_t blob_length;
+            blob_length = *( (uint64_t *)(i) );
+            i += sizeof(uint64_t);
+
+            data_vector.push_back(std::pair<uint64_t, std::string>(timestamp, std::string(i, blob_length)));
+            i += blob_length;
         }
-        else{
-            continue;
-        }
+
     }
-    return responses;
+    return std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>>(response, data_vector);
 }
 
 std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
     assert(key.size() > 0);
-    std::shared_ptr<std::deque<sls::Value> > r(new std::deque<sls::Value>);
+    std::shared_ptr<std::deque<sls::Value> > result_deque(new std::deque<sls::Value>);
 
     sls::Request request;
     request.mutable_req_range()->set_start(start);
@@ -45,22 +58,19 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const std::stri
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
 
-    std::vector<sls::Response> responses = _request(request);
+    std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> response = _request(request);
 
-    for(const auto &response: responses){
-        for(int i = 0; i < response.data_size(); i++){
-            try{
-                sls::Value foo;
-                foo.ParseFromString((response.data(i)).data());
-                r->push_back(foo);
-            }
-            catch(...){
-                throw SLS_Error("Failed to parse incoming value");
-            }
+    if (response.first.success()){
+        for(const auto &d: response.second){
+            sls::Value v;
+            v.set_time(d.first);
+            v.set_data(d.second);
+
+            result_deque->push_back(v);
         }
     }
 
-    return r;
+    return result_deque;
 }
 
 bool sls::Client::append(const std::string &key, const std::string &data){
@@ -72,7 +82,7 @@ bool sls::Client::append(const std::string &key, const std::string &data){
     auto r = request.mutable_req_append();
     r->set_data(data);
 
-    sls::Response retval = _request(request).front();
+    sls::Response retval = _request(request).first;
 
     return retval.success();
 }

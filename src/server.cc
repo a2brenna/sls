@@ -77,7 +77,7 @@ void SLS::append(const std::string &key, const std::string &data){
     _write_data(key, data, disk_dir);
 }
 
-std::deque<sls::Value> SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+std::deque<std::pair<uint64_t, std::string>> SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
     assert(start < end);
 
     const auto start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch());
@@ -89,23 +89,19 @@ std::deque<sls::Value> SLS::time_lookup(const std::string &key, const std::chron
     const std::vector<std::pair<uint64_t, std::string>> dataset = _read_file(disk_dir + key);
     fine_lock.unlock();
 
-    std::deque<sls::Value> result;
+    std::deque<std::pair<uint64_t, std::string>> result;
 
     for(const auto &element: dataset){
         std::chrono::milliseconds timestamp(element.first);
         if( (timestamp > start_time) && (timestamp < end_time) ){
-            sls::Value v;
-            v.set_time(element.first);
-            v.set_data(element.second);
-
-            result.push_back(v);
+            result.push_back(std::pair<uint64_t, std::string>(element.first, element.second));
         }
     }
 
     return result;
 }
 
-std::deque<sls::Value> SLS::index_lookup(const std::string &key, const size_t &start, const size_t &end){
+std::deque<std::pair<uint64_t, std::string>> SLS::index_lookup(const std::string &key, const size_t &start, const size_t &end){
     assert(start > 0);
     assert(start < end);
 
@@ -118,14 +114,10 @@ std::deque<sls::Value> SLS::index_lookup(const std::string &key, const size_t &s
     size_t i = start - 1;
     size_t e = std::min(dataset.size(), end);
 
-    std::deque<sls::Value> result;
+    std::deque<std::pair<uint64_t, std::string>> result;
 
     for(; i < e; i++){
-        sls::Value v;
-        v.set_time(dataset[i].first);
-        v.set_data(dataset[i].second);
-
-        result.push_back(v);
+        result.push_back(std::pair<uint64_t, std::string>(dataset[i].first, dataset[i].second));
     }
 
     return result;

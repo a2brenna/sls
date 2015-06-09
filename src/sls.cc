@@ -38,21 +38,22 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
         sls::Request request;
         request.ParseFromString(request_string);
 
-        std::vector<sls::Response> responses;
+        sls::Response response;
+        response.set_success(false);
+
+        std::string data_string;
 
         if(request.IsInitialized()){
             const std::string key = request.key();
             assert(key.size() > 0);
             if(request.has_req_append()){
-                sls::Response response;
-                response.set_success(false);
                 //decode values
                 sls::Append a = request.req_append();
                 const std::string data = a.data();
 
                 s->append(key, data);
+
                 response.set_success(true);
-                responses.push_back(response);
             }
             else if(request.has_req_range()){
                 //decode values
@@ -60,7 +61,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 const unsigned long long end = request.mutable_req_range()->end();
                 const bool is_time = request.mutable_req_range()->is_time();
 
-                std::deque<sls::Value> r;
+                std::deque<std::pair<uint64_t, std::string>> r;
                 if(is_time){
                     auto start_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(start));
                     auto end_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(end));
@@ -70,27 +71,19 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                     r = s->index_lookup(key, start, end);
                 }
 
-                auto index = r.begin();
-                for(;;){
-                    sls::Response response;
-                    response.set_success(false);
-                    for(size_t i = 0; ( (i < CONFIG_MAX_RESPONSE_SIZE) && (index != r.end()) ); i++, index++){
-                        auto datum = response.add_data();
-                        std::string s;
-                        index->SerializeToString(&s);
-                        datum->set_data(s);
-                    }
-                    response.set_success(true);
-                    responses.push_back(response);
-                    if(index == r.end() ){
-                        break;
-                    }
-                    else{
-                        continue;
-                    }
-                }
+                for(const auto &p: r){
+                    data_string.append( (char *)(&p.first), sizeof(uint64_t));
 
-                std::cerr << "Response values: " << r.size() << std::endl;
+                    uint64_t size = p.second.size();
+                    data_string.append( (char *)(&size), sizeof(uint64_t));
+
+                    data_string.append(p.second);
+                }
+                if(!data_string.empty()){
+                    response.set_data_to_follow(true);
+                }
+                response.set_success(true);
+
             }
             else{
                 syslog(LOG_ERR, "Cannot handle request");
@@ -100,12 +93,11 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
             syslog(LOG_ERR, "Got invalid request");
         }
 
-        responses.back().set_end_of_response(true);
-
-        for(const auto &response: responses){
-            std::string response_string;
-            response.SerializeToString(&response_string);
-            client->send(response_string);
+        std::string response_string;
+        response.SerializeToString(&response_string);
+        client->send(response_string);
+        if(response.data_to_follow()){
+            client->send(data_string);
         }
     }
 }

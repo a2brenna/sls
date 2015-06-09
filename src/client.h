@@ -15,7 +15,7 @@ namespace sls{
     class Client{
         private:
             std::unique_ptr<smpl::Channel> server_connection;
-            std::vector<sls::Response> _request(const sls::Request &request);
+            std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> _request(const sls::Request &request);
             std::shared_ptr< std::deque<sls::Value> > _interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time);
 
         public:
