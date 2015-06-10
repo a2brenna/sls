@@ -26,8 +26,8 @@ sls: src/sls.cc sls.pb.o server.o config.o serialize.o src/config.h
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
-convert: src/convert.cc legacy.pb.o
-	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o -o convert -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+convert: src/convert.cc legacy.pb.o inspect.o
+	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o inspect.o -o convert -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
 test_client: src/test_client.cc sls.pb.o slsc.o client.o serialize.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o serialize.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
