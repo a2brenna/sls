@@ -80,7 +80,8 @@ int main(int argc, char *argv[]){
         const std::string source_path = CONFIG_SOURCE_DIR + "/" + file_list.first;
         const std::string target_path = CONFIG_TARGET_DIR + "/" + file_list.first;
         const auto m = mkdir(target_path.c_str(), 0755);
-        assert( m == 0 );
+        //Can fail if directory already exists
+        //assert( m == 0 );
 
         for(const auto &file: file_list.second){
             //read old file
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]){
 
 
             std::cerr << "Opening file: " << target_file << std::endl;
-            std::ofstream o(target_file, std::ofstream::app | std::ofstream::binary);
+            std::ofstream o(target_file, std::ofstream::binary);
             assert(o);
 
             for(const auto &value: old_archive.values()){
