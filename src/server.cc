@@ -218,11 +218,11 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
 
             uint64_t timestamp = 0;
             while(i.read((char *)&timestamp, sizeof(uint64_t))){
-                index++;
                 if(index >= start){
                     break;
                 }
                 else{
+                    index++;
                     uint64_t data_length = 0;
                     i.read((char *)&data_length, sizeof(uint64_t));
                     i.seekg(data_length, std::ios::cur);
