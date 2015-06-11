@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a test_client convert fsck
+all: sls libsls.so libsls.a test_client convert fsck indexer
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
@@ -29,6 +29,9 @@ fsck: src/fsck.cc sls.pb.o
 convert: src/convert.cc legacy.pb.o inspect.o
 	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o inspect.o -o convert -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
+indexer: src/indexer.cc index.o
+	${CXX} ${CXXFLAGS} src/indexer.cc index.o -o indexer -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+
 test_client: src/test_client.cc sls.pb.o slsc.o client.o serialize.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o serialize.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
 
@@ -46,6 +49,9 @@ serialize.o: src/serialize.cc
 
 client.o: src/client.cc
 	${CXX} ${CXXFLAGS} -c src/client.cc -o client.o
+
+index.o: src/index.cc
+	${CXX} ${CXXFLAGS} -c src/index.cc -o index.o
 
 error.o: src/error.cc
 	${CXX} ${CXXFLAGS} -c src/error.cc -o error.o

@@ -2,6 +2,7 @@ test_client
 fsck
 convert
 sls
+indexer
 *.a
 *.so
 *.o
