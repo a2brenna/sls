@@ -79,9 +79,9 @@ int main(int argc, char *argv[]){
         //mkdir in target
         const std::string source_path = CONFIG_SOURCE_DIR + "/" + file_list.first;
         const std::string target_path = CONFIG_TARGET_DIR + "/" + file_list.first;
-        const auto m = mkdir(target_path.c_str(), 0755);
+
         //Can fail if directory already exists
-        //assert( m == 0 );
+        mkdir(target_path.c_str(), 0755);
 
         for(const auto &file: file_list.second){
             //read old file
