@@ -70,8 +70,8 @@ void _write_data( const std::string &key, const std::string &data, const std::st
 void SLS::append(const std::string &key, const std::string &data){
     std::unique_lock<std::mutex> fine_lock;
     {
-        std::unique_lock<std::mutex> coarse_lock( locks_lock );
-        fine_lock = std::unique_lock<std::mutex>(locks[key]);
+        std::unique_lock<std::mutex> coarse_lock( maps_lock );
+        fine_lock = std::unique_lock<std::mutex>(write_locks[key]);
     }
     _write_data(key, data, disk_dir);
 }
@@ -89,8 +89,8 @@ std::deque<std::pair<uint64_t, std::string>> SLS::time_lookup(const std::string 
     files.push_back(disk_dir + key);
 
     for(const auto &f: files){
-        std::unique_lock<std::mutex> coarse_lock( locks_lock );
-        std::unique_lock<std::mutex> fine_lock( locks[key] );
+        std::unique_lock<std::mutex> coarse_lock( maps_lock );
+        std::unique_lock<std::mutex> fine_lock( write_locks[key] );
         coarse_lock.unlock();
         const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(f);
         fine_lock.unlock();
@@ -119,8 +119,8 @@ std::deque<std::pair<uint64_t, std::string>> SLS::index_lookup(const std::string
     uint64_t current_position = 0; //TODO: set this to the numeric position of the first entry in the first file in the list
 
     for(const auto &f: files){
-        std::unique_lock<std::mutex> coarse_lock( locks_lock );
-        std::unique_lock<std::mutex> fine_lock( locks[key] );
+        std::unique_lock<std::mutex> coarse_lock( maps_lock );
+        std::unique_lock<std::mutex> fine_lock( write_locks[key] );
         coarse_lock.unlock();
         const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(f);
         fine_lock.unlock();
@@ -159,8 +159,8 @@ std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high
     files.push_back(disk_dir + key);
 
     for(const auto &f: files){
-        std::unique_lock<std::mutex> coarse_lock( locks_lock );
-        std::unique_lock<std::mutex> fine_lock( locks[key] );
+        std::unique_lock<std::mutex> coarse_lock( maps_lock );
+        std::unique_lock<std::mutex> fine_lock( write_locks[key] );
         coarse_lock.unlock();
         {
             const std::string path = disk_dir + key;
@@ -220,8 +220,8 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
     size_t index = 0; //TODO: set to numeric position of first entry in first file by index
 
     for(const auto &f: files){
-        std::unique_lock<std::mutex> coarse_lock( locks_lock );
-        std::unique_lock<std::mutex> fine_lock( locks[key] );
+        std::unique_lock<std::mutex> coarse_lock( maps_lock );
+        std::unique_lock<std::mutex> fine_lock( write_locks[key] );
         coarse_lock.unlock();
         {
             const std::string path = disk_dir + key;
