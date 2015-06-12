@@ -84,6 +84,7 @@ std::deque<std::pair<uint64_t, std::string>> SLS::time_lookup(const std::string 
     const auto start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch());
     const auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch());
 
+    //TODO: Fix this to use index to get file list
     std::vector<std::string> files;
     files.push_back(disk_dir + key);
 
@@ -115,6 +116,8 @@ std::deque<std::pair<uint64_t, std::string>> SLS::index_lookup(const std::string
     std::vector<std::string> files;
     files.push_back(disk_dir + key);
 
+    uint64_t current_position = 0; //TODO: set this to the numeric position of the first entry in the first file in the list
+
     for(const auto &f: files){
         std::unique_lock<std::mutex> coarse_lock( locks_lock );
         std::unique_lock<std::mutex> fine_lock( locks[key] );
@@ -122,13 +125,21 @@ std::deque<std::pair<uint64_t, std::string>> SLS::index_lookup(const std::string
         const std::vector<std::pair<uint64_t, std::string>> dataset = _read_file(f);
         fine_lock.unlock();
 
-        for(int i = 0; i < dataset.size(); i++){
-            if( result.size() < (end - start) ){
+        //TODO: skip to start based on numeric position of first entry in first file if possible
+        for(size_t i = 0; i < dataset.size(); i++){
+            if( current_position < start ){
+                //do nothing but jump to bottom and increment
+            }
+            else if( current_position <= end ){
                 result.push_back(std::pair<uint64_t, std::string>(dataset[i].first, dataset[i].second));
             }
-            else{
+            else if( current_position > end){
                 return result;
             }
+            else{
+                assert(false);
+            }
+            current_position++;
         }
     }
 
@@ -143,6 +154,7 @@ std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high
     const uint64_t start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
     const uint64_t end_time = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch()).count();
 
+    //TODO: Fix this to use index to get file list
     std::vector<std::string> files;
     files.push_back(disk_dir + key);
 
@@ -202,9 +214,10 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
 
     std::string result;
 
+    //TODO: Fix this to use index to get file list
     std::vector<std::string> files;
     files.push_back(disk_dir + key);
-    size_t index = 0;
+    size_t index = 0; //TODO: set to numeric position of first entry in first file by index
 
     for(const auto &f: files){
         std::unique_lock<std::mutex> coarse_lock( locks_lock );
