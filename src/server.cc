@@ -26,8 +26,8 @@
 
 namespace sls{
 
-std::vector<std::pair<uint64_t, std::string>> _read_file(const std::string &path){
-    std::vector<std::pair<uint64_t, std::string>> data;
+std::deque<std::pair<uint64_t, std::string>> _read_file(const std::string &path){
+    std::deque<std::pair<uint64_t, std::string>> data;
 
     std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
     assert(i);
@@ -92,7 +92,7 @@ std::deque<std::pair<uint64_t, std::string>> SLS::time_lookup(const std::string 
         std::unique_lock<std::mutex> coarse_lock( locks_lock );
         std::unique_lock<std::mutex> fine_lock( locks[key] );
         coarse_lock.unlock();
-        const std::vector<std::pair<uint64_t, std::string>> dataset = _read_file(f);
+        const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(f);
         fine_lock.unlock();
 
         for(const auto &element: dataset){
@@ -122,7 +122,7 @@ std::deque<std::pair<uint64_t, std::string>> SLS::index_lookup(const std::string
         std::unique_lock<std::mutex> coarse_lock( locks_lock );
         std::unique_lock<std::mutex> fine_lock( locks[key] );
         coarse_lock.unlock();
-        const std::vector<std::pair<uint64_t, std::string>> dataset = _read_file(f);
+        const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(f);
         fine_lock.unlock();
 
         //TODO: skip to start based on numeric position of first entry in first file if possible
