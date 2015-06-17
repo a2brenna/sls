@@ -85,8 +85,14 @@ std::istream& operator>>(std::istream& in, Index &i){
     return in;
 }
 
-void Index::append(const Index_Record &r){
-    _index.push_back(r);
+bool Index::append(const Index_Record &r){
+    if ( (r.position() > _index.back().position()) && (r.timestamp() > _index.back().timestamp()) ){
+        _index.push_back(r);
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 Index build_index(const Path &directory){
