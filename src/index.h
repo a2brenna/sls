@@ -7,6 +7,8 @@
 #include <ostream>
 #include <istream>
 
+#include "file.h"
+
 class Index_Record{
     private:
         uint64_t _timestamp;
@@ -44,6 +46,6 @@ std::istream& operator>>(std::istream& in, Index_Record &i);
 std::ostream& operator<<(std::ostream& out, const Index &i);
 std::istream& operator>>(std::istream& in, Index &i);
 
-std::vector<Index_Record> build_index(const std::string &directory);
+Index build_index(const Path &directory);
 
 #endif

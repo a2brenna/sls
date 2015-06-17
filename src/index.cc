@@ -80,18 +80,34 @@ void Index::append(const Index_Record &r){
     _index.push_back(r);
 }
 
+Index build_index(const Path &directory){
+    Index index;
     std::vector<std::string> files;
-    const auto m = getdir(directory, files);
+    const auto m = getdir(directory.str(), files);
     assert(m == 0);
 
+    uint64_t position = 0;
+
     for(const auto &file: files){
-        std::ifstream i(directory + "/" + file, std::ofstream::binary);
+        std::ifstream i(directory.str() + "/" + file, std::ofstream::binary);
         assert(i);
 
-        uint64_t timestamp;
-        assert(i.read((char *)&timestamp, sizeof(uint64_t)));
+        //have to iterate over file entries so we can get position of start and end elements
+        uint64_t first_timestamp;
+        i.read((char *)&first_timestamp, sizeof(uint64_t));
+        uint64_t first_position = position;
 
-        index.push_back(Index_Record(timestamp, file, 0));
+        uint64_t temp_timestamp;
+        uint64_t payload_size;
+        do{
+            position++;
+            i.read((char *)&payload_size, sizeof(uint64_t));
+            i.seekg(payload_size, std::ios::cur);
+        }
+        while(i.read((char *)&temp_timestamp, sizeof(uint64_t)));
+
+
+        index.append(Index_Record(first_timestamp, first_position, file, 0));
     }
 
     return index;
