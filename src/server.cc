@@ -67,7 +67,6 @@ void SLS::append(const std::string &key, const std::string &data){
         catch(std::out_of_range e){
             std::string dir = disk_dir + key + "/";
             backend_file = dir + RandomString(32);
-            std::cerr << "Generating new backend file: " << backend_file << std::endl;
             active_files[key] = backend_file;
             const auto d = mkdir(dir.c_str(), 0755);
             if( d != 0 ){
