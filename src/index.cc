@@ -59,7 +59,7 @@ std::istream& operator>>(std::istream& in, Index_Record &i){
 }
 
 std::ostream& operator<<(std::ostream& out, const Index &i){
-    for(const Index_Record &r: i){
+    for(const Index_Record &r: i.index()){
         out << r;
     }
 
@@ -70,14 +70,15 @@ std::istream& operator>>(std::istream& in, Index &i){
     while(in){
         Index_Record r;
         in >> r;
-        i.push_back(r);
+        i.append(r);
     }
 
     return in;
 }
 
-Index build_index(const std::string &directory){
-    Index index;
+void Index::append(const Index_Record &r){
+    _index.push_back(r);
+}
 
     std::vector<std::string> files;
     const auto m = getdir(directory, files);

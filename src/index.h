@@ -25,7 +25,18 @@ class Index_Record{
 
 };
 
-typedef std::vector<Index_Record> Index;
+class Index {
+
+    public:
+        const std::vector<Index_Record> &index() const;
+        void append(const Index_Record &r);
+
+    private:
+        std::vector<Index_Record> _index;
+
+};
+
+//typedef std::vector<Index_Record> Index;
 
 std::ostream& operator<<(std::ostream& out, const Index_Record &i);
 std::istream& operator>>(std::istream& in, Index_Record &i);
