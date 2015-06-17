@@ -9,6 +9,7 @@
 #include <smplsocket.h>
 
 #include "sls.h"
+#include <hgutil/strings.h>
 
 namespace po = boost::program_options;
 
@@ -43,6 +44,8 @@ int main(int argc, char* argv[]){
     std::cerr << "Test Client Started... " << std::endl;
     get_config(argc, argv);
 
+    //TODO: IMPLEMENT BETTER TESTS FOR CORRECTNESS OF FUNCTIONS
+
     sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(unix_domain_file));
 
     auto r = std::minstd_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
@@ -55,10 +58,7 @@ int main(int argc, char* argv[]){
     size_t total_elements = 0;
     for(unsigned long long i = 0; i < num_keys; i++){
 
-        std::string key;
-        for(size_t i = 0; i < ( (r() % 63) + 1 ); i++){
-            key.append(1, key_alphabet[ r() & alphabet_size ]);
-        }
+        std::string key = RandomString(r() % 63 + 1);
 
         assert(key.size() > 0);
 
@@ -90,11 +90,8 @@ int main(int argc, char* argv[]){
 
     total_elements = 0;
     {
-        std::string key;
+        std::string key = RandomString(r() % 63 + 1);
         std::vector<std::string> data;
-        for(size_t i = 0; i < ( r() % 64 ); i++){
-            key.append(1, key_alphabet[ r() & alphabet_size ]);
-        }
 
         for(size_t i = 0; i < 5000000; i++){
             data.push_back( std::to_string(r()) );
