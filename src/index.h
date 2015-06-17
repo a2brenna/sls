@@ -27,6 +27,9 @@ class Index_Record{
 
 };
 
+bool operator<(const Index_Record &rhs, const Index_Record &lhs);
+bool operator>(const Index_Record &rhs, const Index_Record &lhs);
+
 class Index {
 
     public:

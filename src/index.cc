@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <cassert>
+#include <algorithm>
 
 Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
     _timestamp = timestamp;
@@ -28,6 +29,14 @@ uint64_t Index_Record::offset() const{
 
 uint64_t Index_Record::position() const{
     return _position;
+}
+
+bool operator<(const Index_Record &rhs, const Index_Record &lhs){
+    return (rhs.timestamp() < lhs.timestamp()) && (rhs.position() < lhs.position());
+}
+
+bool operator>(const Index_Record &rhs, const Index_Record &lhs){
+    return (rhs.timestamp() > lhs.timestamp()) && (rhs.position() > lhs.position());
 }
 
 const std::vector<Index_Record> &Index::index() const{
@@ -81,7 +90,7 @@ void Index::append(const Index_Record &r){
 }
 
 Index build_index(const Path &directory){
-    Index index;
+    std::vector<std::pair<uint64_t, Index_Record>> timestamp_records;
     std::vector<std::string> files;
     const auto m = getdir(directory.str(), files);
     assert(m == 0);
@@ -106,9 +115,15 @@ Index build_index(const Path &directory){
         }
         while(i.read((char *)&temp_timestamp, sizeof(uint64_t)));
 
-
-        index.append(Index_Record(first_timestamp, first_position, file, 0));
+        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(first_timestamp, Index_Record(first_timestamp, first_position, file, 0)));
     }
 
+    //sort
+    std::sort(timestamp_records.begin(), timestamp_records.end());
+
+    Index index;
+    for(const auto &r: timestamp_records){
+        index.append(r.second);
+    }
     return index;
 }
