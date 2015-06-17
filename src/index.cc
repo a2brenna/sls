@@ -86,12 +86,18 @@ std::istream& operator>>(std::istream& in, Index &i){
 }
 
 bool Index::append(const Index_Record &r){
-    if ( (r.position() > _index.back().position()) && (r.timestamp() > _index.back().timestamp()) ){
+    if (_index.empty()){
         _index.push_back(r);
         return true;
     }
     else{
-        return false;
+        if( (r.position() > _index.back().position()) && (r.timestamp() >= _index.back().timestamp()) ){
+            _index.push_back(r);
+            return true;
+        }
+        else{
+            return false;
+        }
     }
 }
 
