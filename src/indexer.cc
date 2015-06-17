@@ -51,7 +51,7 @@ int main(int argc, char *argv[]){
     for(const auto k: keys){
         Index index = build_index(CONFIG_SLS_DIR + "/" + k);
 
-        std::ofstream o(CONFIG_SLS_DIR + "/ " + k + "/index", std::ofstream::out | std::ofstream::trunc );
+        std::ofstream o(CONFIG_SLS_DIR + "/" + k + "/index", std::ofstream::out | std::ofstream::trunc );
         assert(o);
 
         o << index;
