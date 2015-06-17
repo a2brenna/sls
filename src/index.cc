@@ -4,8 +4,9 @@
 #include <fstream>
 #include <cassert>
 
-Index_Record::Index_Record(const uint64_t &timestamp, const std::string &filename, const uint64_t &offset){
+Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
     _timestamp = timestamp;
+    _position = position;
     _filename = filename;
     _offset = offset;
 }
@@ -25,8 +26,17 @@ uint64_t Index_Record::offset() const{
     return _offset;
 }
 
+uint64_t Index_Record::position() const{
+    return _position;
+}
+
+const std::vector<Index_Record> &Index::index() const{
+    return _index;
+}
+
 std::ostream& operator<<(std::ostream& out, const Index_Record &i){
     out << i.timestamp() << " ";
+    out << i.position() << " ";
     out << i.filename() << " ";
     out << i.offset() << std::endl;
     return out;
@@ -35,12 +45,14 @@ std::ostream& operator<<(std::ostream& out, const Index_Record &i){
 std::istream& operator>>(std::istream& in, Index_Record &i){
     uint64_t timestamp;
     in >> timestamp;
+    uint64_t position;
+    in >> position;
     std::string filename;
     in >> filename;
     uint64_t offset;
     in >> offset;
 
-    Index_Record r(timestamp, filename, offset);
+    Index_Record r(timestamp, position, filename, offset);
     i = r;
 
     return in;

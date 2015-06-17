@@ -10,14 +10,16 @@
 class Index_Record{
     private:
         uint64_t _timestamp;
+        uint64_t _position;
         std::string _filename;
         uint64_t _offset;
 
     public:
-        Index_Record(const uint64_t &timestamp, const std::string &filename, const uint64_t &offset);
+        Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset);
         Index_Record();
 
         uint64_t timestamp() const;
+        uint64_t position() const;
         std::string filename() const;
         uint64_t offset() const;
 
