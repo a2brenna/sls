@@ -49,7 +49,6 @@ int main(int argc, char* argv[]){
     sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(unix_domain_file));
 
     auto r = std::minstd_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
-    const size_t alphabet_size = key_alphabet.size();
 
     std::map<std::string, std::vector<std::string>> test_data;
 
