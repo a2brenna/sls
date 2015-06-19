@@ -20,8 +20,8 @@ uninstall:
 	rm ${DESTDIR}/${PREFIX}/include/sls.h
 	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
 
-sls: src/sls.cc sls.pb.o server.o config.o serialize.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o serialize.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
+sls: src/sls.cc sls.pb.o server.o config.o serialize.o index.o src/config.h
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o serialize.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
 
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
