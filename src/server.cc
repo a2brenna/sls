@@ -1,8 +1,5 @@
-#include <limits.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <syslog.h>
 #include <unistd.h>
 #include <algorithm>
 #include <cstdlib>
@@ -11,19 +8,16 @@
 #include <mutex>
 #include <string>
 #include <utility>
+#include <algorithm>
 
 #include "hgutil/files.h"
 #include "hgutil/strings.h"
 #include "hgutil/time.h"
 #include "sls.h"
 #include "server.h"
-#include "sls.pb.h"
 #include "file.h"
-#include <smpl.h>
 
 #include <fstream>
-
-#include <iostream>
 
 namespace sls{
 
