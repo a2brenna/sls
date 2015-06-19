@@ -47,6 +47,100 @@ std::deque<std::pair<uint64_t, std::string>> _read_file(const std::string &path)
     return data;
 }
 
+std::vector<Index_Record> SLS::_index_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+    std::vector<Index_Record> files;
+    std::unique_lock<std::mutex> l( maps_lock );
+
+    std::string index_file_path = disk_dir + key + "/index";
+
+    std::ifstream infile(index_file_path, std::ofstream::in);
+    if(!infile){
+        return files;
+    }
+
+    Index index;
+    infile >> index;
+
+    const uint64_t s = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
+    const uint64_t e = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch()).count();
+
+    if(index.index().empty()){
+        return files;
+    }
+    else{
+        assert(index.index().size() > 0);
+
+        size_t is = 0;
+        size_t ie = index.index().size() - 1;
+
+        size_t i = 0;
+        for( ; i < index.index().size(); i++){
+            if(index.index()[i].timestamp() < s){
+                is = i;
+            }
+        }
+        for(; i < index.index().size(); i++){
+            if(index.index()[i].timestamp() < e){
+                ie = i;
+            }
+        }
+
+        assert( is <= ie);
+        assert( ie < index.index().size() );
+
+        for(size_t i = is; i <= ie; i++){
+            files.push_back(index.index()[i]);
+        }
+
+        return files;
+    }
+}
+
+std::vector<Index_Record> SLS::_index_position_lookup(const std::string &key, const uint64_t &start, const uint64_t &end){
+    std::vector<Index_Record> files;
+    std::unique_lock<std::mutex> l( maps_lock );
+
+    std::string index_file_path = disk_dir + key + "/index";
+    std::ifstream infile(index_file_path, std::ofstream::in);
+    if(!infile){
+        return files;
+    }
+
+    Index index;
+    infile >> index;
+
+    if(index.index().empty()){
+        return files;
+    }
+    else{
+        assert(index.index().size() > 0);
+
+        size_t is = 0;
+        size_t ie = index.index().size() - 1;
+
+        size_t i = 0;
+        for( ; i < index.index().size(); i++){
+            if(index.index()[i].position() < start){
+                is = i;
+            }
+        }
+        for(; i < index.index().size(); i++){
+            if(index.index()[i].position() < end){
+                ie = i;
+            }
+        }
+
+        assert( is <= ie);
+        assert( ie < index.index().size() );
+
+        for(size_t i = is; i <= ie; i++){
+            files.push_back(index.index()[i]);
+        }
+
+        return files;
+    }
+}
+
 void SLS::append(const std::string &key, const std::string &data){
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     std::string backend_file;
