@@ -187,15 +187,14 @@ std::deque<std::pair<uint64_t, std::string>> SLS::time_lookup(const std::string 
     const auto start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch());
     const auto end_time = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch());
 
-    //TODO: Fix this to use index to get file list
-    std::vector<std::string> files;
-    files.push_back(disk_dir + key);
+    std::vector<Index_Record> files = _index_time_lookup(key, start, end);
 
     for(const auto &f: files){
         std::unique_lock<std::mutex> coarse_lock( maps_lock );
         std::unique_lock<std::mutex> fine_lock( write_locks[key] );
         coarse_lock.unlock();
-        const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(f);
+        const std::string path = disk_dir + key + "/" + f.filename();
+        const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(path);
         fine_lock.unlock();
 
         for(const auto &element: dataset){
@@ -215,38 +214,42 @@ std::deque<std::pair<uint64_t, std::string>> SLS::index_lookup(const std::string
 
     std::deque<std::pair<uint64_t, std::string>> result;
 
-    //TODO: Fix this to use index to get file list
-    std::vector<std::string> files;
-    files.push_back(disk_dir + key);
+    std::vector<Index_Record> files = _index_position_lookup(key, start, end);
 
-    uint64_t current_position = 0; //TODO: set this to the numeric position of the first entry in the first file in the list
-
-    for(const auto &f: files){
-        std::unique_lock<std::mutex> coarse_lock( maps_lock );
-        std::unique_lock<std::mutex> fine_lock( write_locks[key] );
-        coarse_lock.unlock();
-        const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(f);
-        fine_lock.unlock();
-
-        //TODO: skip to start based on numeric position of first entry in first file if possible
-        for(size_t i = 0; i < dataset.size(); i++){
-            if( current_position < start ){
-                //do nothing but jump to bottom and increment
-            }
-            else if( current_position <= end ){
-                result.push_back(std::pair<uint64_t, std::string>(dataset[i].first, dataset[i].second));
-            }
-            else if( current_position > end){
-                return result;
-            }
-            else{
-                assert(false);
-            }
-            current_position++;
-        }
+    if(files.empty()){
+        return result;
     }
+    else{
+        uint64_t current_position = files.front().position();
 
-    return result;
+        for(const auto &f: files){
+            std::unique_lock<std::mutex> coarse_lock( maps_lock );
+            std::unique_lock<std::mutex> fine_lock( write_locks[key] );
+            coarse_lock.unlock();
+            const std::string path = disk_dir + key + "/" + f.filename();
+            const std::deque<std::pair<uint64_t, std::string>> dataset = _read_file(path);
+            fine_lock.unlock();
+
+            //TODO: skip to start based on numeric position of first entry in first file if possible
+            for(size_t i = 0; i < dataset.size(); i++){
+                if( current_position < start ){
+                    //do nothing but jump to bottom and increment
+                }
+                else if( current_position <= end ){
+                    result.push_back(std::pair<uint64_t, std::string>(dataset[i].first, dataset[i].second));
+                }
+                else if( current_position > end){
+                    return result;
+                }
+                else{
+                    assert(false);
+                }
+                current_position++;
+            }
+        }
+
+        return result;
+    }
 }
 
 std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
@@ -257,58 +260,61 @@ std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high
     const uint64_t start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
     const uint64_t end_time = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch()).count();
 
-    //TODO: Fix this to use index to get file list
-    std::vector<std::string> files;
-    files.push_back(disk_dir + key);
+    std::vector<Index_Record> files = _index_time_lookup(key, start, end);
+    if(files.empty()){
+        return result;
+    }
+    else{
 
-    for(const auto &f: files){
-        std::unique_lock<std::mutex> coarse_lock( maps_lock );
-        std::unique_lock<std::mutex> fine_lock( write_locks[key] );
-        coarse_lock.unlock();
-        {
-            const std::string path = disk_dir + key;
-            std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
-            assert(i);
+        for(const auto &f: files){
+            std::unique_lock<std::mutex> coarse_lock( maps_lock );
+            std::unique_lock<std::mutex> fine_lock( write_locks[key] );
+            coarse_lock.unlock();
+            {
+                const std::string path = disk_dir + key + "/" + f.filename();
+                std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
+                assert(i);
 
-            uint64_t timestamp = 0;
-            while(i.read((char *)&timestamp, sizeof(uint64_t))){
-                if(timestamp > start_time){
-                    break;
-                }
-                else{
-                    uint64_t data_length = 0;
-                    i.read((char *)&data_length, sizeof(uint64_t));
-                    i.seekg(data_length, std::ios::cur);
-                }
-            }
-
-            do{
-                if(timestamp > end_time){
-                    return result;
-                }
-                else{
-                    result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
-
-                    uint64_t data_length = 0;
-                    i.read((char *)&data_length, sizeof(uint64_t));
-
-                    result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
-
-                    char datagram[data_length];
-                    i.read(datagram, data_length);
-
-                    if(i){
-                        result.append(std::string( datagram, data_length ));
+                uint64_t timestamp = 0;
+                while(i.read((char *)&timestamp, sizeof(uint64_t))){
+                    if(timestamp > start_time){
+                        break;
                     }
                     else{
-                        assert(false);
+                        uint64_t data_length = 0;
+                        i.read((char *)&data_length, sizeof(uint64_t));
+                        i.seekg(data_length, std::ios::cur);
                     }
                 }
-            } while(i.read((char *)&timestamp, sizeof(uint64_t)));
-        }
-    }
 
-    return result;
+                do{
+                    if(timestamp > end_time){
+                        return result;
+                    }
+                    else{
+                        result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
+
+                        uint64_t data_length = 0;
+                        i.read((char *)&data_length, sizeof(uint64_t));
+
+                        result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
+
+                        char datagram[data_length];
+                        i.read(datagram, data_length);
+
+                        if(i){
+                            result.append(std::string( datagram, data_length ));
+                        }
+                        else{
+                            assert(false);
+                        }
+                    }
+                } while(i.read((char *)&timestamp, sizeof(uint64_t)));
+            }
+        }
+
+        return result;
+    }
 }
 
 std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, const size_t &end){
@@ -317,61 +323,64 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
 
     std::string result;
 
-    //TODO: Fix this to use index to get file list
-    std::vector<std::string> files;
-    files.push_back(disk_dir + key);
-    size_t index = 0; //TODO: set to numeric position of first entry in first file by index
+    std::vector<Index_Record> files = _index_position_lookup(key, start, end);
+    if(files.empty()){
+        return result;
+    }
+    else{
+        size_t index = files.front().position();
 
-    for(const auto &f: files){
-        std::unique_lock<std::mutex> coarse_lock( maps_lock );
-        std::unique_lock<std::mutex> fine_lock( write_locks[key] );
-        coarse_lock.unlock();
-        {
-            const std::string path = disk_dir + key;
-            std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
-            assert(i);
+        for(const auto &f: files){
+            std::unique_lock<std::mutex> coarse_lock( maps_lock );
+            std::unique_lock<std::mutex> fine_lock( write_locks[key] );
+            coarse_lock.unlock();
+            {
+                const std::string path = disk_dir + key + "/" + f.filename();
+                std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
+                assert(i);
 
-            uint64_t timestamp = 0;
-            while(i.read((char *)&timestamp, sizeof(uint64_t))){
-                if(index >= start){
-                    break;
-                }
-                else{
-                    index++;
-                    uint64_t data_length = 0;
-                    i.read((char *)&data_length, sizeof(uint64_t));
-                    i.seekg(data_length, std::ios::cur);
-                }
-            }
-
-            do{
-                if(index > end){
-                    return result;
-                }
-                else{
-                    result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
-
-                    uint64_t data_length = 0;
-                    i.read((char *)&data_length, sizeof(uint64_t));
-
-                    result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
-
-                    char datagram[data_length];
-                    i.read(datagram, data_length);
-
-                    if(i){
-                        result.append(std::string( datagram, data_length ));
+                uint64_t timestamp = 0;
+                while(i.read((char *)&timestamp, sizeof(uint64_t))){
+                    if(index >= start){
+                        break;
                     }
                     else{
-                        assert(false);
+                        index++;
+                        uint64_t data_length = 0;
+                        i.read((char *)&data_length, sizeof(uint64_t));
+                        i.seekg(data_length, std::ios::cur);
                     }
                 }
-                index++;
-            } while(i.read((char *)&timestamp, sizeof(uint64_t)));
-        }
-    }
 
-    return result;
+                do{
+                    if(index > end){
+                        return result;
+                    }
+                    else{
+                        result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
+
+                        uint64_t data_length = 0;
+                        i.read((char *)&data_length, sizeof(uint64_t));
+
+                        result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
+
+                        char datagram[data_length];
+                        i.read(datagram, data_length);
+
+                        if(i){
+                            result.append(std::string( datagram, data_length ));
+                        }
+                        else{
+                            assert(false);
+                        }
+                    }
+                    index++;
+                } while(i.read((char *)&timestamp, sizeof(uint64_t)));
+            }
+        }
+
+        return result;
+    }
 }
 
 SLS::SLS(const std::string &dd){

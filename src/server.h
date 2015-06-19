@@ -27,6 +27,7 @@ namespace sls{
             std::string disk_dir;
             std::mutex maps_lock;
             std::map<std::string, std::mutex> write_locks;
+            std::map<std::string, Index> indices;
             std::map<std::string, std::string> active_files;
 
             std::vector<Index_Record> _index_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end);
