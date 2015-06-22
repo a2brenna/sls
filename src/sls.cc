@@ -77,6 +77,14 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 response.set_success(true);
 
             }
+            else if(request.has_last()){
+                const unsigned long long max_values = request.last().max_values();
+                data_string = s->raw_last_lookup(key, max_values);
+                if(!data_string.empty()){
+                    response.set_data_to_follow(true);
+                }
+                response.set_success(true);
+            }
             else{
                 syslog(LOG_ERR, "Cannot handle request");
             }

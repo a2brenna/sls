@@ -383,6 +383,12 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
     }
 }
 
+std::string SLS::raw_last_lookup(const std::string &key, const size_t &max_values){
+    //TODO: Implement efficient lookups here
+    std::string result;
+    return result;
+}
+
 SLS::SLS(const std::string &dd){
     disk_dir = dd;
 }

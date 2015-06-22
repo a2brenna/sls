@@ -39,7 +39,6 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const std::stri
 
     sls::Request request;
     request.mutable_req_range()->set_start(start);
-    request.mutable_req_range()->set_start(start);
     request.mutable_req_range()->set_end(end);
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
@@ -75,7 +74,26 @@ bool sls::Client::append(const std::string &key, const std::string &data){
 
 std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const std::string &key, const unsigned long long &num_entries){
     assert(key.size() > 0);
-    return _interval(key, 1, num_entries, false);
+
+    std::shared_ptr<std::deque<sls::Value> > result_deque(new std::deque<sls::Value>);
+
+    sls::Request request;
+    request.mutable_last()->set_max_values(num_entries);
+    request.set_key(key);
+
+    std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> response = _request(request);
+
+    if (response.first.success()){
+        for(const auto &d: response.second){
+            sls::Value v;
+            v.set_time(d.first);
+            v.set_data(d.second);
+
+            result_deque->push_back(v);
+        }
+    }
+
+    return result_deque;
 }
 
 std::shared_ptr< std::deque<sls::Value> > sls::Client::all(const std::string &key){

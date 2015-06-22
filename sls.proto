@@ -10,10 +10,15 @@ message Range{
     required bool is_time = 3;
 }
 
+message Last{
+    required uint64 max_values = 1;
+}
+
 message Request{
     optional Append req_append = 1;
     optional Range req_range = 2;
     optional string key = 3;
+    optional Last last = 4;
 }
 
 message Data{
