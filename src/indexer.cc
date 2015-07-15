@@ -14,15 +14,10 @@ void config(int argc, char *argv[]){
 
     po::options_description desc("Options");
 
-    try{
-        desc.add_options()
-            ("help", "Produce help message")
-            ("sls_dir", po::value<std::string>(&CONFIG_SLS_DIR), "Directory to database from ")
-            ;
-    }
-    catch(...){
-        throw;
-    }
+    desc.add_options()
+        ("help", "Produce help message")
+        ("sls_dir", po::value<std::string>(&CONFIG_SLS_DIR), "Directory to database from ")
+        ;
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);

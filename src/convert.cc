@@ -25,17 +25,12 @@ void config(int argc, char *argv[]){
 
     po::options_description desc("Options");
 
-    try{
-        desc.add_options()
-            ("help", "Produce help message")
-            ("src_dir", po::value<std::string>(&CONFIG_SOURCE_DIR), "Directory to read legacy data from")
-            ("tgt_dir", po::value<std::string>(&CONFIG_TARGET_DIR), "Directory to assemble new store in")
-            ("accept", po::value<std::string>(&CONFIG_ACCEPT), "Accept only keys matching")
-            ;
-    }
-    catch(...){
-        throw;
-    }
+    desc.add_options()
+        ("help", "Produce help message")
+        ("src_dir", po::value<std::string>(&CONFIG_SOURCE_DIR), "Directory to read legacy data from")
+        ("tgt_dir", po::value<std::string>(&CONFIG_TARGET_DIR), "Directory to assemble new store in")
+        ("accept", po::value<std::string>(&CONFIG_ACCEPT), "Accept only keys matching")
+        ;
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
