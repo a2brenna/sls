@@ -65,10 +65,10 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 if(is_time){
                     auto start_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(start));
                     auto end_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(end));
-                    data_string = s->raw_time_lookup(key, start_time, end_time);
+                    data_string = s->time_lookup(key, start_time, end_time);
                 }
                 else{
-                    data_string = s->raw_index_lookup(key, start, end);
+                    data_string = s->index_lookup(key, start, end);
                 }
 
                 if(!data_string.empty()){
@@ -79,7 +79,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
             }
             else if(request.has_last()){
                 const unsigned long long max_values = request.last().max_values();
-                data_string = s->raw_last_lookup(key, max_values);
+                data_string = s->last_lookup(key, max_values);
                 if(!data_string.empty()){
                     response.set_data_to_follow(true);
                 }

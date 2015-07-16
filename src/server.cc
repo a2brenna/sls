@@ -179,7 +179,7 @@ void SLS::append(const std::string &key, const std::string &data){
     o.close();
 }
 
-std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+std::string SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
     assert(start < end);
 
     std::string result;
@@ -244,7 +244,7 @@ std::string SLS::raw_time_lookup(const std::string &key, const std::chrono::high
     }
 }
 
-std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, const size_t &end){
+std::string SLS::index_lookup(const std::string &key, const size_t &start, const size_t &end){
     assert(start > 0);
     assert(start < end);
 
@@ -310,7 +310,7 @@ std::string SLS::raw_index_lookup(const std::string &key, const size_t &start, c
     }
 }
 
-std::string SLS::raw_last_lookup(const std::string &key, const size_t &max_values){
+std::string SLS::last_lookup(const std::string &key, const size_t &max_values){
     //TODO: Implement efficient lookups here
     std::string result;
     return result;
