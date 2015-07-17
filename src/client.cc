@@ -1,7 +1,7 @@
 #include "client.h"
 #include "error.h"
 #include "sls.h"
-#include "serialize.h"
+#include "archive.h"
 
 #include <smpl.h>
 #include <limits.h>
@@ -27,8 +27,8 @@ std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> sls::Cli
     std::vector<std::pair<uint64_t, std::string>> data_vector;
 
     if(response.data_to_follow()){
-        const std::string data = server_connection->recv();
-        data_vector = de_serialize(data);
+        const Archive data(server_connection->recv());
+        data_vector = data.extract();
     }
     return std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>>(response, data_vector);
 }

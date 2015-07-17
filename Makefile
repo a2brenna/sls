@@ -20,8 +20,8 @@ uninstall:
 	rm ${DESTDIR}/${PREFIX}/include/sls.h
 	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
 
-sls: src/sls.cc sls.pb.o server.o config.o serialize.o archive.o index.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o serialize.o archive.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
+sls: src/sls.cc sls.pb.o server.o config.o archive.o index.o src/config.h
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
 
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
@@ -32,20 +32,17 @@ convert: src/convert.cc legacy.pb.o
 indexer: src/indexer.cc index.o
 	${CXX} ${CXXFLAGS} src/indexer.cc index.o -o indexer -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
-test_client: src/test_client.cc sls.pb.o slsc.o client.o serialize.o
-	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o serialize.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
+test_client: src/test_client.cc sls.pb.o slsc.o client.o archive.o
+	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o archive.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
 
-libsls.so: slsc.o client.o error.o sls.pb.o serialize.o archive.o
-	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o serialize.o archive.o
+libsls.so: slsc.o client.o error.o sls.pb.o archive.o
+	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o archive.o
 
-libsls.a: slsc.o client.o error.o sls.pb.o serialize.o archive.o
-	ar rcs libsls.a slsc.o client.o error.o sls.pb.o serialize.o archive.o
+libsls.a: slsc.o client.o error.o sls.pb.o archive.o
+	ar rcs libsls.a slsc.o client.o error.o sls.pb.o archive.o
 
 server.o: src/server.cc
 	${CXX} ${CXXFLAGS} -c src/server.cc -o server.o
-
-serialize.o: src/serialize.cc
-	${CXX} ${CXXFLAGS} -c src/serialize.cc -o serialize.o
 
 archive.o: src/archive.cc
 	${CXX} ${CXXFLAGS} -c src/archive.cc -o archive.o
