@@ -20,8 +20,8 @@ uninstall:
 	rm ${DESTDIR}/${PREFIX}/include/sls.h
 	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
 
-sls: src/sls.cc sls.pb.o server.o config.o serialize.o index.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o serialize.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
+sls: src/sls.cc sls.pb.o server.o config.o serialize.o archive.o index.o src/config.h
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o serialize.o archive.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
 
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
@@ -35,17 +35,20 @@ indexer: src/indexer.cc index.o
 test_client: src/test_client.cc sls.pb.o slsc.o client.o serialize.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o serialize.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
 
-libsls.so: slsc.o client.o error.o sls.pb.o serialize.o
-	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o serialize.o
+libsls.so: slsc.o client.o error.o sls.pb.o serialize.o archive.o
+	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o serialize.o archive.o
 
-libsls.a: slsc.o client.o error.o sls.pb.o serialize.o
-	ar rcs libsls.a slsc.o client.o error.o sls.pb.o serialize.o
+libsls.a: slsc.o client.o error.o sls.pb.o serialize.o archive.o
+	ar rcs libsls.a slsc.o client.o error.o sls.pb.o serialize.o archive.o
 
 server.o: src/server.cc
 	${CXX} ${CXXFLAGS} -c src/server.cc -o server.o
 
 serialize.o: src/serialize.cc
 	${CXX} ${CXXFLAGS} -c src/serialize.cc -o serialize.o
+
+archive.o: src/archive.cc
+	${CXX} ${CXXFLAGS} -c src/archive.cc -o archive.o
 
 client.o: src/client.cc
 	${CXX} ${CXXFLAGS} -c src/client.cc -o client.o
