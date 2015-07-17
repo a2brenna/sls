@@ -21,32 +21,6 @@
 
 namespace sls{
 
-std::deque<std::pair<uint64_t, std::string>> _read_file(const std::string &path){
-    std::deque<std::pair<uint64_t, std::string>> data;
-
-    std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
-    assert(i);
-
-    uint64_t timestamp = 0;
-    while(i.read((char *)&timestamp, sizeof(uint64_t))){
-        uint64_t data_length = 0;
-        i.read((char *)&data_length, sizeof(uint64_t));
-
-        char datagram[data_length];
-        i.read(datagram, data_length);
-
-        if(i){
-            const std::pair<uint64_t, std::string> d(timestamp, std::string(datagram, data_length));
-            data.push_back(d);
-        }
-        else{
-            assert(false);
-        }
-    }
-
-    return data;
-}
-
 std::vector<Index_Record> SLS::_index_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
     std::vector<Index_Record> files;
     std::unique_lock<std::mutex> l( maps_lock );
