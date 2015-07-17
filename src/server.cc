@@ -15,6 +15,7 @@
 #include "hgutil/time.h"
 #include "sls.h"
 #include "server.h"
+#include "archive.h"
 #include "file.h"
 
 #include <fstream>
@@ -154,6 +155,10 @@ void SLS::append(const std::string &key, const std::string &data){
 }
 
 std::string SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+    std::unique_lock<std::mutex> coarse_lock( maps_lock );
+    std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
+    coarse_lock.unlock();
+
     assert(start < end);
 
     std::string result;
@@ -166,54 +171,32 @@ std::string SLS::time_lookup(const std::string &key, const std::chrono::high_res
         return result;
     }
     else{
-
         for(const auto &f: files){
-            std::unique_lock<std::mutex> coarse_lock( maps_lock );
-            std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
-            coarse_lock.unlock();
-            {
-                const std::string path = disk_dir + key + "/" + f.filename();
-                std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
-                assert(i);
+            Path path(disk_dir + key + "/" + f.filename());
+            Archive arch(path);
+            while(true){
+                try{
+                    const uint64_t current_time = arch.head_time();
 
-                uint64_t timestamp = 0;
-                while(i.read((char *)&timestamp, sizeof(uint64_t))){
-                    if(timestamp > start_time){
+                    if( current_time < start_time ){
+                        arch.advance_index();
+                    }
+                    else if( current_time > end_time){
                         break;
                     }
+                    else if( current_time >= start_time && current_time <= end_time){
+                        result.append(arch.head_record());
+                        arch.advance_index();
+                    }
                     else{
-                        uint64_t data_length = 0;
-                        i.read((char *)&data_length, sizeof(uint64_t));
-                        i.seekg(data_length, std::ios::cur);
+                        assert(false);
                     }
                 }
-
-                do{
-                    if(timestamp > end_time){
-                        return result;
-                    }
-                    else{
-                        result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
-
-                        uint64_t data_length = 0;
-                        i.read((char *)&data_length, sizeof(uint64_t));
-
-                        result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
-
-                        char datagram[data_length];
-                        i.read(datagram, data_length);
-
-                        if(i){
-                            result.append(std::string( datagram, data_length ));
-                        }
-                        else{
-                            assert(false);
-                        }
-                    }
-                } while(i.read((char *)&timestamp, sizeof(uint64_t)));
+                catch(End_Of_Archive e){
+                    break;
+                }
             }
         }
-
         return result;
     }
 }
@@ -222,6 +205,10 @@ std::string SLS::index_lookup(const std::string &key, const size_t &start, const
     assert(start > 0);
     assert(start < end);
 
+    std::unique_lock<std::mutex> coarse_lock( maps_lock );
+    std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
+    coarse_lock.unlock();
+
     std::string result;
 
     std::vector<Index_Record> files = _index_position_lookup(key, start, end);
@@ -229,57 +216,33 @@ std::string SLS::index_lookup(const std::string &key, const size_t &start, const
         return result;
     }
     else{
-        size_t index = files.front().position();
-
         for(const auto &f: files){
-            std::unique_lock<std::mutex> coarse_lock( maps_lock );
-            std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
-            coarse_lock.unlock();
-            {
-                const std::string path = disk_dir + key + "/" + f.filename();
-                std::ifstream i(path, std::ifstream::in | std::ifstream::binary);
-                assert(i);
-
-                uint64_t timestamp = 0;
-                while(i.read((char *)&timestamp, sizeof(uint64_t))){
-                    if(index >= start){
+            size_t current_index = f.position();
+            Path path(disk_dir + key + "/" + f.filename());
+            Archive arch(path);
+            while(true){
+                try{
+                    if( current_index < start){
+                        arch.advance_index();
+                        current_index++;
+                    }
+                    else if( current_index > end){
                         break;
                     }
+                    else if( current_index >= start && current_index <= end){
+                        result.append(arch.head_record());
+                        arch.advance_index();
+                        current_index++;
+                    }
                     else{
-                        index++;
-                        uint64_t data_length = 0;
-                        i.read((char *)&data_length, sizeof(uint64_t));
-                        i.seekg(data_length, std::ios::cur);
+                        assert(false);
                     }
                 }
-
-                do{
-                    if(index > end){
-                        return result;
-                    }
-                    else{
-                        result.append(std::string( (char *)(&timestamp), sizeof(uint64_t)));
-
-                        uint64_t data_length = 0;
-                        i.read((char *)&data_length, sizeof(uint64_t));
-
-                        result.append(std::string( (char *)(&data_length), sizeof(uint64_t)));
-
-                        char datagram[data_length];
-                        i.read(datagram, data_length);
-
-                        if(i){
-                            result.append(std::string( datagram, data_length ));
-                        }
-                        else{
-                            assert(false);
-                        }
-                    }
-                    index++;
-                } while(i.read((char *)&timestamp, sizeof(uint64_t)));
+                catch(End_Of_Archive e){
+                    break;
+                }
             }
         }
-
         return result;
     }
 }

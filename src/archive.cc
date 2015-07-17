@@ -36,6 +36,19 @@ std::string Archive::head_data() const{
     return std::string( blob_start, blob_length);
 }
 
+std::string Archive::head_record() const{
+    const char *i = _raw.c_str() + _index;
+    if(i == (_raw.c_str() + _raw.size())){
+        throw End_Of_Archive();
+    }
+    assert( i < (_raw.c_str() + _raw.size()) );
+
+    const uint64_t blob_length = *( (uint64_t *)(i + sizeof(uint64_t)) );
+    const char *blob_start = i + sizeof(uint64_t)*2;
+
+    return std::string( i, blob_length);
+}
+
 std::vector<std::pair<uint64_t, std::string>> Archive::extract() const{
     const char *i = _raw.c_str() + _index;
     if(i == (_raw.c_str() + _raw.size())){

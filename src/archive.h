@@ -16,6 +16,7 @@ class Archive{
 
         uint64_t head_time() const;
         std::string head_data() const;
+        std::string head_record() const;
         std::vector<std::pair<uint64_t, std::string>> extract() const;
         void advance_index();
 
