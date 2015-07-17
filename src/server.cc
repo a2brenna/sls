@@ -122,7 +122,7 @@ void SLS::append(const std::string &key, const std::string &data){
     std::unique_lock<std::mutex> fine_lock;
     {
         std::unique_lock<std::mutex> coarse_lock( maps_lock );
-        fine_lock = std::unique_lock<std::mutex>(write_locks[key]);
+        fine_lock = std::unique_lock<std::mutex>(disk_locks[key]);
         try{
             backend_file = active_files.at(key);
         }
@@ -169,7 +169,7 @@ std::string SLS::time_lookup(const std::string &key, const std::chrono::high_res
 
         for(const auto &f: files){
             std::unique_lock<std::mutex> coarse_lock( maps_lock );
-            std::unique_lock<std::mutex> fine_lock( write_locks[key] );
+            std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
             coarse_lock.unlock();
             {
                 const std::string path = disk_dir + key + "/" + f.filename();
@@ -233,7 +233,7 @@ std::string SLS::index_lookup(const std::string &key, const size_t &start, const
 
         for(const auto &f: files){
             std::unique_lock<std::mutex> coarse_lock( maps_lock );
-            std::unique_lock<std::mutex> fine_lock( write_locks[key] );
+            std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
             coarse_lock.unlock();
             {
                 const std::string path = disk_dir + key + "/" + f.filename();

@@ -25,7 +25,7 @@ namespace sls{
         private:
             std::string disk_dir;
             std::mutex maps_lock;
-            std::map<std::string, std::mutex> write_locks;
+            std::map<std::string, std::mutex> disk_locks;
             std::map<std::string, Index> indices;
             std::map<std::string, std::string> active_files;
 
