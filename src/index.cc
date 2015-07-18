@@ -85,6 +85,11 @@ Index::Index(const Path &file){
         infile >> r;
         _index.push_back(r);
     }
+    //TODO: FIX THIS
+    //This alwasy fetches an additional bad record
+    if(_index.size() > 1){
+        _index.pop_back();
+    }
 }
 
 void Index::append(const Index_Record &r){
