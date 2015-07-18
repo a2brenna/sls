@@ -34,6 +34,7 @@ class Index {
 
     public:
         const std::vector<Index_Record> &index() const;
+        //TODO: make void?
         bool append(const Index_Record &r);
 
     private:
