@@ -98,7 +98,7 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const std::string &
 
 std::shared_ptr< std::deque<sls::Value> > sls::Client::all(const std::string &key){
     assert(key.size() > 0);
-    return _interval(key, 1, ULONG_MAX, false);
+    return _interval(key, 0, ULONG_MAX, false);
 }
 
 std::shared_ptr< std::deque<sls::Value> > sls::Client::intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
