@@ -110,7 +110,7 @@ std::string SLS::time_lookup(const std::string &key, const std::chrono::high_res
 }
 
 std::string SLS::index_lookup(const std::string &key, const size_t &start, const size_t &end){
-    assert(start > 0);
+    assert(start >= 0);
     assert(start < end);
 
     std::unique_lock<std::mutex> coarse_lock( maps_lock );
