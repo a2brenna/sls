@@ -87,7 +87,7 @@ void Archive::advance_index(){
     const uint64_t blob_length = *( (uint64_t *)(i + sizeof(uint64_t)) );
 
     const size_t new_index = _index + sizeof(uint64_t)*2 + blob_length;
-    assert( new_index < _raw.size() );
+    assert( new_index <= _raw.size() );
 
     _index = new_index;
 }
