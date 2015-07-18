@@ -43,10 +43,10 @@ std::string Archive::head_record() const{
     }
     assert( i < (_raw.c_str() + _raw.size()) );
 
-    const uint64_t blob_length = *( (uint64_t *)(i + sizeof(uint64_t)) );
-    const char *blob_start = i + sizeof(uint64_t)*2;
+    const uint64_t data_length = *( (uint64_t *)(i + sizeof(uint64_t)) );
+    const size_t record_length = sizeof(uint64_t) * 2 + data_length;
 
-    return std::string( i, blob_length);
+    return std::string( i, record_length);
 }
 
 std::vector<std::pair<uint64_t, std::string>> Archive::extract() const{
