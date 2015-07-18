@@ -75,29 +75,101 @@ std::ostream& operator<<(std::ostream& out, const Index &i){
     return out;
 }
 
-std::istream& operator>>(std::istream& in, Index &i){
-    while(in){
-        Index_Record r;
-        in >> r;
-        i.append(r);
-    }
-
-    return in;
+Index::Index(){
 }
 
-bool Index::append(const Index_Record &r){
+Index::Index(const Path &file){
+    std::ifstream infile(file.str(), std::ofstream::in);
+    while(infile){
+        Index_Record r;
+        infile >> r;
+        _index.push_back(r);
+    }
+}
+
+void Index::append(const Index_Record &r){
     if (_index.empty()){
         _index.push_back(r);
-        return true;
     }
     else{
         if( (r.position() > _index.back().position()) && (r.timestamp() >= _index.back().timestamp()) ){
             _index.push_back(r);
-            return true;
         }
         else{
-            return false;
+            throw Out_of_Order();
         }
+    }
+}
+
+const std::vector<Index_Record> Index::time_lookup(const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+    std::vector<Index_Record> files;
+
+    const uint64_t s = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
+    const uint64_t e = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch()).count();
+
+    if(_index.empty()){
+        return files;
+    }
+    else{
+        assert(_index.size() > 0);
+
+        size_t is = 0;
+        size_t ie = _index.size() - 1;
+        size_t i = 0;
+        for( ; i < _index.size(); i++){
+            if(_index[i].timestamp() < s){
+                is = i;
+            }
+        }
+        for(; i < _index.size(); i++){
+            if(_index[i].timestamp() < e){
+                ie = i;
+            }
+        }
+
+        assert( is <= ie);
+        assert( ie < _index.size() );
+
+        for(size_t i = is; i <= ie; i++){
+            files.push_back(_index[i]);
+        }
+
+        return files;
+    }
+}
+
+const std::vector<Index_Record> Index::position_lookup(const uint64_t &start, const uint64_t &end){
+    std::vector<Index_Record> files;
+
+    if(_index.empty()){
+        return files;
+    }
+    else{
+        assert(_index.size() > 0);
+
+        size_t is = 0;
+        size_t ie = _index.size() - 1;
+
+        size_t i = 0;
+        for( ; i < _index.size(); i++){
+            if(_index[i].position() < start){
+                is = i;
+            }
+        }
+        for(; i < _index.size(); i++){
+            if(_index[i].position() < end){
+                ie = i;
+            }
+        }
+
+        assert( is <= ie);
+        assert( ie < _index.size() );
+
+        for(size_t i = is; i <= ie; i++){
+            files.push_back(_index[i]);
+        }
+
+        return files;
     }
 }
 

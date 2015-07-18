@@ -29,9 +29,6 @@ namespace sls{
             std::map<std::string, Index> indices;
             std::map<std::string, std::string> active_files;
 
-            std::vector<Index_Record> _index_time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end);
-            std::vector<Index_Record> _index_position_lookup(const std::string &key, const uint64_t &start, const uint64_t &end);
-
     };
 
 }
