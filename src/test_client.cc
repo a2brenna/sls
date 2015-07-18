@@ -44,82 +44,101 @@ int main(int argc, char* argv[]){
     std::cerr << "Test Client Started... " << std::endl;
     get_config(argc, argv);
 
-    //TODO: IMPLEMENT BETTER TESTS FOR CORRECTNESS OF FUNCTIONS
-
     sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(unix_domain_file));
 
     auto r = std::minstd_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    //TODO: IMPLEMENT BETTER TESTS FOR CORRECTNESS OF FUNCTIONS
 
-    std::map<std::string, std::vector<std::string>> test_data;
-
-    const unsigned long long num_keys = r() % CONFIG_MAX_KEYS; //up to 100 random keys
-
-    size_t total_elements = 0;
-    for(unsigned long long i = 0; i < num_keys; i++){
-
-        std::string key = RandomString(r() % 63 + 1);
-
-        assert(key.size() > 0);
-
-        for(size_t i = 0; i < ( (r() % CONFIG_MAX_ELEMENTS) + 1 ); i++){
-            test_data[key].push_back( std::to_string(r()) );
-        }
-
-        total_elements += test_data[key].size();
-
-    }
-
-    const auto start_time = std::chrono::high_resolution_clock::now();
-
-    for(const auto &k: test_data){
-        const std::string key = k.first;
-        const std::vector<std::string> data = k.second;
-
-        for(const auto &d: data){
-            sls::append(key, d);
-        }
-
-    }
-    const auto end_time = std::chrono::high_resolution_clock::now();
-
-    std::cerr << "RANDOM_TEST_COMPLETE"
-        << " nanos " << (end_time - start_time).count()
-        << " elements " << total_elements
-        << std::endl;
-
-    total_elements = 0;
     {
-        std::string key = RandomString(r() % 63 + 1);
-        std::vector<std::string> data;
+        std::string test_key = "numeric_test";
+        std::vector<std::string> test_data = { "1","2","3","4","5","6","7","8","9","0" };
 
-        for(size_t i = 0; i < 5000000; i++){
-            data.push_back( std::to_string(r()) );
+        for(const auto &i: test_data){
+            sls::append(test_key, i);
         }
 
-        for(const auto &d: data){
-            const bool success = sls::append( key, d );
-            if( !success ){
-                std::cerr << "ERROR APPENDING!" << std::endl;
-            }
-            else{
-            }
+        const auto all = sls::all(test_key);
+        std::cerr << "Got: " << all->size() << std::endl;
+
+        for(const auto &r: *all){
+            std::cout << r.data() << std::endl;
         }
 
-        std::cout << "Test Data Stored" << std::endl;
+    }
 
-        const auto retrieve_start = std::chrono::high_resolution_clock::now();
-        auto l = sls::lastn(key, 5000000);
-        const auto retrieve_end = std::chrono::high_resolution_clock::now();
+    return 0;
 
-        std::cout << "Retrieved: " << l->size() << std::endl;
-        total_elements+=l->size();
+    {
+        std::map<std::string, std::vector<std::string>> test_data;
 
-        std::cerr << "RETRIEVAL_TEST_COMPLETE"
-            << " nanos " << (retrieve_end - retrieve_start).count()
+        const unsigned long long num_keys = r() % CONFIG_MAX_KEYS; //up to 100 random keys
+
+        size_t total_elements = 0;
+        for(unsigned long long i = 0; i < num_keys; i++){
+
+            std::string key = RandomString(r() % 63 + 1);
+
+            assert(key.size() > 0);
+
+            for(size_t i = 0; i < ( (r() % CONFIG_MAX_ELEMENTS) + 1 ); i++){
+                test_data[key].push_back( std::to_string(r()) );
+            }
+
+            total_elements += test_data[key].size();
+
+        }
+
+        const auto start_time = std::chrono::high_resolution_clock::now();
+
+        for(const auto &k: test_data){
+            const std::string key = k.first;
+            const std::vector<std::string> data = k.second;
+
+            for(const auto &d: data){
+                sls::append(key, d);
+            }
+
+        }
+        const auto end_time = std::chrono::high_resolution_clock::now();
+
+        std::cerr << "RANDOM_TEST_COMPLETE"
+            << " nanos " << (end_time - start_time).count()
             << " elements " << total_elements
             << std::endl;
-    }
 
+        total_elements = 0;
+        {
+            std::string key = RandomString(r() % 63 + 1);
+            std::vector<std::string> data;
+
+            for(size_t i = 0; i < 5000000; i++){
+                data.push_back( std::to_string(r()) );
+            }
+
+            for(const auto &d: data){
+                const bool success = sls::append( key, d );
+                if( !success ){
+                    std::cerr << "ERROR APPENDING!" << std::endl;
+                }
+                else{
+                }
+            }
+
+            std::cout << "Test Data Stored" << std::endl;
+
+            const auto retrieve_start = std::chrono::high_resolution_clock::now();
+            auto l = sls::lastn(key, 5000000);
+            const auto retrieve_end = std::chrono::high_resolution_clock::now();
+
+            std::cout << "Retrieved: " << l->size() << std::endl;
+            total_elements+=l->size();
+
+            std::cerr << "RETRIEVAL_TEST_COMPLETE"
+                << " nanos " << (retrieve_end - retrieve_start).count()
+                << " elements " << total_elements
+                << std::endl;
+        }
+    }
 
     return 0;
 }
