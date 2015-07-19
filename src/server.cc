@@ -65,8 +65,6 @@ std::string SLS::time_lookup(const std::string &key, const std::chrono::high_res
     std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
     coarse_lock.unlock();
 
-    assert(start < end);
-
     std::string result;
 
     const uint64_t start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
@@ -110,9 +108,6 @@ std::string SLS::time_lookup(const std::string &key, const std::chrono::high_res
 }
 
 std::string SLS::index_lookup(const std::string &key, const size_t &start, const size_t &end){
-    assert(start >= 0);
-    assert(start < end);
-
     std::unique_lock<std::mutex> coarse_lock( maps_lock );
     std::unique_lock<std::mutex> fine_lock( disk_locks[key] );
     coarse_lock.unlock();
