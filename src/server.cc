@@ -17,6 +17,7 @@
 #include "server.h"
 #include "archive.h"
 #include "file.h"
+#include "active_file.h"
 
 #include <fstream>
 
@@ -24,7 +25,7 @@ namespace sls{
 
 void SLS::append(const std::string &key, const std::string &data){
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    std::string backend_file;
+    std::shared_ptr<Active_File> backend_file;
 
     std::unique_lock<std::mutex> fine_lock;
     {
@@ -34,10 +35,10 @@ void SLS::append(const std::string &key, const std::string &data){
             backend_file = active_files.at(key);
         }
         catch(std::out_of_range e){
-            std::string dir = disk_dir + key + "/";
-            backend_file = dir + RandomString(32);
+            backend_file = std::shared_ptr<Active_File>( new Active_File(disk_dir, key, 0) );
             active_files[key] = backend_file;
-            const auto d = mkdir(dir.c_str(), 0755);
+            Path dir(disk_dir + key);
+            const auto d = mkdir(dir.str().c_str(), 0755);
             if( d != 0 ){
                 if(errno != EISDIR){
                     return;
@@ -46,18 +47,7 @@ void SLS::append(const std::string &key, const std::string &data){
         }
     }
 
-    assert(backend_file.size() > 0);
-
-    const uint64_t data_length = data.size();
-
-    std::ofstream o(backend_file, std::ofstream::app | std::ofstream::binary);
-    assert(o);
-
-    o.write((char *)&current_time, sizeof(uint64_t));
-    o.write((char *)&data_length, sizeof(uint64_t));
-    o.write(data.c_str(), data_length);
-
-    o.close();
+    backend_file->append(data);
 }
 
 std::string SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){

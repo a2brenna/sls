@@ -4,8 +4,10 @@
 #include <string>
 #include <mutex>
 #include <deque>
+#include <memory>
 #include "sls.pb.h"
 #include "index.h"
+#include "active_file.h"
 
 namespace sls{
 
@@ -27,7 +29,7 @@ namespace sls{
             std::mutex maps_lock;
             std::map<std::string, std::mutex> disk_locks;
             std::map<std::string, Index> indices;
-            std::map<std::string, std::string> active_files;
+            std::map<std::string, std::shared_ptr<Active_File>> active_files;
 
     };
 
