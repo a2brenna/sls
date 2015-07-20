@@ -3,10 +3,8 @@
 
 #include <string>
 #include <vector>
-
 #include <ostream>
 #include <istream>
-#include <chrono>
 
 #include "file.h"
 
@@ -41,7 +39,7 @@ class Index {
         Index();
         Index(const Path &index_file);
         const std::vector<Index_Record> &index() const;
-        const std::vector<Index_Record> time_lookup(const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end);
+        const std::vector<Index_Record> time_lookup(const uint64_t &start, const uint64_t &end);
         const std::vector<Index_Record> position_lookup(const uint64_t &start, const uint64_t &end);
         size_t num_elements() const;
         void append(const Index_Record &r);

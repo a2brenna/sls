@@ -3,7 +3,6 @@
 
 #include "file.h"
 #include <vector>
-#include <chrono>
 #include <string>
 
 class End_Of_Archive {};

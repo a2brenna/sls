@@ -1,7 +1,6 @@
 #include "active_key.h"
 
 #include <hgutil/strings.h>
-#include <chrono>
 #include <fstream>
 #include <cassert>
 #include "archive.h"
@@ -80,13 +79,10 @@ size_t Active_Key::num_elements() const{
     return _num_elements;
 }
 
-std::string Active_Key::time_lookup(const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end){
     std::unique_lock<std::mutex> l(_lock);
 
     std::string result;
-
-    const uint64_t start_time = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
-    const uint64_t end_time = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch()).count();
 
     Index index(_index);
     std::vector<Index_Record> files = index.time_lookup(start, end);
@@ -100,13 +96,13 @@ std::string Active_Key::time_lookup(const std::chrono::high_resolution_clock::ti
             try{
                 const uint64_t current_time = arch.head_time();
 
-                if( current_time < start_time ){
+                if( current_time < start ){
                     arch.advance_index();
                 }
-                else if( current_time > end_time){
+                else if( current_time > end){
                     break;
                 }
-                else if( current_time >= start_time && current_time <= end_time){
+                else if( current_time >= start && current_time <= end){
                     result.append(arch.head_record());
                     arch.advance_index();
                 }

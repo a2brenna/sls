@@ -106,12 +106,9 @@ void Index::append(const Index_Record &r){
     }
 }
 
-const std::vector<Index_Record> Index::time_lookup(const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+const std::vector<Index_Record> Index::time_lookup(const uint64_t &start, const uint64_t &end){
     assert(start <= end);
     std::vector<Index_Record> files;
-
-    const uint64_t s = std::chrono::duration_cast<std::chrono::milliseconds>(start.time_since_epoch()).count();
-    const uint64_t e = std::chrono::duration_cast<std::chrono::milliseconds>(end.time_since_epoch()).count();
 
     if(_index.empty()){
         return files;
@@ -123,12 +120,12 @@ const std::vector<Index_Record> Index::time_lookup(const std::chrono::high_resol
         size_t ie = _index.size() - 1;
         size_t i = 0;
         for( ; i < _index.size(); i++){
-            if(_index[i].timestamp() < s){
+            if(_index[i].timestamp() < start){
                 is = i;
             }
         }
         for(; i < _index.size(); i++){
-            if(_index[i].timestamp() < e){
+            if(_index[i].timestamp() < end){
                 ie = i;
             }
         }

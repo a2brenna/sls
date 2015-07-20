@@ -47,7 +47,6 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
             const std::string key = request.key();
             assert(key.size() > 0);
             if(request.has_req_append()){
-                //decode values
                 sls::Append a = request.req_append();
                 const std::string data = a.data();
 
@@ -56,16 +55,12 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 response.set_success(true);
             }
             else if(request.has_req_range()){
-                //decode values
-                const unsigned long long start = request.mutable_req_range()->start();
-                const unsigned long long end = request.mutable_req_range()->end();
+                const uint64_t start = request.mutable_req_range()->start();
+                const uint64_t end = request.mutable_req_range()->end();
                 const bool is_time = request.mutable_req_range()->is_time();
 
-                //std::deque<std::pair<uint64_t, std::string>> r;
                 if(is_time){
-                    auto start_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(start));
-                    auto end_time = std::chrono::high_resolution_clock::time_point(std::chrono::milliseconds(end));
-                    data_string = s->time_lookup(key, start_time, end_time);
+                    data_string = s->time_lookup(key, start, end);
                 }
                 else{
                     data_string = s->index_lookup(key, start, end);

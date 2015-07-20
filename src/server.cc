@@ -34,7 +34,7 @@ void SLS::append(const std::string &key, const std::string &data){
     backend_file->append(data);
 }
 
-std::string SLS::time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &start, const std::chrono::high_resolution_clock::time_point &end){
+std::string SLS::time_lookup(const std::string &key, const uint64_t &start, const uint64_t &end){
     std::shared_ptr<Active_Key> backend_file = _get_active_file(key);
     return backend_file->time_lookup(start, end);
 }
