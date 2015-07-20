@@ -164,8 +164,7 @@ std::string Active_Key::_index_lookup(const size_t &start, const size_t &end){
 
 std::string Active_Key::last_lookup( const size_t &max_values){
     std::unique_lock<std::mutex> l(_lock);
-    Index index(_index);
-    const size_t total_elements = _num_elements + index.num_elements();
+    const size_t total_elements = _num_elements + _start_pos;
     const size_t upper_bound = total_elements + 1;
 
     const int lower_bound_index = upper_bound - max_values;
