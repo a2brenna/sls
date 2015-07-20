@@ -120,6 +120,11 @@ std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end){
 
 std::string Active_Key::index_lookup(const size_t &start, const size_t &end){
     std::unique_lock<std::mutex> l(_lock);
+    return _index_lookup(start, end);
+}
+
+std::string Active_Key::_index_lookup(const size_t &start, const size_t &end){
+    assert(start <= end);
     std::string result;
 
     Index index(_index);
@@ -159,7 +164,12 @@ std::string Active_Key::index_lookup(const size_t &start, const size_t &end){
 
 std::string Active_Key::last_lookup( const size_t &max_values){
     std::unique_lock<std::mutex> l(_lock);
-    //TODO: Implement efficient lookups here
-    std::string result;
-    return result;
+    Index index(_index);
+    const size_t total_elements = _num_elements + index.num_elements();
+    const size_t upper_bound = total_elements + 1;
+
+    const int lower_bound_index = upper_bound - max_values;
+    const size_t lower_bound = std::max(0, lower_bound_index);
+
+    return _index_lookup(lower_bound, upper_bound);
 }
