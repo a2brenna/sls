@@ -17,11 +17,9 @@ namespace sls{
 
         public:
             SLS(const std::string &d);
-            virtual ~SLS();
 
             void append(const std::string &key, const std::string &value);
 
-            //Raw lookups
             std::string index_lookup(const std::string &key, const size_t &start, const size_t &end);
             std::string time_lookup(const std::string &key, const std::chrono::high_resolution_clock::time_point &begin, const std::chrono::high_resolution_clock::time_point &end);
             std::string last_lookup(const std::string &key, const size_t &max_values);

@@ -29,7 +29,6 @@ Path Active_Key::_filepath() const{
 void Active_Key::append(const std::string &new_val){
     std::unique_lock<std::mutex> l(_lock);
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
     const uint64_t val_length = new_val.size();
 
     std::ofstream o(_filepath().str(), std::ofstream::app | std::ofstream::binary);
@@ -94,35 +93,33 @@ std::string Active_Key::time_lookup(const std::chrono::high_resolution_clock::ti
     if(files.empty()){
         return result;
     }
-    else{
-        for(const auto &f: files){
-            Path path(_base_dir.str() + _key + "/" + f.filename());
-            Archive arch(path);
-            while(true){
-                try{
-                    const uint64_t current_time = arch.head_time();
+    for(const auto &f: files){
+        Path path(_base_dir.str() + _key + "/" + f.filename());
+        Archive arch(path);
+        while(true){
+            try{
+                const uint64_t current_time = arch.head_time();
 
-                    if( current_time < start_time ){
-                        arch.advance_index();
-                    }
-                    else if( current_time > end_time){
-                        break;
-                    }
-                    else if( current_time >= start_time && current_time <= end_time){
-                        result.append(arch.head_record());
-                        arch.advance_index();
-                    }
-                    else{
-                        assert(false);
-                    }
+                if( current_time < start_time ){
+                    arch.advance_index();
                 }
-                catch(End_Of_Archive e){
+                else if( current_time > end_time){
                     break;
                 }
+                else if( current_time >= start_time && current_time <= end_time){
+                    result.append(arch.head_record());
+                    arch.advance_index();
+                }
+                else{
+                    assert(false);
+                }
+            }
+            catch(End_Of_Archive e){
+                break;
             }
         }
-        return result;
     }
+    return result;
 }
 
 std::string Active_Key::index_lookup(const size_t &start, const size_t &end){
@@ -134,36 +131,34 @@ std::string Active_Key::index_lookup(const size_t &start, const size_t &end){
     if(files.empty()){
         return result;
     }
-    else{
-        for(const auto &f: files){
-            size_t current_index = f.position();
-            Path path(_base_dir.str() + _key + "/" + f.filename());
-            Archive arch(path);
-            while(true){
-                try{
-                    if( current_index < start){
-                        arch.advance_index();
-                        current_index++;
-                    }
-                    else if( current_index > end){
-                        break;
-                    }
-                    else if( current_index >= start && current_index <= end){
-                        result.append(arch.head_record());
-                        arch.advance_index();
-                        current_index++;
-                    }
-                    else{
-                        assert(false);
-                    }
+    for(const auto &f: files){
+        size_t current_index = f.position();
+        Path path(_base_dir.str() + _key + "/" + f.filename());
+        Archive arch(path);
+        while(true){
+            try{
+                if( current_index < start){
+                    arch.advance_index();
+                    current_index++;
                 }
-                catch(End_Of_Archive e){
+                else if( current_index > end){
                     break;
                 }
+                else if( current_index >= start && current_index <= end){
+                    result.append(arch.head_record());
+                    arch.advance_index();
+                    current_index++;
+                }
+                else{
+                    assert(false);
+                }
+            }
+            catch(End_Of_Archive e){
+                break;
             }
         }
-        return result;
     }
+    return result;
 }
 
 std::string Active_Key::last_lookup( const size_t &max_values){

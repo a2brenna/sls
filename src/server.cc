@@ -53,7 +53,4 @@ SLS::SLS(const std::string &dd){
     _disk_dir = dd;
 }
 
-SLS::~SLS(){
-}
-
 }
