@@ -2,6 +2,7 @@
 #define __ACTIVE_FILE_H__
 
 #include "file.h"
+#include <mutex>
 
 class Active_File{
 
@@ -13,6 +14,7 @@ class Active_File{
         size_t num_elements() const;
 
     private:
+        mutable std::mutex _lock;
         Path _base_dir;
         std::string _key;
         std::string _name;

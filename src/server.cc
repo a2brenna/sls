@@ -23,30 +23,27 @@
 
 namespace sls{
 
-void SLS::append(const std::string &key, const std::string &data){
-    const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    std::shared_ptr<Active_File> backend_file;
-
-    std::unique_lock<std::mutex> fine_lock;
-    {
-        std::unique_lock<std::mutex> coarse_lock( maps_lock );
-        fine_lock = std::unique_lock<std::mutex>(disk_locks[key]);
-        try{
-            backend_file = active_files.at(key);
-        }
-        catch(std::out_of_range e){
-            backend_file = std::shared_ptr<Active_File>( new Active_File(disk_dir, key, 0) );
-            active_files[key] = backend_file;
-            Path dir(disk_dir + key);
-            const auto d = mkdir(dir.str().c_str(), 0755);
-            if( d != 0 ){
-                if(errno != EISDIR){
-                    return;
-                }
+std::shared_ptr<Active_File> SLS::_get_active_file(const std::string &key){
+    std::unique_lock<std::mutex> l(_active_file_map_lock);
+    try{
+        return _active_files.at(key);
+    }
+    catch(std::out_of_range e){
+        //TODO: move this? will cause creation of empty directories here...
+        const auto d = mkdir((disk_dir + key).c_str(), 0755);
+        if( d != 0 ){
+            if(errno != EISDIR){
+                throw Fatal_Error();
             }
         }
+        std::shared_ptr<Active_File> active_file(new Active_File(disk_dir, key, 0));
+        _active_files[key] = active_file;
+        return active_file;
     }
+}
 
+void SLS::append(const std::string &key, const std::string &data){
+    std::shared_ptr<Active_File> backend_file = _get_active_file(key);
     backend_file->append(data);
 }
 

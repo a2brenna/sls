@@ -25,6 +25,7 @@ Path Active_File::_filepath() const{
 }
 
 void Active_File::append(const std::string &new_val){
+    std::unique_lock<std::mutex> l(_lock);
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
     const uint64_t val_length = new_val.size();
@@ -56,6 +57,7 @@ void Active_File::append(const std::string &new_val){
 }
 
 void Active_File::sync(){
+    std::unique_lock<std::mutex> l(_lock);
     assert(_num_elements > 0);
 
     if( _synced ){
@@ -73,5 +75,6 @@ void Active_File::sync(){
 }
 
 size_t Active_File::num_elements() const{
+    std::unique_lock<std::mutex> l(_lock);
     return _num_elements;
 }

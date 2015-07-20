@@ -11,6 +11,8 @@
 
 namespace sls{
 
+    class Fatal_Error {};
+
     class SLS {
 
         public:
@@ -26,10 +28,13 @@ namespace sls{
 
         private:
             std::string disk_dir;
+            std::mutex _active_file_map_lock;
+            std::map<std::string, std::shared_ptr<Active_File>> _active_files;
             std::mutex maps_lock;
             std::map<std::string, std::mutex> disk_locks;
             std::map<std::string, Index> indices;
             std::map<std::string, std::shared_ptr<Active_File>> active_files;
+            std::shared_ptr<Active_File> _get_active_file(const std::string &key);
 
     };
 
