@@ -27,13 +27,10 @@ namespace sls{
             std::string last_lookup(const std::string &key, const size_t &max_values);
 
         private:
-            std::string disk_dir;
+            std::string _disk_dir;
             std::mutex _active_file_map_lock;
             std::map<std::string, std::shared_ptr<Active_Key>> _active_files;
-            std::mutex maps_lock;
-            std::map<std::string, std::mutex> disk_locks;
-            std::map<std::string, Index> indices;
-            std::map<std::string, std::shared_ptr<Active_Key>> active_files;
+
             std::shared_ptr<Active_Key> _get_active_file(const std::string &key);
 
     };

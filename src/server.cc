@@ -30,13 +30,13 @@ std::shared_ptr<Active_Key> SLS::_get_active_file(const std::string &key){
     }
     catch(std::out_of_range e){
         //TODO: move this? will cause creation of empty directories here...
-        const auto d = mkdir((disk_dir + key).c_str(), 0755);
+        const auto d = mkdir((_disk_dir + key).c_str(), 0755);
         if( d != 0 ){
             if(errno != EISDIR){
                 throw Fatal_Error();
             }
         }
-        std::shared_ptr<Active_Key> active_file(new Active_Key(disk_dir, key, 0));
+        std::shared_ptr<Active_Key> active_file(new Active_Key(_disk_dir, key, 0));
         _active_files[key] = active_file;
         return active_file;
     }
@@ -63,7 +63,7 @@ std::string SLS::last_lookup(const std::string &key, const size_t &max_values){
 }
 
 SLS::SLS(const std::string &dd){
-    disk_dir = dd;
+    _disk_dir = dd;
 }
 
 SLS::~SLS(){
