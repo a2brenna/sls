@@ -1,25 +1,12 @@
-#include <stdio.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <algorithm>
-#include <cstdlib>
+#include "server.h"
+#include <sys/stat.h> //for mkdir()
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <utility>
-#include <algorithm>
-
 #include "hgutil/files.h"
-#include "hgutil/strings.h"
 #include "hgutil/time.h"
-#include "sls.h"
-#include "server.h"
-#include "archive.h"
-#include "file.h"
 #include "active_key.h"
-
-#include <fstream>
 
 namespace sls{
 
