@@ -12,6 +12,9 @@ class Active_Key{
         void append(const std::string &new_val);
         void sync();
         size_t num_elements() const;
+        std::string index_lookup(const size_t &start, const size_t &end);
+        std::string time_lookup(const std::chrono::high_resolution_clock::time_point &begin, const std::chrono::high_resolution_clock::time_point &end);
+        std::string last_lookup(const size_t &max_values);
 
     private:
         mutable std::mutex _lock;
