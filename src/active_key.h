@@ -1,14 +1,14 @@
-#ifndef __ACTIVE_FILE_H__
-#define __ACTIVE_FILE_H__
+#ifndef __ACTIVE_KEY_H__
+#define __ACTIVE_KEY_H__
 
 #include "file.h"
 #include <mutex>
 
-class Active_File{
+class Active_Key{
 
     public:
-        Active_File(const Path &base_dir, const std::string &key, const size_t &start_pos);
-        Active_File(const Active_File &f) = delete;
+        Active_Key(const Path &base_dir, const std::string &key, const size_t &start_pos);
+        Active_Key(const Active_Key &f) = delete;
         void append(const std::string &new_val);
         void sync();
         size_t num_elements() const;

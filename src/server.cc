@@ -17,13 +17,13 @@
 #include "server.h"
 #include "archive.h"
 #include "file.h"
-#include "active_file.h"
+#include "active_key.h"
 
 #include <fstream>
 
 namespace sls{
 
-std::shared_ptr<Active_File> SLS::_get_active_file(const std::string &key){
+std::shared_ptr<Active_Key> SLS::_get_active_file(const std::string &key){
     std::unique_lock<std::mutex> l(_active_file_map_lock);
     try{
         return _active_files.at(key);
@@ -36,14 +36,14 @@ std::shared_ptr<Active_File> SLS::_get_active_file(const std::string &key){
                 throw Fatal_Error();
             }
         }
-        std::shared_ptr<Active_File> active_file(new Active_File(disk_dir, key, 0));
+        std::shared_ptr<Active_Key> active_file(new Active_Key(disk_dir, key, 0));
         _active_files[key] = active_file;
         return active_file;
     }
 }
 
 void SLS::append(const std::string &key, const std::string &data){
-    std::shared_ptr<Active_File> backend_file = _get_active_file(key);
+    std::shared_ptr<Active_Key> backend_file = _get_active_file(key);
     backend_file->append(data);
 }
 

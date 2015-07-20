@@ -1,4 +1,4 @@
-#include "active_file.h"
+#include "active_key.h"
 
 #include <hgutil/strings.h>
 #include <chrono>
@@ -6,7 +6,7 @@
 #include <cassert>
 #include "index.h"
 
-Active_File::Active_File(const Path &base_dir, const std::string &key, const size_t &start_pos):
+Active_Key::Active_Key(const Path &base_dir, const std::string &key, const size_t &start_pos):
     _base_dir(base_dir),
     _index(base_dir.str() + key +"/index")
 {
@@ -20,11 +20,11 @@ Active_File::Active_File(const Path &base_dir, const std::string &key, const siz
     _last_element_offset = 0;
 }
 
-Path Active_File::_filepath() const{
+Path Active_Key::_filepath() const{
     return Path(_base_dir.str() + _key + "/" + _name);
 }
 
-void Active_File::append(const std::string &new_val){
+void Active_Key::append(const std::string &new_val){
     std::unique_lock<std::mutex> l(_lock);
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
@@ -56,7 +56,7 @@ void Active_File::append(const std::string &new_val){
     }
 }
 
-void Active_File::sync(){
+void Active_Key::sync(){
     std::unique_lock<std::mutex> l(_lock);
     assert(_num_elements > 0);
 
@@ -74,7 +74,7 @@ void Active_File::sync(){
     _synced = true;
 }
 
-size_t Active_File::num_elements() const{
+size_t Active_Key::num_elements() const{
     std::unique_lock<std::mutex> l(_lock);
     return _num_elements;
 }

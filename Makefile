@@ -20,8 +20,8 @@ uninstall:
 	rm ${DESTDIR}/${PREFIX}/include/sls.h
 	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
 
-sls: src/sls.cc sls.pb.o server.o config.o archive.o active_file.o index.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o active_file.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
+sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o src/config.h
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o active_key.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
 
 fsck: src/fsck.cc sls.pb.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
@@ -47,8 +47,8 @@ server.o: src/server.cc
 archive.o: src/archive.cc
 	${CXX} ${CXXFLAGS} -c src/archive.cc -o archive.o
 
-active_file.o: src/active_file.cc
-	${CXX} ${CXXFLAGS} -c src/active_file.cc -o active_file.o
+active_key.o: src/active_key.cc
+	${CXX} ${CXXFLAGS} -c src/active_key.cc -o active_key.o
 
 client.o: src/client.cc
 	${CXX} ${CXXFLAGS} -c src/client.cc -o client.o
