@@ -23,7 +23,7 @@ std::shared_ptr<Active_Key> SLS::_get_active_file(const std::string &key){
                 throw Fatal_Error();
             }
         }
-        std::shared_ptr<Active_Key> active_file(new Active_Key(_disk_dir, key, 0));
+        std::shared_ptr<Active_Key> active_file(new Active_Key(_disk_dir, key));
         _active_files[key] = active_file;
         return active_file;
     }

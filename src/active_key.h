@@ -7,7 +7,7 @@
 class Active_Key{
 
     public:
-        Active_Key(const Path &base_dir, const std::string &key, const size_t &start_pos);
+        Active_Key(const Path &base_dir, const std::string &key);
         Active_Key(const Active_Key &f) = delete;
         void append(const std::string &new_val);
         void sync();

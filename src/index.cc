@@ -181,6 +181,15 @@ const std::vector<Index_Record> Index::position_lookup(const uint64_t &start, co
     }
 }
 
+size_t Index::num_elements() const{
+    if(_index.empty()){
+        return 0;
+    }
+    else{
+        return _index.back().position();
+    }
+}
+
 Index build_index(const Path &directory){
     std::vector<std::pair<uint64_t, Index_Record>> timestamp_records;
     std::vector<std::string> files;
@@ -219,3 +228,4 @@ Index build_index(const Path &directory){
     }
     return index;
 }
+

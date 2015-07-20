@@ -7,13 +7,14 @@
 #include "archive.h"
 #include "index.h"
 
-Active_Key::Active_Key(const Path &base_dir, const std::string &key, const size_t &start_pos):
+Active_Key::Active_Key(const Path &base_dir, const std::string &key):
     _base_dir(base_dir),
     _index(base_dir.str() + key +"/index")
 {
     _key = key;
     _name = RandomString(32);
-    _start_pos = start_pos;
+    Index index(_index);
+    _start_pos = index.num_elements();
     _num_elements = 0;
     _synced = true;
     _last_time = 0;
