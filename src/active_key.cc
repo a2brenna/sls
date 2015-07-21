@@ -18,7 +18,7 @@ Active_Key::Active_Key(const Path &base_dir, const std::string &key):
     _synced = true;
     _last_time = 0;
     _filesize = 0;
-    _last_element_offset = 0;
+    _last_element_start = 0;
 }
 
 Path Active_Key::_filepath() const{
@@ -39,7 +39,7 @@ void Active_Key::append(const std::string &new_val){
     assert(o);
 
     if(_filesize != 0){
-        _last_element_offset = _filesize + 1;
+        _last_element_start = _filesize + 1;
     }
 
     o.write((char *)&current_time, sizeof(uint64_t));
@@ -50,7 +50,14 @@ void Active_Key::append(const std::string &new_val){
     assert(o);
 
     o.close();
-    _filesize += (_last_element_offset + (2 * sizeof(uint64_t)) + val_length);
+
+    if(_last_element_start == 0){
+        _filesize = (_last_element_start + (2 * sizeof(uint64_t)) + val_length);
+    }
+    else{
+        _filesize = (_last_element_start + (2 * sizeof(uint64_t)) + val_length) - 1;
+    }
+
 
     _last_time = current_time;
     _synced = false;
@@ -68,7 +75,7 @@ void Active_Key::_sync(){
         return;
     }
 
-    Index_Record record(_last_time, _start_pos + _num_elements - 1, _name, _last_element_offset);
+    Index_Record record(_last_time, _start_pos + _num_elements - 1, _name, _last_element_start);
     std::ofstream o(_index.str(), std::ofstream::app | std::ofstream::binary);
     assert(o);
     o << record;

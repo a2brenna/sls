@@ -29,7 +29,7 @@ class Active_Key{
         void _sync();
         size_t _start_pos;
         size_t _num_elements;
-        size_t _last_element_offset;
+        size_t _last_element_start;
         size_t _filesize;
         bool _synced;
         uint64_t _last_time;
