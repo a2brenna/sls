@@ -52,12 +52,11 @@ void Active_Key::append(const std::string &new_val){
     _num_elements++;
 
     if(_num_elements == 1){
-        sync();
+        _sync();
     }
 }
 
-void Active_Key::sync(){
-    std::unique_lock<std::mutex> l(_lock);
+void Active_Key::_sync(){
     assert(_num_elements > 0);
 
     if( _synced ){
@@ -72,6 +71,12 @@ void Active_Key::sync(){
     o.close();
 
     _synced = true;
+
+}
+
+void Active_Key::sync(){
+    std::unique_lock<std::mutex> l(_lock);
+    _sync();
 }
 
 size_t Active_Key::num_elements() const{
