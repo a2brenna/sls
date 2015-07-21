@@ -25,6 +25,11 @@ Path Active_Key::_filepath() const{
     return Path(_base_dir.str() + _key + "/" + _name);
 }
 
+Active_Key::~Active_Key(){
+    std::unique_lock<std::mutex> l(_lock);
+    _sync();
+}
+
 void Active_Key::append(const std::string &new_val){
     std::unique_lock<std::mutex> l(_lock);
     const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
