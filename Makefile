@@ -29,8 +29,8 @@ fsck: src/fsck.cc sls.pb.o
 convert: src/convert.cc legacy.pb.o
 	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o -o convert -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
-indexer: src/indexer.cc index.o
-	${CXX} ${CXXFLAGS} src/indexer.cc index.o -o indexer -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+indexer: src/indexer.cc index.o archive.o
+	${CXX} ${CXXFLAGS} src/indexer.cc index.o archive.o -o indexer -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
 test_client: src/test_client.cc sls.pb.o slsc.o client.o archive.o
 	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o archive.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls

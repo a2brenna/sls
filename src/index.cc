@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cassert>
 #include <algorithm>
+#include "archive.h"
 
 Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
     _timestamp = timestamp;
@@ -196,27 +197,31 @@ Index build_index(const Path &directory){
     uint64_t position = 0;
 
     for(const auto &file: files){
-        std::ifstream i(directory.str() + "/" + file, std::ofstream::binary);
-        assert(i);
+        Path arch_path(directory.str() + "/" + file);
+        Archive arch(arch_path);
 
-        //have to iterate over file entries so we can get position of start and end elements
-        uint64_t first_timestamp;
-        i.read((char *)&first_timestamp, sizeof(uint64_t));
-        uint64_t first_position = position;
+        const uint64_t first_timestamp = arch.head_time();
+        const uint64_t first_position = position;
 
-        uint64_t temp_timestamp;
-        uint64_t payload_size;
-        do{
-            position++;
-            i.read((char *)&payload_size, sizeof(uint64_t));
-            i.seekg(payload_size, std::ios::cur);
+        uint64_t last_timestamp = first_timestamp;
+        uint64_t last_index = 0;
+
+        for(;;){
+            try{
+                arch.advance_index();
+                position++;
+                last_timestamp = arch.head_time();
+                last_index = arch.index();
+            }
+            catch(End_Of_Archive e){
+                break;
+            }
         }
-        while(i.read((char *)&temp_timestamp, sizeof(uint64_t)));
 
         timestamp_records.push_back(std::pair<uint64_t, Index_Record>(first_timestamp, Index_Record(first_timestamp, first_position, file, 0)));
+        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, position, file, last_index)));
     }
 
-    //sort
     std::sort(timestamp_records.begin(), timestamp_records.end());
 
     Index index;

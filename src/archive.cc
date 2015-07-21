@@ -12,6 +12,10 @@ Archive::Archive(const std::string &raw){
     _index = 0;
 }
 
+uint64_t Archive::index() const{
+    return _index;
+}
+
 uint64_t Archive::head_time() const{
     const char *i = _raw.c_str() + _index;
     if(i == (_raw.c_str() + _raw.size())){
