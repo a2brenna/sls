@@ -54,15 +54,24 @@ int main(int argc, char* argv[]){
         std::vector<std::string> test_data = { "1","2","3","4","5","6","7","8","9","0" };
 
         for(const auto &i: test_data){
+            std::cerr << "Appending" << std::endl;
             sls::append(test_key, i);
         }
 
         const auto all = sls::all(test_key);
-        std::cerr << "Got: " << all->size() << std::endl;
+        std::cout << "Got: " << all->size() << std::endl;
 
         for(const auto &r: *all){
             std::cout << r.data() << std::endl;
         }
+
+        const auto last = sls::lastn(test_key, 3);
+        std::cout << "Got: " << last->size() << std::endl;
+
+        for(const auto &r: *last){
+            std::cout << r.data() << std::endl;
+        }
+
 
     }
 
