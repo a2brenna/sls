@@ -111,6 +111,8 @@ const std::vector<Index_Record> Index::time_lookup(const uint64_t &start, const 
     assert(start <= end);
     std::vector<Index_Record> files;
 
+    std::string last_file = "";
+
     if(_index.empty()){
         return files;
     }
@@ -135,7 +137,10 @@ const std::vector<Index_Record> Index::time_lookup(const uint64_t &start, const 
         assert( ie < _index.size() );
 
         for(size_t i = is; i <= ie; i++){
-            files.push_back(_index[i]);
+            if( _index[i].filename() !=  last_file ){
+                files.push_back(_index[i]);
+            }
+            last_file = _index[i].filename();
         }
 
         return files;
@@ -145,10 +150,12 @@ const std::vector<Index_Record> Index::time_lookup(const uint64_t &start, const 
 const std::vector<Index_Record> Index::position_lookup(const uint64_t &start, const uint64_t &end){
     assert(start >= 0);
     assert(start <= end);
-    std::vector<Index_Record> files;
+    std::vector<Index_Record> records;
+
+    std::string last_file = "";
 
     if(_index.empty()){
-        return files;
+        return records;
     }
     else{
         assert(_index.size() > 0);
@@ -172,10 +179,13 @@ const std::vector<Index_Record> Index::position_lookup(const uint64_t &start, co
         assert( ie < _index.size() );
 
         for(size_t i = is; i <= ie; i++){
-            files.push_back(_index[i]);
+            if( _index[i].filename() !=  last_file ){
+                records.push_back(_index[i]);
+            }
+            last_file = _index[i].filename();
         }
 
-        return files;
+        return records;
     }
 }
 
