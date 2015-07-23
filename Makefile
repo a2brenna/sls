@@ -82,6 +82,9 @@ clean:
 	rm -f *.so *.a
 	rm -f test_client
 	rm -rf sls
+	rm -rf convert
+	rm -rf indexer
+	rm -rf fsck
 	rm -rf src/*.pb.cc
 	rm -rf src/*.pb.h
 	rm -rf src/*_pb2.py
