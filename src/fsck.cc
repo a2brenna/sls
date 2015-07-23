@@ -7,10 +7,11 @@
 #include <algorithm>
 #include <hgutil/files.h>
 #include <boost/program_options.hpp>
-#include <stdio.h>
 #include <fstream>
 #include <regex>
 #include "sls.pb.h"
+#include "file.h"
+#include "index.h"
 
 std::string CONFIG_ROOT_DIR;
 bool CONFIG_FIX;
@@ -26,17 +27,12 @@ void config(int argc, char *argv[]){
 
     po::options_description desc("Options");
 
-    try{
-        desc.add_options()
-            ("help", "Produce help message")
-            ("root_dir", po::value<std::string>(&CONFIG_ROOT_DIR), "Absolute PATH to root of sls storage directory")
-            ("filter", po::value<std::string>(&CONFIG_KEY_FILTER), "Regex filter")
-            ("fix", po::bool_switch(&CONFIG_FIX), "Attempt to fix problems")
-            ;
-    }
-    catch(...){
-        throw;
-    }
+    desc.add_options()
+        ("help", "Produce help message")
+        ("root_dir", po::value<std::string>(&CONFIG_ROOT_DIR), "Absolute PATH to root of sls storage directory")
+        ("filter", po::value<std::string>(&CONFIG_KEY_FILTER), "Regex filter")
+        ("fix", po::bool_switch(&CONFIG_FIX), "Attempt to fix problems")
+        ;
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -50,50 +46,51 @@ void config(int argc, char *argv[]){
 
     if(CONFIG_ROOT_DIR.empty()){
         std::cout << "You must specify a root directory [--root_dir=...]" << std::endl;
-        exit(-1);
+        exit(1);
     }
 }
 
 int main(int argc, char *argv[]){
     config(argc, argv);
 
+    //get list of all keys
     std::vector<std::string> raw_keys;
-
     try{
         getdir( CONFIG_ROOT_DIR, raw_keys );
     }
     catch(...){
         std::cerr << "Could not list keys in " << CONFIG_ROOT_DIR << std::endl;
-        exit(-1);
+        exit(1);
     }
 
+    //filter keys that don't match provided regex
     std::regex f(CONFIG_KEY_FILTER);
     std::vector<std::string> keys;
     for(const auto &rk: raw_keys){
         if(std::regex_match(rk, f)){
             keys.push_back(rk);
         }
-        else{
-            std::cerr << "Filtering out: " << rk << std::endl;
-        }
     }
 
     for(const auto &k: keys){
-        const std::string key_path = CONFIG_ROOT_DIR + "/" + k;
+        const Path key_path(CONFIG_ROOT_DIR + "/" + k);
+
+        const Path index_path(key_path.str() + "/index");
+        Index index(index_path);
 
         std::set<std::string> chunk_files;
         {
             try{
                 std::vector<std::string> chunks;
-                getdir( key_path, chunks );
+                getdir( key_path.str(), chunks );
                 for(const auto &c: chunks){
                     if(c != "index"){
-                        chunk_files.insert(key_path + "/" + c);
+                        chunk_files.insert(key_path.str() + "/" + c);
                     }
                 }
             }
             catch(...){
-                std::cerr << "Could not list chunks in " << key_path << std::endl;
+                std::cerr << "Could not list chunks in " << key_path.str() << std::endl;
                 continue;
             }
         }
