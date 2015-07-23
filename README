@@ -1,2 +1,4 @@
-A simple Key -> List storage system that supports appending to a list and
-recalling a range of values.
+A simple Key -> Timeseries storage system that supports appending arbitrary
+values to a Timeseries and recalling a range of values, either by their position
+or timestamps.  Makes no requirements on the structure, or size of individual
+datapoints, and supports varying and arbitrary datapoint sizes.
