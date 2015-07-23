@@ -41,16 +41,32 @@ int main(int argc, char *argv[]){
 
     std::vector<std::string> keys;
     const auto m = getdir(CONFIG_SLS_DIR, keys);
-    assert(m == 0);
+    if( m != 0 ){
+        std::cerr << "Fatal error reading from: " << CONFIG_SLS_DIR << std::endl;
+        exit(1);
+    }
 
-    for(const auto k: keys){
-        Index index = build_index(CONFIG_SLS_DIR + "/" + k);
+    for(const auto &k: keys){
+        Path key_directory(CONFIG_SLS_DIR + "/" + k);
+        Index index;
+        try{
+            index = build_index(key_directory.str());
+        }
+        catch(...){
+            std::cerr << "Error, failure to build_index for: " << key_directory.str() << std::endl;
+            continue;
+        }
 
-        std::ofstream o(CONFIG_SLS_DIR + "/" + k + "/index", std::ofstream::out | std::ofstream::trunc );
-        assert(o);
-
-        o << index;
-        o.close();
+        Path index_file(CONFIG_SLS_DIR + "/" + k + "/index");
+        std::ofstream o(index_file.str(), std::ofstream::out | std::ofstream::trunc );
+        if(o){
+            std::cerr << "Error, unable to open file for writing: " << index_file.str() << std::endl;
+            continue;
+        }
+        else{
+            o << index;
+            o.close();
+        }
     }
 
     return 0;
