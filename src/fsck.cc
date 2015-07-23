@@ -12,6 +12,7 @@
 #include "sls.pb.h"
 #include "file.h"
 #include "index.h"
+#include "archive.h"
 
 std::string CONFIG_ROOT_DIR;
 bool CONFIG_FIX;
@@ -92,6 +93,46 @@ int main(int argc, char *argv[]){
             catch(...){
                 std::cerr << "Could not list chunks in " << key_path.str() << std::endl;
                 continue;
+            }
+        }
+
+        //Check files in directory vs. index
+        std::set<std::string> missing_but_indexed;
+        std::set<std::string> not_indexed = chunk_files;
+        for(const auto &f: index.index()){
+            if( chunk_files.find(f.filename()) == chunk_files.end() ){
+                missing_but_indexed.insert(f.filename());
+            }
+
+            not_indexed.erase(f.filename());
+        }
+
+        for(const auto &f: missing_but_indexed){
+            std::cerr << "File missing: " << (key_path.str() + "/" + f) << std::endl;
+        }
+
+        for(const auto &f: not_indexed){
+            std::cerr << "File not indexed: " << (key_path.str() + "/" + f) << std::endl;
+        }
+
+        if( !not_indexed.empty() || !missing_but_indexed.empty() ){
+            //rebuild index
+            try{
+                index = build_index(key_path.str());
+            }
+            catch(...){
+                std::cerr << "Error, failure to build_index for: " << key_path.str() << std::endl;
+                continue;
+            }
+
+            std::ofstream o(index_path.str(), std::ofstream::out | std::ofstream::trunc );
+            if(o){
+                std::cerr << "Error, unable to open file for writing: " << index_path.str() << std::endl;
+                continue;
+            }
+            else{
+                o << index;
+                o.close();
             }
         }
     }
