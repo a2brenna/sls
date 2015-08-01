@@ -5,7 +5,6 @@
 #include <mutex>
 #include <string>
 #include "hgutil/files.h"
-#include "hgutil/time.h"
 #include "active_key.h"
 
 namespace sls{
