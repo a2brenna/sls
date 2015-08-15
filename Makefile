@@ -33,7 +33,7 @@ indexer: src/indexer.cc index.o archive.o
 	${CXX} ${CXXFLAGS} src/indexer.cc index.o archive.o -o indexer -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
 test_client: src/test_client.cc sls.pb.o slsc.o client.o archive.o
-	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o archive.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
+	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o archive.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket
 
 libsls.so: slsc.o client.o error.o sls.pb.o archive.o
 	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o archive.o
