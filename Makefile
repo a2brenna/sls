@@ -21,7 +21,7 @@ uninstall:
 	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
 
 sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o active_key.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o active_key.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lslog
 
 fsck: src/fsck.cc sls.pb.o index.o archive.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp

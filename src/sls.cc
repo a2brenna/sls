@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <signal.h>
-#include <syslog.h>
 
 #include "server.h"
 #include "sls.h"
@@ -11,10 +10,15 @@
 #include <smpl.h>
 #include <smplsocket.h>
 
+#include <slog/slog.h>
+#include <slog/syslog.h>
+
 #include <thread>
 #include <memory>
 
 sls::SLS *s;
+
+slog::Log Error(std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogErr)), slog::kLogErr, "ERROR");
 
 //TODO: THIS IS NOT SAFE
 void shutdown(int signal){
@@ -81,11 +85,11 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 response.set_success(true);
             }
             else{
-                syslog(LOG_ERR, "Cannot handle request");
+                Error << "Cannot handle request" << std::endl;;
             }
         }
         else{
-            syslog(LOG_ERR, "Got invalid request");
+            Error << "Got invalid request" << std::endl;;
         }
 
         std::string response_string;
@@ -98,8 +102,6 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
 }
 
 int main(){
-    openlog("sls", LOG_NDELAY, LOG_LOCAL1);
-    setlogmask(LOG_UPTO(LOG_INFO));
     srand(time(0));
 
     s = new sls::SLS(CONFIG_DISK_DIR);
