@@ -6,7 +6,9 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a test_client convert fsck indexer
+all: sls libsls.so libsls.a convert fsck indexer
+
+test: test_client
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	cp *.a ${DESTDIR}/${PREFIX}/lib
@@ -32,8 +34,8 @@ convert: src/convert.cc legacy.pb.o
 indexer: src/indexer.cc index.o archive.o
 	${CXX} ${CXXFLAGS} src/indexer.cc index.o archive.o -o indexer -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
-test_client: src/test_client.cc sls.pb.o slsc.o client.o archive.o
-	${CXX} ${CXXFLAGS} src/test_client.cc sls.pb.o slsc.o client.o archive.o -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket
+test_client: src/test_client.cc
+	${CXX} ${CXXFLAGS} src/test_client.cc -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
 
 libsls.so: slsc.o client.o error.o sls.pb.o archive.o
 	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o archive.o
@@ -81,6 +83,7 @@ clean:
 	rm -f *.o
 	rm -f *.so *.a
 	rm -f test_client
+	rm -f test
 	rm -rf sls
 	rm -rf convert
 	rm -rf indexer

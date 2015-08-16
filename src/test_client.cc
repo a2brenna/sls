@@ -41,41 +41,50 @@ void get_config(int argc, char* argv[]){
 
 
 int main(int argc, char* argv[]){
-    std::cerr << "Test Client Started... " << std::endl;
     get_config(argc, argv);
 
     sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(unix_domain_file));
 
     auto r = std::minstd_rand(std::chrono::high_resolution_clock::now().time_since_epoch().count());
-    //TODO: IMPLEMENT BETTER TESTS FOR CORRECTNESS OF FUNCTIONS
 
     {
         std::string test_key = "numeric_test";
         std::vector<std::string> test_data = { "1","2","3","4","5","6","7","8","9","0" };
-
         for(const auto &i: test_data){
-            std::cerr << "Appending" << std::endl;
             sls::append(test_key, i);
         }
 
-        const auto all = sls::all(test_key);
-        std::cout << "Got: " << all->size() << std::endl;
+        {
+            std::vector<std::string> expected_response = test_data;
+            std::vector<std::string> actual_response;
 
-        for(const auto &r: *all){
-            std::cout << r.data() << std::endl;
+            const auto all = sls::all(test_key);
+
+            for(const auto &r: *all){
+                actual_response.push_back(r.data());
+            }
+
+            assert(actual_response == expected_response);
+            std::cout << "all() test passed" << std::endl;
         }
 
-        const auto last = sls::lastn(test_key, 3);
-        std::cout << "Got: " << last->size() << std::endl;
+        {
+            std::vector<std::string> expected_response = { "8", "9", "0" };
+            std::vector<std::string> actual_response;
 
-        for(const auto &r: *last){
-            std::cout << r.data() << std::endl;
+            const auto last = sls::lastn(test_key, 3);
+
+            for(const auto &r: *last){
+                actual_response.push_back(r.data());
+            }
+
+            assert(actual_response == expected_response);
+            std::cout << "lastn() test passed" << std::endl;
         }
 
+        return 0;
 
     }
-
-    return 0;
 
     {
         std::map<std::string, std::vector<std::string>> test_data;
