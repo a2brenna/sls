@@ -18,7 +18,7 @@
 
 sls::SLS *s;
 
-slog::Log Error(std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogErr)), slog::kLogErr, "ERROR");
+std::unique_ptr<slog::Log> Error;
 
 //TODO: THIS IS NOT SAFE
 void shutdown(int signal){
@@ -85,11 +85,11 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 response.set_success(true);
             }
             else{
-                Error << "Cannot handle request" << std::endl;;
+                *Error << "Cannot handle request" << std::endl;;
             }
         }
         else{
-            Error << "Got invalid request" << std::endl;;
+            *Error << "Got invalid request" << std::endl;;
         }
 
         std::string response_string;
@@ -103,6 +103,8 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
 
 int main(){
     srand(time(0));
+    slog::initialize_syslog("sls", LOG_USER);
+    Error = std::unique_ptr<slog::Log>( new slog::Log(std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogErr)), slog::kLogErr, "ERROR"));
 
     s = new sls::SLS(CONFIG_DISK_DIR);
 
