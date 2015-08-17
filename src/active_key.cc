@@ -69,13 +69,12 @@ void Active_Key::append(const std::string &new_val){
 }
 
 void Active_Key::_sync(){
-    assert(_num_elements > 0);
-
     if( _synced ){
         return;
     }
 
     Index_Record record(_last_time, _start_pos + _num_elements - 1, _name, _last_element_start);
+    assert(_num_elements > 0);
     std::ofstream o(_index.str(), std::ofstream::app | std::ofstream::binary);
     assert(o);
     o << record;
