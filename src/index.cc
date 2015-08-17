@@ -123,12 +123,12 @@ const std::vector<Index_Record> Index::time_lookup(const uint64_t &start, const 
         size_t ie = _index.size() - 1;
         size_t i = 0;
         for( ; i < _index.size(); i++){
-            if(_index[i].timestamp() < start){
+            if(_index[i].timestamp() <= start){
                 is = i;
             }
         }
         for(; i < _index.size(); i++){
-            if(_index[i].timestamp() < end){
+            if(_index[i].timestamp() <= end){
                 ie = i;
             }
         }
@@ -165,12 +165,12 @@ const std::vector<Index_Record> Index::position_lookup(const uint64_t &start, co
 
         size_t i = 0;
         for( ; i < _index.size(); i++){
-            if(_index[i].position() < start){
+            if(_index[i].position() <= start){
                 is = i;
             }
         }
         for(; i < _index.size(); i++){
-            if(_index[i].position() < end){
+            if(_index[i].position() <= end){
                 ie = i;
             }
         }
