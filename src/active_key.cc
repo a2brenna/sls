@@ -100,6 +100,7 @@ std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end){
     for(const auto &f: files){
         Path path(_base_dir.str() + _key + "/" + f.filename());
         Archive arch(path);
+        arch.set_index(f.offset());
         while(true){
             try{
                 const uint64_t current_time = arch.head_time();
@@ -144,6 +145,7 @@ std::string Active_Key::_index_lookup(const size_t &start, const size_t &end){
         size_t current_index = f.position();
         Path path(_base_dir.str() + _key + "/" + f.filename());
         Archive arch(path);
+        arch.set_index(f.offset());
         while(true){
             try{
                 if( current_index < start){

@@ -95,3 +95,7 @@ void Archive::advance_index(){
 
     _index = new_index;
 }
+
+void Archive::set_index(const size_t &offset){
+    _index = offset;
+}

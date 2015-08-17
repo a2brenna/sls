@@ -19,6 +19,7 @@ class Archive{
         std::vector<std::pair<uint64_t, std::string>> extract() const;
         uint64_t index() const;
         void advance_index();
+        void set_index(const size_t &offset);
 
     private:
         std::string _raw;
