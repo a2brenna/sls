@@ -194,7 +194,7 @@ size_t Index::num_elements() const{
         return 0;
     }
     else{
-        return _index.back().position();
+        return _index.back().position() + 1; //Index positions counts from 0
     }
 }
 
