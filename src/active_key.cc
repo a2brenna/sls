@@ -174,7 +174,7 @@ std::string Active_Key::last_lookup( const size_t &max_values){
     std::unique_lock<std::mutex> l(_lock);
     const size_t total_elements = _num_elements + _start_pos;
     //The - 1 here is because the bounds on these index lookups are inclusive
-    const size_t upper_bound = total_elements - 1;
+    const size_t upper_bound = total_elements;
     const int lower_bound_index = upper_bound - max_values + 1;
     const size_t lower_bound = std::max(0, lower_bound_index);
 
