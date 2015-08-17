@@ -18,7 +18,7 @@ std::shared_ptr<Active_Key> SLS::_get_active_file(const std::string &key){
         //TODO: move this? will cause creation of empty directories here...
         const auto d = mkdir((_disk_dir + key).c_str(), 0755);
         if( d != 0 ){
-            if(errno != EISDIR){
+            if(errno != EEXIST){
                 throw Fatal_Error();
             }
         }

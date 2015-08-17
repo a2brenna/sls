@@ -3,6 +3,7 @@ fsck
 convert
 sls
 indexer
+sls_extract
 *.a
 *.so
 *.o
