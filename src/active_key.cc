@@ -38,10 +38,6 @@ void Active_Key::append(const std::string &new_val){
     std::ofstream o(_filepath().str(), std::ofstream::app | std::ofstream::binary);
     assert(o);
 
-    if(_filesize != 0){
-        _last_element_start = _filesize + 1;
-    }
-
     o.write((char *)&current_time, sizeof(uint64_t));
     assert(o);
     o.write((char *)&val_length, sizeof(uint64_t));
@@ -51,13 +47,9 @@ void Active_Key::append(const std::string &new_val){
 
     o.close();
 
-    if(_last_element_start == 0){
-        _filesize = (_last_element_start + (2 * sizeof(uint64_t)) + val_length);
-    }
-    else{
-        _filesize = (_last_element_start + (2 * sizeof(uint64_t)) + val_length) - 1;
-    }
-
+    const auto written = (2 * sizeof(uint64_t)) + val_length;
+    _last_element_start = _filesize;
+    _filesize = _filesize + written;
 
     _last_time = current_time;
     _synced = false;
