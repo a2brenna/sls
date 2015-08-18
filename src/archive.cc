@@ -42,14 +42,16 @@ std::string Archive::head_data() const{
 
 std::string Archive::head_record() const{
     const char *i = _raw.c_str() + _index;
-    if(i == (_raw.c_str() + _raw.size())){
+    const char *end_of_archive = _raw.c_str() + _raw.size();
+    if(i == end_of_archive){
         throw End_Of_Archive();
     }
-    assert( i < (_raw.c_str() + _raw.size()) );
 
     const uint64_t data_length = *( (uint64_t *)(i + sizeof(uint64_t)) );
     const size_t record_length = sizeof(uint64_t) * 2 + data_length;
 
+    assert( i < end_of_archive );
+    assert(record_length > 0);
     return std::string( i, record_length);
 }
 
