@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a convert fsck indexer sls_query
+all: sls libsls.so libsls.a convert fsck sls_query
 
 test: test_client
 
@@ -30,9 +30,6 @@ fsck: src/fsck.cc sls.pb.o index.o archive.o
 
 convert: src/convert.cc legacy.pb.o
 	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o -o convert -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
-
-indexer: src/indexer.cc index.o archive.o
-	${CXX} ${CXXFLAGS} src/indexer.cc index.o archive.o -o indexer -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
 sls_query: src/sls_query.cc
 	${CXX} ${CXXFLAGS} src/sls_query.cc -o sls_query -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsls -lsmplsocket
