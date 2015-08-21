@@ -199,7 +199,7 @@ size_t Index::num_elements() const{
     }
 }
 
-Index build_index(const Path &directory){
+Index build_index(const Path &directory, const size_t &resolution){
     std::vector<std::pair<uint64_t, Index_Record>> timestamp_records;
     std::vector<std::string> files;
     const auto m = getdir(directory.str(), files);
@@ -208,10 +208,16 @@ Index build_index(const Path &directory){
     std::map<std::string, size_t> size_map;
 
     for(const auto &file: files){
+        bool dirty = false;
+        if(file == "index"){
+            continue;
+        }
         Path arch_path(directory.str() + "/" + file);
         Archive arch(arch_path);
 
         const uint64_t first_timestamp = arch.head_time();
+        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(first_timestamp, Index_Record(first_timestamp, 0, file, 0)));
+
         size_t count = 1;
         uint64_t last_index = 0;
 
@@ -219,10 +225,15 @@ Index build_index(const Path &directory){
 
         for(;;){
             try{
+                if(count % resolution == 0){
+                    timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
+                    dirty = false;
+                }
                 arch.advance_index();
                 last_timestamp = arch.head_time();
                 last_index = arch.index();
                 count++;
+                dirty = true;
             }
             catch(End_Of_Archive e){
                 break;
@@ -233,8 +244,9 @@ Index build_index(const Path &directory){
         assert(last_timestamp >= first_timestamp);
         assert(last_index > 0);
 
-        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(first_timestamp, Index_Record(first_timestamp, 0, file, 0)));
-        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
+        if(dirty){
+            timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
+        }
         size_map[file] = count;
     }
 

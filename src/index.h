@@ -51,6 +51,6 @@ class Index {
 
 std::ostream& operator<<(std::ostream& out, const Index &i);
 
-Index build_index(const Path &directory);
+Index build_index(const Path &directory, const size_t &resolution);
 
 #endif

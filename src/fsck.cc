@@ -7,7 +7,7 @@
 #include <fstream>
 
 std::string CONFIG_SLS_DIR;
-size_t CONFIG_RESOLUTION = 4000;
+size_t CONFIG_RESOLUTION = 5;
 
 namespace po = boost::program_options;
 
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]){
         Path key_directory(CONFIG_SLS_DIR + "/" + k);
         Index index;
         try{
-            index = build_index(key_directory.str());
+            index = build_index(key_directory.str(), CONFIG_RESOLUTION);
         }
         catch(...){
             std::cerr << "Error, failure to build_index for: " << key_directory.str() << std::endl;
