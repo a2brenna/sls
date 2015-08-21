@@ -16,6 +16,10 @@ uint64_t Archive::index() const{
     return _index;
 }
 
+size_t Archive::size() const{
+    return _raw.size();
+}
+
 uint64_t Archive::head_time() const{
     const char *i = _raw.c_str() + _index;
     if(i == (_raw.c_str() + _raw.size())){
