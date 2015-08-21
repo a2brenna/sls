@@ -225,7 +225,7 @@ Index build_index(const Path &directory, const size_t &resolution){
 
         for(;;){
             try{
-                if(count % resolution == 0){
+                if( (count % resolution == 0) && dirty ){
                     timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
                     dirty = false;
                 }
