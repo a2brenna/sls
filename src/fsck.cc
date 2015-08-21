@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
 
         Path index_file(CONFIG_SLS_DIR + "/" + k + "/index");
         std::ofstream o(index_file.str(), std::ofstream::out | std::ofstream::trunc );
-        if(o){
+        if(!o){
             std::cerr << "Error, unable to open file for writing: " << index_file.str() << std::endl;
             continue;
         }
