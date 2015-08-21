@@ -11,6 +11,8 @@ class Archive{
 
     public:
         Archive(const Path &file);
+        Archive(const Path &file, const size_t &offset);
+        Archive(const Path &file, const size_t &offset, const size_t &max_size);
         Archive(const std::string &raw);
 
         uint64_t head_time() const;

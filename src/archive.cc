@@ -1,9 +1,30 @@
 #include "archive.h"
-#include <hgutil/files.h>
+#include <fstream>
 #include <cassert>
 
+std::string readfile(const Path &filepath, const size_t &offset, const size_t &max_size){
+    std::string output;
+    std::ifstream i(filepath.str(), std::ios_base::in);
+    i.seekg(offset, i.beg);
+
+    if(max_size > 0){
+        output.resize(max_size);
+        i.get(&output[0], max_size);
+    }
+    else{
+        i >> output;
+    }
+
+    return output;
+}
+
 Archive::Archive(const Path &file){
-    _raw = readfile(file.str());
+    _raw = readfile(file, 0, 0);
+    _index = 0;
+}
+
+Archive::Archive(const Path &file, const size_t &offset){
+    _raw = readfile(file, offset, 0);
     _index = 0;
 }
 
