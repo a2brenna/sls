@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cassert>
 #include <algorithm>
+#include <map>
 #include "archive.h"
 
 Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
@@ -204,39 +205,50 @@ Index build_index(const Path &directory){
     const auto m = getdir(directory.str(), files);
     assert(m == 0);
 
-    uint64_t position = 0;
+    std::map<std::string, size_t> size_map;
 
     for(const auto &file: files){
         Path arch_path(directory.str() + "/" + file);
         Archive arch(arch_path);
 
         const uint64_t first_timestamp = arch.head_time();
-        const uint64_t first_position = position;
+        size_t count = 1;
+        uint64_t last_index = 0;
 
         uint64_t last_timestamp = first_timestamp;
-        uint64_t last_index = 0;
 
         for(;;){
             try{
                 arch.advance_index();
-                position++;
                 last_timestamp = arch.head_time();
                 last_index = arch.index();
+                count++;
             }
             catch(End_Of_Archive e){
                 break;
             }
         }
 
-        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(first_timestamp, Index_Record(first_timestamp, first_position, file, 0)));
-        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, position, file, last_index)));
+        assert(count > 0);
+        assert(last_timestamp >= first_timestamp);
+        assert(last_index > 0);
+
+        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(first_timestamp, Index_Record(first_timestamp, 0, file, 0)));
+        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
+        size_map[file] = count;
     }
 
     std::sort(timestamp_records.begin(), timestamp_records.end());
 
     Index index;
+    size_t count = 0;
+    std::string previous_filename = "";
     for(const auto &r: timestamp_records){
-        index.append(r.second);
+        if(r.second.filename() != previous_filename){
+            count = count + size_map[previous_filename];
+        }
+        index.append(Index_Record(r.second.timestamp(), count + r.second.position(), r.second.filename(), r.second.offset()));
+        previous_filename = r.second.filename();
     }
     return index;
 }
