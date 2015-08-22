@@ -9,13 +9,12 @@
 #include <smplsocket.h>
 
 #include "sls.h"
-#include <hgutil/strings.h>
+#include "util.h"
 
 namespace po = boost::program_options;
 
 std::string unix_domain_file;
 
-const std::string key_alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 size_t CONFIG_MAX_KEYS = 1000;
 size_t CONFIG_MAX_ELEMENTS = 100000;
 
