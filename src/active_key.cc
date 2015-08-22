@@ -5,6 +5,7 @@
 #include "archive.h"
 #include "index.h"
 #include "util.h"
+#include "config.h"
 
 Active_Key::Active_Key(const Path &base_dir, const std::string &key):
     _base_dir(base_dir),
@@ -55,8 +56,10 @@ void Active_Key::append(const std::string &new_val){
     _synced = false;
     _num_elements++;
 
-    if(_num_elements == 1){
-        _sync();
+    if(_num_elements > 0){
+        if( (_num_elements == 1) || ((_num_elements % CONFIG_RESOLUTION) == 0) ){
+            _sync();
+        }
     }
 }
 
