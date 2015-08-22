@@ -101,10 +101,11 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
     }
 }
 
-int main(){
+int main(int argc, char* argv[]){
     srand(time(0));
     slog::initialize_syslog("sls", LOG_USER);
     Error = std::unique_ptr<slog::Log>( new slog::Log(std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogErr)), slog::kLogErr, "ERROR"));
+    get_config(argc, argv);
 
     s = new sls::SLS(CONFIG_DISK_DIR);
 
