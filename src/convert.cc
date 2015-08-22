@@ -1,6 +1,5 @@
 #include <boost/program_options.hpp>
 #include <cassert>
-#include <hgutil/files.h>
 
 //for mkdir()
 #include <sys/stat.h>
@@ -14,6 +13,7 @@
 #include <set>
 
 #include "legacy.pb.h"
+#include "file.h"
 
 std::string CONFIG_SOURCE_DIR;
 std::string CONFIG_TARGET_DIR;
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
             const std::string target_file = target_path + "/" + file;
 
             std::cerr << "Reading: " << source_file << std::endl;
-            const std::string data = readfile(source_file);
+            const std::string data = readfile(source_file, 0, 0);
             std::cerr << "Read: " << data.size() << std::endl;
 
             //parse

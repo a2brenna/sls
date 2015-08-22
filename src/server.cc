@@ -4,7 +4,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include "hgutil/files.h"
 #include "active_key.h"
 
 namespace sls{

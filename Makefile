@@ -22,26 +22,26 @@ uninstall:
 	rm ${DESTDIR}/${PREFIX}/include/sls.h
 	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
 
-sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o active_key.o index.o -o sls -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lslog
+sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o file.o src/config.h
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o file.o active_key.o index.o -o sls -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lslog
 
-fsck: src/fsck.cc sls.pb.o index.o archive.o
-	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o -o fsck -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+fsck: src/fsck.cc sls.pb.o index.o archive.o file.o
+	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o file.o -o fsck -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
-convert: src/convert.cc legacy.pb.o
-	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o -o convert -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+convert: src/convert.cc legacy.pb.o file.o
+	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o file.o -o convert -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
 sls_query: src/sls_query.cc
-	${CXX} ${CXXFLAGS} src/sls_query.cc -o sls_query -lprotobuf -lpthread -lhgutil -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsls -lsmplsocket
+	${CXX} ${CXXFLAGS} src/sls_query.cc -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsls -lsmplsocket
 
 test_client: src/test_client.cc
 	${CXX} ${CXXFLAGS} src/test_client.cc -o test_client -lprotobuf -lpthread -lhgutil -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
 
-libsls.so: slsc.o client.o error.o sls.pb.o archive.o
-	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o archive.o
+libsls.so: slsc.o client.o error.o sls.pb.o archive.o file.o
+	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o archive.o file.o
 
-libsls.a: slsc.o client.o error.o sls.pb.o archive.o
-	ar rcs libsls.a slsc.o client.o error.o sls.pb.o archive.o
+libsls.a: slsc.o client.o error.o sls.pb.o archive.o file.o
+	ar rcs libsls.a slsc.o client.o error.o sls.pb.o archive.o file.o
 
 server.o: src/server.cc
 	${CXX} ${CXXFLAGS} -c src/server.cc -o server.o
@@ -60,6 +60,9 @@ index.o: src/index.cc
 
 error.o: src/error.cc
 	${CXX} ${CXXFLAGS} -c src/error.cc -o error.o
+
+file.o: src/file.cc
+	${CXX} ${CXXFLAGS} -c src/file.cc -o file.o
 
 slsc.o: src/slsc.cc
 	${CXX} ${CXXFLAGS} -c src/slsc.cc -o slsc.o

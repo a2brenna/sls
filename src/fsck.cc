@@ -1,6 +1,5 @@
 #include "index.h"
 #include <boost/program_options.hpp>
-#include <hgutil/files.h>
 
 #include <vector>
 #include <string>

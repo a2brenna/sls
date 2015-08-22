@@ -1,11 +1,11 @@
 #include "index.h"
-#include <hgutil/files.h>
 #include <sstream>
 #include <fstream>
 #include <cassert>
 #include <algorithm>
 #include <map>
 #include "archive.h"
+#include "file.h"
 
 Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
     _timestamp = timestamp;
