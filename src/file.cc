@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <fstream>
+#include <sstream>
 
 int getdir(std::string dir, std::vector<std::string> &files) {
   struct dirent *dirp;
@@ -25,19 +26,21 @@ int getdir(std::string dir, std::vector<std::string> &files) {
 }
 
 std::string readfile(const Path &filepath, const size_t &offset, const size_t &max_size){
-    std::string output;
     std::ifstream i(filepath.str(), std::ios_base::in);
     i.seekg(offset, i.beg);
 
     if(max_size > 0){
+        std::string output;
         output.resize(max_size);
         i.get(&output[0], max_size);
+        return output;
     }
     else{
-        i >> output;
+        std::stringstream s;
+        s << i.rdbuf();
+        return s.str();
     }
 
-    return output;
 }
 
 
