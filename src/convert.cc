@@ -62,7 +62,10 @@ int main(int argc, char *argv[]){
 
         const std::string directory = CONFIG_SOURCE_DIR + "/" + k;
         const auto g = getdir(directory, _f);
-        assert( g == 0 );
+        if( g != 0 ){
+            std::cerr << "Error processing: " << directory << std::endl;
+            continue;
+        }
 
         for(const auto &f: _f){
             files[k].insert(f);
