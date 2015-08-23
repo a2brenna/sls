@@ -26,6 +26,7 @@ class Active_Key{
         Path _index;
         Path _filepath() const;
         std::string _index_lookup(const size_t &start, const size_t &end);
+        void _initialize(const std::string key);
         void _sync();
         size_t _start_pos;
         size_t _num_elements;
