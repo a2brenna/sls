@@ -29,7 +29,7 @@ namespace sls{
             std::mutex _active_file_map_lock;
             std::map<std::string, std::shared_ptr<Active_Key>> _active_files;
 
-            std::shared_ptr<Active_Key> _get_active_file(const std::string &key);
+            std::shared_ptr<Active_Key> _get_active_file(const std::string &key, const bool &create_if_missing);
 
     };
 
