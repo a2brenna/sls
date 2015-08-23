@@ -20,12 +20,53 @@ sls::SLS *s;
 
 std::unique_ptr<slog::Log> Error;
 
-//TODO: THIS IS NOT SAFE
+std::mutex requests_in_progress_lock;
+int requests_in_progress = 0;
+bool shutting_down = false;
+
+/*Need to make sure that no threads are manipulating state on disk during
+ * shutdown. Keep track of the number of threads that could possibly be
+ * manipulating state on disk with "requests_in_progress" (see
+ * handle_channel(...)). All threads must increment "requests_in_progress"
+ * before entering critical section. Additionally, threads check to see
+ * if we're shutting down before incrementing, terminating if we are
+ * (causing the client Channel to close, indicating request failure).
+ * Once in the critical section, non-zero "requests_in_progress" prevent
+ * shutdown from proceeding until disk is in a consistent state.  Leaking
+ * the lock prevents additional threads from entering critical section once
+ * the last thread has completed it.
+ *
+ * The "shutting_down" bool should prevent threads from waiting on
+ * requests_in_progress_lock and beginning another critical section after
+ * requests_in_progress goes to 0, but before the shutdown thread can acquire
+ * requests_in_progress_lock and complete shutdown.
+ */
 void shutdown(int signal){
+    //Main thread can no longer accept new connections...
     (void)signal;
-    //shutdown backend server
-    delete s;
-    //exit gracefully
+
+    for(;;){
+        //supposed to leak...
+        requests_in_progress_lock.lock();
+        assert(requests_in_progress >= 0);
+        shutting_down = true;
+        if(requests_in_progress == 0){
+            //All threads dead or safe to kill
+            break;
+        }
+        else{
+            //Need to unlock so one or more thread(s) can complete event loop
+            //(and decrement requests_in_progress)
+            requests_in_progress_lock.unlock();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+
+    //all handle_channel() threads should have terminated OR are blocked
+    //in recv() or otherwise safe to kill.
+
+    delete s; //Causes indices to be synced to disk
+
     exit(0);
 }
 
@@ -38,6 +79,17 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
         catch(smpl::Transport_Failed e){
             break;
         }
+
+        {
+            std::lock_guard<std::mutex> l(requests_in_progress_lock);
+            if(shutting_down){
+                break;
+            }
+            assert(requests_in_progress >= 0);
+            requests_in_progress++;
+        }
+        //Very important that the following code completes and requests_in_progress
+        //gets decremented.
 
         sls::Request request;
         request.ParseFromString(request_string);
@@ -98,6 +150,10 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
         if(response.data_to_follow()){
             client->send(data_string);
         }
+
+        std::lock_guard<std::mutex> l(requests_in_progress_lock);
+        assert(requests_in_progress > 0);
+        requests_in_progress--;
     }
 }
 
