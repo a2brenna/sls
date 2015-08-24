@@ -14,6 +14,8 @@ Active_Key::Active_Key(const Path &base_dir, const std::string &key):
     _initialize(key);
 }
 
+//key is deliberately pass by value here because I'm afraid of problems when
+//Active_Key _initialize(...)s itself in Active_Key::append(...);
 void Active_Key::_initialize(const std::string key){
     _key = key;
     _name = RandomString(32);
@@ -66,6 +68,8 @@ void Active_Key::append(const std::string &new_val){
         }
         else if( (_num_elements % CONFIG_RESOLUTION) == 0){
             _sync();
+            //Starts a new randomly named file, thus limiting max datapoints
+            //per file to CONFIG_RESOLUTION.
             _initialize(_key);
         }
     }
@@ -98,7 +102,7 @@ size_t Active_Key::num_elements() const{
     return _num_elements;
 }
 
-std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end){
+std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end) const{
     std::unique_lock<std::mutex> l(_lock);
 
     std::string result;
@@ -138,12 +142,12 @@ std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end){
     return result;
 }
 
-std::string Active_Key::index_lookup(const size_t &start, const size_t &end){
+std::string Active_Key::index_lookup(const size_t &start, const size_t &end) const{
     std::unique_lock<std::mutex> l(_lock);
     return _index_lookup(start, end);
 }
 
-std::string Active_Key::_index_lookup(const size_t &start, const size_t &end){
+std::string Active_Key::_index_lookup(const size_t &start, const size_t &end) const{
     assert(start <= end);
     std::string result;
 
@@ -183,7 +187,7 @@ std::string Active_Key::_index_lookup(const size_t &start, const size_t &end){
     return result;
 }
 
-std::string Active_Key::last_lookup( const size_t &max_values){
+std::string Active_Key::last_lookup( const size_t &max_values) const{
     std::unique_lock<std::mutex> l(_lock);
     const int total_elements = _num_elements + _start_pos;
     const int last_index = total_elements - 1;
