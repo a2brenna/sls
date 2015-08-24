@@ -1,12 +1,8 @@
 #include <boost/program_options.hpp>
 #include <cassert>
-
-//for mkdir()
-#include <sys/stat.h>
+#include <sys/stat.h>//for mkdir()
 #include <sys/types.h>
-
 #include <fstream>
-
 #include <string>
 #include <vector>
 #include <map>
@@ -73,7 +69,6 @@ int main(int argc, char *argv[]){
     }
 
     for(const auto &file_list: files){
-
         //mkdir in target
         const std::string source_path = CONFIG_SOURCE_DIR + "/" + file_list.first;
         const std::string target_path = CONFIG_TARGET_DIR + "/" + file_list.first;
@@ -94,8 +89,7 @@ int main(int argc, char *argv[]){
             legacy::Archive old_archive;
             old_archive.ParseFromString(data);
 
-
-            std::cerr << "Opening file: " << target_file << std::endl;
+            std::cerr << "Writing file: " << target_file << std::endl;
             std::ofstream o(target_file, std::ofstream::binary);
             assert(o);
 
@@ -110,9 +104,7 @@ int main(int argc, char *argv[]){
 
             }
             o.close();
-            std::cerr << "Closed file: " << target_file << std::endl;
         }
     }
-
     return 0;
 }
