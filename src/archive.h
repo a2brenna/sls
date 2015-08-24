@@ -15,14 +15,14 @@ class Archive{
         Archive(const Path &file, const size_t &offset, const size_t &max_size);
         Archive(const std::string &raw);
 
+        void advance_index();
+        void set_offset(const size_t &offset);
         uint64_t head_time() const;
         std::string head_data() const;
         std::string head_record() const;
         std::vector<std::pair<uint64_t, std::string>> extract() const;
         uint64_t index() const;
         size_t size() const;
-        void advance_index();
-        void set_index(const size_t &offset);
 
     private:
         std::string _raw;
