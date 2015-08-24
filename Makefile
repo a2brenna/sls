@@ -37,11 +37,11 @@ sls_query: src/sls_query.cc
 test_client: src/test_client.cc util.o
 	${CXX} ${CXXFLAGS} src/test_client.cc util.o -o test_client -lprotobuf -lpthread -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
 
-libsls.so: slsc.o client.o error.o sls.pb.o archive.o file.o
-	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o error.o sls.pb.o archive.o file.o
+libsls.so: slsc.o client.o sls.pb.o archive.o file.o
+	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o sls.pb.o archive.o file.o
 
-libsls.a: slsc.o client.o error.o sls.pb.o archive.o file.o
-	ar rcs libsls.a slsc.o client.o error.o sls.pb.o archive.o file.o
+libsls.a: slsc.o client.o sls.pb.o archive.o file.o
+	ar rcs libsls.a slsc.o client.o sls.pb.o archive.o file.o
 
 server.o: src/server.cc
 	${CXX} ${CXXFLAGS} -c src/server.cc -o server.o
@@ -57,9 +57,6 @@ client.o: src/client.cc
 
 index.o: src/index.cc
 	${CXX} ${CXXFLAGS} -c src/index.cc -o index.o
-
-error.o: src/error.cc
-	${CXX} ${CXXFLAGS} -c src/error.cc -o error.o
 
 file.o: src/file.cc
 	${CXX} ${CXXFLAGS} -c src/file.cc -o file.o
