@@ -42,6 +42,3 @@ std::string readfile(const Path &filepath, const size_t &offset, const size_t &m
     }
 
 }
-
-
-
