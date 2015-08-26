@@ -21,13 +21,10 @@ std::shared_ptr<Active_Key> SLS::_get_active_file(const std::string &key, const 
                     throw Fatal_Error();
                 }
             }
-            std::shared_ptr<Active_Key> active_file(new Active_Key(_disk_dir, key));
-            _active_files[key] = active_file;
-            return active_file;
         }
-        else{
-            return nullptr;
-        }
+        std::shared_ptr<Active_Key> active_file(new Active_Key(_disk_dir, key));
+        _active_files[key] = active_file;
+        return active_file;
     }
 }
 
@@ -38,32 +35,17 @@ void SLS::append(const std::string &key, const std::string &data){
 
 std::string SLS::time_lookup(const std::string &key, const uint64_t &start, const uint64_t &end){
     std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
-    if(active_key != nullptr){
-        return active_key->time_lookup(start, end);
-    }
-    else{
-        return "";
-    }
+    return active_key->time_lookup(start, end);
 }
 
 std::string SLS::index_lookup(const std::string &key, const size_t &start, const size_t &end){
     std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
-    if(active_key != nullptr){
-        return active_key->index_lookup(start, end);
-    }
-    else{
-        return "";
-    }
+    return active_key->index_lookup(start, end);
 }
 
 std::string SLS::last_lookup(const std::string &key, const size_t &max_values){
     std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
-    if(active_key != nullptr){
-        return active_key->last_lookup(max_values);
-    }
-    else{
-        return "";
-    }
+    return active_key->last_lookup(max_values);
 }
 
 SLS::SLS(const std::string &dd){
