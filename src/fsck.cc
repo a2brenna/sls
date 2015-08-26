@@ -6,7 +6,7 @@
 #include <fstream>
 
 std::string CONFIG_SLS_DIR;
-size_t CONFIG_RESOLUTION = 5;
+size_t CONFIG_RESOLUTION = 1000;
 
 namespace po = boost::program_options;
 
@@ -54,6 +54,7 @@ int main(int argc, char *argv[]){
             index = build_index(key_directory.str(), CONFIG_RESOLUTION);
         }
         catch(...){
+            throw;
             std::cerr << "Error, failure to build_index for: " << key_directory.str() << std::endl;
             continue;
         }
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]){
         else{
             o << index;
             o.close();
+            std::cout << "Indexed " << key_directory.str() << std::endl;
         }
     }
 
