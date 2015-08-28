@@ -108,6 +108,18 @@ void Index::append(const Index_Record &r){
     }
 }
 
+const std::vector<Index_Record> Index::get_records(const std::string &chunk_name) const{
+    std::vector<Index_Record> records;
+
+    for(const auto &r: _index){
+        if(r.filename() == chunk_name){
+            records.push_back(r);
+        }
+    }
+
+    return records;
+}
+
 const std::vector<Index_Record> Index::time_lookup(const uint64_t &start, const uint64_t &end){
     assert(start <= end);
     std::vector<Index_Record> files;

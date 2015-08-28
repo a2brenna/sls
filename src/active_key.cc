@@ -84,7 +84,10 @@ void Active_Key::_sync(){
 
     //Check the index on disk in case its changed since we instantiated this Active_File
     Index index(_index);
-    _start_pos = index.num_elements();
+    const auto relevant_records = index.get_records(_name);
+    if(!relevant_records.empty()){
+        _start_pos = index.get_records(_name).front().position();
+    }
 
     Index_Record record(_last_time, _start_pos + _num_elements - 1, _name, _last_element_start);
     std::ofstream o(_index.str(), std::ofstream::app | std::ofstream::binary);

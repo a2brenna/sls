@@ -42,6 +42,7 @@ class Index {
         const std::vector<Index_Record> time_lookup(const uint64_t &start, const uint64_t &end);
         const std::vector<Index_Record> position_lookup(const uint64_t &start, const uint64_t &end);
         size_t num_elements() const;
+        const std::vector<Index_Record> get_records(const std::string &chunk_name) const;
         void append(const Index_Record &r);
 
     private:
