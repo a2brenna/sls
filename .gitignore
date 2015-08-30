@@ -1,6 +1,6 @@
 test_client
 fsck
-convert
+migrate
 sls
 indexer
 sls_query

@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a convert fsck sls_query
+all: sls libsls.so libsls.a migrate fsck sls_query
 
 test: test_client
 
@@ -28,8 +28,8 @@ sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o file.o
 fsck: src/fsck.cc sls.pb.o index.o archive.o file.o
 	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o file.o -o fsck -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
-convert: src/convert.cc legacy.pb.o file.o
-	${CXX} ${CXXFLAGS} src/convert.cc legacy.pb.o file.o -o convert -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+migrate: src/migrate.cc legacy.pb.o file.o
+	${CXX} ${CXXFLAGS} src/migrate.cc legacy.pb.o file.o -o migrate -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
 sls_query: src/sls_query.cc
 	${CXX} ${CXXFLAGS} src/sls_query.cc -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsls -lsmplsocket
@@ -88,7 +88,7 @@ clean:
 	rm -f test_client
 	rm -f test
 	rm -rf sls
-	rm -rf convert
+	rm -rf migrate
 	rm -rf indexer
 	rm -rf fsck
 	rm -rf src/*.pb.cc
