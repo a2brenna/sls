@@ -7,6 +7,8 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <deque>
+#include <chrono>
 
 #include "legacy.pb.h"
 #include "file.h"
@@ -90,10 +92,15 @@ int main(int argc, char *argv[]){
             old_archive.ParseFromString(data);
 
             std::cerr << "Writing file: " << target_file << std::endl;
-            std::ofstream o(target_file, std::ofstream::binary);
+            std::ofstream o(target_file, std::ofstream::binary | std::ofstream::trunc);
             assert(o);
 
+            std::deque<legacy::Value> legacy_values;
             for(const auto &value: old_archive.values()){
+                legacy_values.push_front(value);
+            }
+
+            for(const auto &value: legacy_values){
                 const uint64_t timestamp = value.time();
                 const std::string datagram = value.data();
                 const uint64_t datagram_length = datagram.size();
