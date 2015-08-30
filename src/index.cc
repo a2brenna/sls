@@ -7,6 +7,8 @@
 #include "archive.h"
 #include "file.h"
 
+#include <iostream>
+
 Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
     _timestamp = timestamp;
     _position = position;
@@ -271,9 +273,13 @@ Index build_index(const Path &directory, const size_t &resolution){
         if(r.second.filename() != previous_filename){
             count = count + size_map[previous_filename];
         }
-        index.append(Index_Record(r.second.timestamp(), count + r.second.position(), r.second.filename(), r.second.offset()));
+        try{
+            index.append(Index_Record(r.second.timestamp(), count + r.second.position(), r.second.filename(), r.second.offset()));
+        }
+        catch(Out_of_Order o){
+            std::cerr << directory.str() << "/" + r.second.filename() << " contains out of order data " << std::endl;
+        }
         previous_filename = r.second.filename();
     }
     return index;
 }
-
