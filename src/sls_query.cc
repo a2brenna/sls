@@ -12,6 +12,7 @@ size_t INDEX_START = 0;
 size_t INDEX_END = 0;
 uint64_t TIME_START = 0;
 uint64_t TIME_END = 0;
+std::string CONFIG_SERVER = "/tmp/sls.sock";
 
 void config(int argc, char *argv[]){
     po::options_description desc("Options");
@@ -23,6 +24,7 @@ void config(int argc, char *argv[]){
         ("start", po::value<uint64_t>(&TIME_START), "Time to start retrieving elements")
         ("end", po::value<uint64_t>(&TIME_END), "Time to start retrieving elements")
         ("all", po::bool_switch(&ALL), "Retrieve all elements")
+        ("unix_domain_file", po::value<std::string>(&CONFIG_SERVER), "Server unix domain file")
         ;
 
     po::variables_map vm;
@@ -44,7 +46,7 @@ void config(int argc, char *argv[]){
 int main(int argc, char *argv[]){
     config(argc, argv);
 
-    sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS("/tmp/sls.sock"));
+    sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(CONFIG_SERVER));
 
     std::shared_ptr<std::deque<sls::Value>> result;
     if(LAST > 0){
@@ -60,6 +62,7 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
+    std::cerr << "Retrieved: " << result->size() << std::endl;
     for(const auto &r: *result){
         std::cout << r.time() << " " << r.data() << std::endl;
     }
