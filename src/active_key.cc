@@ -38,8 +38,6 @@ Active_Key::~Active_Key(){
 }
 
 void Active_Key::_append(const std::string &new_val, const std::chrono::milliseconds &time){
-    std::unique_lock<std::mutex> l(_lock);
-
     const uint64_t current_time = time.count();
     if(_last_time > current_time){
         throw Out_of_Order();
