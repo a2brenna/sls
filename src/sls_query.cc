@@ -12,6 +12,9 @@ size_t INDEX_START = 0;
 size_t INDEX_END = 0;
 uint64_t TIME_START = 0;
 uint64_t TIME_END = 0;
+
+std::string VALUE = "";
+int64_t TIME = -1;
 std::string CONFIG_SERVER = "/tmp/sls.sock";
 
 void config(int argc, char *argv[]){
@@ -20,6 +23,8 @@ void config(int argc, char *argv[]){
     desc.add_options()
         ("help", "Produce help messagwe")
         ("key", po::value<std::string>(&KEY), "Key to retrieve values for")
+        ("append", po::value<std::string>(&VALUE), "Value to append")
+        ("time", po::value<int64_t>(&TIME), "Time (milliseconds since epoch) to append at")
         ("last", po::value<size_t>(&LAST), "Number of most recent elements to retrieve")
         ("start", po::value<uint64_t>(&TIME_START), "Time to start retrieving elements")
         ("end", po::value<uint64_t>(&TIME_END), "Time to start retrieving elements")
@@ -28,8 +33,15 @@ void config(int argc, char *argv[]){
         ;
 
     po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+
+    try{
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    }
+    catch(...){
+        std::cout << desc << std::endl;
+        exit(1);
+    }
 
     if (vm.count("help")) {
         std::cout << desc << std::endl;
@@ -48,23 +60,39 @@ int main(int argc, char *argv[]){
 
     sls::global_server = std::shared_ptr<smpl::Remote_Address>(new smpl::Remote_UDS(CONFIG_SERVER));
 
-    std::shared_ptr<std::deque<sls::Value>> result;
-    if(LAST > 0){
-        result = sls::lastn(KEY, LAST);
-    }
-    else if(TIME_END > TIME_START){
-        result = sls::intervalt(KEY, TIME_START, TIME_END);
-    }
-    else if(ALL){
-        result = sls::all(KEY);
+    if( VALUE != "" ){
+        if( TIME < 0 ){
+            const auto r = sls::append(KEY, VALUE);
+            if(!r){
+                return -1;
+            }
+        }
+        else{
+            const std::chrono::milliseconds time(TIME);
+            const auto r = sls::append(KEY, time, VALUE);
+            if(!r){
+                return -1;
+            }
+        }
     }
     else{
-        return -1;
-    }
+        std::shared_ptr<std::deque<sls::Value>> result;
+        if(LAST > 0){
+            result = sls::lastn(KEY, LAST);
+        }
+        else if(TIME_END > TIME_START){
+            result = sls::intervalt(KEY, TIME_START, TIME_END);
+        }
+        else if(ALL){
+            result = sls::all(KEY);
+        }
+        else{
+            return -1;
+        }
 
-    std::cerr << "Retrieved: " << result->size() << std::endl;
-    for(const auto &r: *result){
-        std::cout << r.time() << " " << r.data() << std::endl;
+        for(const auto &r: *result){
+            std::cout << r.time() << " " << r.data() << std::endl;
+        }
     }
 
     return 0;
