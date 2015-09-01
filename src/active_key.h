@@ -11,6 +11,7 @@ class Active_Key{
         Active_Key(const Active_Key &f) = delete;
         ~Active_Key();
         void append(const std::string &new_val);
+        void append(const std::string &new_val, const std::chrono::milliseconds &time);
         void sync();
         size_t num_elements() const;
         std::string index_lookup(const size_t &start, const size_t &end) const;
@@ -31,6 +32,7 @@ class Active_Key{
         uint64_t _last_time;
 
         Path _filepath() const;
+        void _append(const std::string &new_val, const std::chrono::milliseconds &time);
         std::string _index_lookup(const size_t &start, const size_t &end) const;
         void _initialize(const std::string key);
         void _sync();

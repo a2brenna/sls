@@ -2,6 +2,7 @@ package sls;
 
 message Append{
     required bytes data = 1;
+    optional uint64 time = 2;
 }
 
 message Range{

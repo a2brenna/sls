@@ -37,6 +37,14 @@ namespace sls{
             */
             bool append(const std::string &key, const std::string &data);
 
+            /* Append data to the list indicated by key at time
+            *
+            * key: Any std::string such that key.empty() = false
+            * time: Milliseconds since epoch > any previous time
+            * data: Any string
+            */
+            bool append(const std::string &key, const std::chrono::milliseconds &time, const std::string &data);
+
             /* Returns a deque of at most the N most recent entries in the list for key
             * in chronological order.  If the list for key contains less than
             * num_entries, the entire list is returned. If the list for key is empty,

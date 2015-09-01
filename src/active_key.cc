@@ -37,9 +37,14 @@ Active_Key::~Active_Key(){
     _sync();
 }
 
-void Active_Key::append(const std::string &new_val){
+void Active_Key::_append(const std::string &new_val, const std::chrono::milliseconds &time){
     std::unique_lock<std::mutex> l(_lock);
-    const uint64_t current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+    const uint64_t current_time = time.count();
+    if(_last_time > current_time){
+        throw Out_of_Order();
+    }
+
     const uint64_t val_length = new_val.size();
 
     std::ofstream o(_filepath().str(), std::ofstream::app | std::ofstream::binary);
@@ -73,6 +78,18 @@ void Active_Key::append(const std::string &new_val){
             _initialize(_key);
         }
     }
+}
+
+void Active_Key::append(const std::string &new_val, const std::chrono::milliseconds &time){
+    std::unique_lock<std::mutex> l(_lock);
+    _append(new_val, time);
+}
+
+void Active_Key::append(const std::string &new_val){
+    const auto current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+
+    std::unique_lock<std::mutex> l(_lock);
+    _append(new_val, current_time);
 }
 
 void Active_Key::_sync(){

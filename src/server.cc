@@ -33,6 +33,11 @@ void SLS::append(const std::string &key, const std::string &data){
     active_key->append(data);
 }
 
+void SLS::append(const std::string &key, const std::chrono::milliseconds &time, const std::string &data){
+    std::shared_ptr<Active_Key> active_key = _get_active_file(key, true);
+    active_key->append(data, time);
+}
+
 std::string SLS::time_lookup(const std::string &key, const uint64_t &start, const uint64_t &end){
     std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
     return active_key->time_lookup(start, end);

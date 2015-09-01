@@ -14,6 +14,13 @@ bool append(const std::string &key, const std::string &data){
     return c.append(key, data);
 }
 
+bool append(const std::string &key, const std::chrono::milliseconds &time, const std::string &data){
+    assert(!key.empty());
+
+    Client c(global_server);
+    return c.append(key, time, data);
+}
+
 std::shared_ptr< std::deque<sls::Value> > lastn(const std::string &key, const unsigned long long &num_entries){
     assert(!key.empty());
 

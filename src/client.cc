@@ -72,6 +72,21 @@ bool sls::Client::append(const std::string &key, const std::string &data){
     return retval.success();
 }
 
+bool sls::Client::append(const std::string &key, const std::chrono::milliseconds &time, const std::string &data){
+    assert(key.size() > 0);
+    sls::Request request;
+    request.set_key(key);
+
+    //TODO: Can do this in one step?
+    auto r = request.mutable_req_append();
+    r->set_data(data);
+    r->set_time(time.count());
+
+    sls::Response retval = _request(request).first;
+
+    return retval.success();
+}
+
 std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const std::string &key, const unsigned long long &num_entries){
     assert(key.size() > 0);
 

@@ -106,9 +106,19 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 sls::Append a = request.req_append();
                 const std::string data = a.data();
 
-                s->append(key, data);
-
-                response.set_success(true);
+                try{
+                    if(a.has_time()){
+                        const std::chrono::milliseconds time(a.time());
+                        s->append(key, time, data);
+                    }
+                    else{
+                        s->append(key, data);
+                    }
+                    response.set_success(true);
+                }
+                catch(Out_of_Order){
+                    response.set_success(false);
+                }
             }
             else if(request.has_req_range()){
                 const uint64_t start = request.mutable_req_range()->start();
