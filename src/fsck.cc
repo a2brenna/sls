@@ -4,8 +4,13 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <regex>
 
 std::string CONFIG_SLS_DIR;
+std::string CONFIG_INCLUDE_REGEX = ".*";
+std::string CONFIG_EXCLUDE_REGEX = "";
+std::regex include_regex;
+std::regex exclude_regex;
 size_t CONFIG_RESOLUTION = 1000;
 
 namespace po = boost::program_options;
@@ -17,6 +22,8 @@ void config(int argc, char *argv[]){
     desc.add_options()
         ("help", "Produce help message")
         ("sls_dir", po::value<std::string>(&CONFIG_SLS_DIR), "Directory to database from")
+        ("include_regex", po::value<std::string>(&CONFIG_INCLUDE_REGEX), "Fsck keys only if they match this regex and are not caught by the exclude_regex")
+        ("exclude_regex", po::value<std::string>(&CONFIG_EXCLUDE_REGEX), "Exclude keys matching this regex")
         ("resolution", po::value<size_t>(&CONFIG_RESOLUTION), "Resolution of the index")
         ;
 
@@ -35,6 +42,9 @@ void config(int argc, char *argv[]){
         exit(1);
     }
 
+    include_regex = std::regex(CONFIG_INCLUDE_REGEX);
+    exclude_regex = std::regex(CONFIG_EXCLUDE_REGEX);
+
 }
 
 int main(int argc, char *argv[]){
@@ -48,6 +58,14 @@ int main(int argc, char *argv[]){
     }
 
     for(const auto &k: keys){
+
+        if(!std::regex_match(k, include_regex)){
+            continue;
+        }
+        else if(std::regex_match(k, exclude_regex)){
+            continue;
+        }
+
         Path key_directory(CONFIG_SLS_DIR + "/" + k);
         Index index;
         try{
