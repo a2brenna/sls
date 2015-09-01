@@ -20,17 +20,23 @@ void get_config(int argc, char *argv[]){
         ("resolution", po::value<size_t>(&CONFIG_RESOLUTION), "Indexing resolution")
         ;
 
-    assert(CONFIG_RESOLUTION > 0);
+    try{
+        assert(CONFIG_RESOLUTION > 0);
 
-    std::ifstream global(global_config_file, std::ios_base::in);
-    std::string user_config_file = getenv("HOME");
-    std::ifstream user(user_config_file, std::ios_base::in);
+        std::ifstream global(global_config_file, std::ios_base::in);
+        std::string user_config_file = getenv("HOME");
+        std::ifstream user(user_config_file, std::ios_base::in);
 
-    po::variables_map vm;
-    po::store(po::parse_config_file(global, desc), vm);
-    po::store(po::parse_config_file(user, desc), vm);
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+        po::variables_map vm;
+        po::store(po::parse_config_file(global, desc), vm);
+        po::store(po::parse_config_file(user, desc), vm);
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    }
+    catch(...){
+        std::cerr << desc << std::endl;
+        exit(-1);
+    }
 
     return;
 }
