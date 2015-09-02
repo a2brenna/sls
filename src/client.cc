@@ -12,7 +12,7 @@ sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server){
     server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 
-std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> sls::Client::_request(const sls::Request &request){
+std::pair<sls::Response, std::vector<std::pair<std::chrono::milliseconds, std::string>>> sls::Client::_request(const sls::Request &request){
     assert(request.key().size() > 0);
 
     std::string request_string;
@@ -24,18 +24,17 @@ std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> sls::Cli
     sls::Response response;
     response.ParseFromString(returned);
 
-    std::vector<std::pair<uint64_t, std::string>> data_vector;
+    std::vector<std::pair<std::chrono::milliseconds, std::string>> data_vector;
 
     if(response.data_to_follow()){
         const Archive data(server_connection->recv());
         data_vector = data.extract();
     }
-    return std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>>(response, data_vector);
+    return std::pair<sls::Response, std::vector<std::pair<std::chrono::milliseconds, std::string>>>(response, data_vector);
 }
 
-std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::_interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
+std::vector<std::pair<std::chrono::milliseconds, std::string>> sls::Client::_interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
     assert(key.size() > 0);
-    std::shared_ptr<std::deque<std::pair<std::chrono::milliseconds, std::string>> > result_deque(new std::deque<std::pair<std::chrono::milliseconds, std::string>>);
 
     sls::Request request;
     request.mutable_req_range()->set_start(start);
@@ -43,19 +42,15 @@ std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> >
     request.mutable_req_range()->set_is_time(is_time);
     request.set_key(key);
 
-    std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> response = _request(request);
+    std::pair<sls::Response, std::vector<std::pair<std::chrono::milliseconds, std::string>>> response = _request(request);
 
     if (response.first.success()){
-        for(const auto &d: response.second){
-            std::pair<std::chrono::milliseconds, std::string> v;
-            v.first = std::chrono::milliseconds(d.first);
-            v.second = d.second;
-
-            result_deque->push_back(v);
-        }
+        return response.second;
     }
-
-    return result_deque;
+    else{
+        const std::vector<std::pair<std::chrono::milliseconds, std::string>> empty_vector;
+        return empty_vector;
+    }
 }
 
 bool sls::Client::append(const std::string &key, const std::string &data){
@@ -63,7 +58,6 @@ bool sls::Client::append(const std::string &key, const std::string &data){
     sls::Request request;
     request.set_key(key);
 
-    //TODO: Can do this in one step?
     auto r = request.mutable_req_append();
     r->set_data(data);
 
@@ -77,7 +71,6 @@ bool sls::Client::append(const std::string &key, const std::chrono::milliseconds
     sls::Request request;
     request.set_key(key);
 
-    //TODO: Can do this in one step?
     auto r = request.mutable_req_append();
     r->set_data(data);
     r->set_time(time.count());
@@ -87,36 +80,30 @@ bool sls::Client::append(const std::string &key, const std::chrono::milliseconds
     return retval.success();
 }
 
-std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::lastn(const std::string &key, const unsigned long long &num_entries){
+std::vector<std::pair<std::chrono::milliseconds, std::string>> sls::Client::lastn(const std::string &key, const unsigned long long &num_entries){
     assert(key.size() > 0);
-
-    std::shared_ptr<std::deque<std::pair<std::chrono::milliseconds, std::string>> > result_deque(new std::deque<std::pair<std::chrono::milliseconds, std::string>>);
 
     sls::Request request;
     request.mutable_last()->set_max_values(num_entries);
     request.set_key(key);
 
-    std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> response = _request(request);
+    std::pair<sls::Response, std::vector<std::pair<std::chrono::milliseconds, std::string>>> response = _request(request);
 
     if (response.first.success()){
-        for(const auto &d: response.second){
-            std::pair<std::chrono::milliseconds, std::string> v;
-            v.first = std::chrono::milliseconds(d.first);
-            v.second = d.second;
-
-            result_deque->push_back(v);
-        }
+        return response.second;
     }
-
-    return result_deque;
+    else{
+        const std::vector<std::pair<std::chrono::milliseconds, std::string>> empty_vector;
+        return empty_vector;
+    }
 }
 
-std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::all(const std::string &key){
+std::vector<std::pair<std::chrono::milliseconds, std::string>> sls::Client::all(const std::string &key){
     assert(key.size() > 0);
     return _interval(key, 0, ULONG_MAX, false);
 }
 
-std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
+std::vector<std::pair<std::chrono::milliseconds, std::string>> sls::Client::intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
     assert(key.size() > 0);
     return _interval(key, start, end, true);
 }
