@@ -4,6 +4,7 @@
 #include "file.h"
 #include <vector>
 #include <string>
+#include <chrono>
 
 class End_Of_Archive {};
 
@@ -17,10 +18,10 @@ class Archive{
 
         void advance_index();
         void set_offset(const size_t &offset);
-        uint64_t head_time() const;
+        std::chrono::milliseconds head_time() const;
         std::string head_data() const;
         std::string head_record() const;
-        std::vector<std::pair<uint64_t, std::string>> extract() const;
+        std::vector<std::pair<std::chrono::milliseconds, std::string>> extract() const;
         uint64_t index() const;
         size_t size() const;
 
