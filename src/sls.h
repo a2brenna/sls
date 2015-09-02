@@ -41,7 +41,7 @@ namespace sls{
      * key: Any std::string such that key.empty() = false
      * num_entries: >= 0
      */
-    std::shared_ptr< std::deque<sls::Value> > lastn(const std::string &key, const unsigned long long &num_entries);
+    std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > lastn(const std::string &key, const unsigned long long &num_entries);
 
     /* Returns a deque contains all the entries in the list for key in
      * chronological order.  If the list is empty or no list exists, a deque
@@ -49,7 +49,7 @@ namespace sls{
      *
      * key: Any std::string such that key.empty() = false
      */
-    std::shared_ptr< std::deque<sls::Value> > all(const std::string &key);
+    std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > all(const std::string &key);
 
     /* Returns a deque of all the values in the list for key between time
      * index start and end, inclusive.  start and end must be milliseconds
@@ -59,17 +59,17 @@ namespace sls{
      * start: 0 <= end
      * end: 0 >= start
      */
-    std::shared_ptr< std::deque<sls::Value> > intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end);
+    std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end);
 
-    /* Given an sls::Value value, return the data component without its
+    /* Given an std::pair<std::chrono::milliseconds, std::string> value, return the data component without its
      * timestamp
      */
-    std::string unwrap(const sls::Value &value);
+    std::string unwrap(const std::pair<std::chrono::milliseconds, std::string> &value);
 
-    /* Given an sls::Value value, return the timestamp component without its
+    /* Given an std::pair<std::chrono::milliseconds, std::string> value, return the timestamp component without its
      * data
      */
-    unsigned long long check_time(const sls::Value &value);
+    unsigned long long check_time(const std::pair<std::chrono::milliseconds, std::string> &value);
 
 }
 

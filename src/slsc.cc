@@ -21,25 +21,25 @@ bool append(const std::string &key, const std::chrono::milliseconds &time, const
     return c.append(key, time, data);
 }
 
-std::shared_ptr< std::deque<sls::Value> > lastn(const std::string &key, const unsigned long long &num_entries){
+std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > lastn(const std::string &key, const unsigned long long &num_entries){
     assert(!key.empty());
 
     if( num_entries == 0){
-        return std::shared_ptr<std::deque<sls::Value>>(new std::deque<sls::Value>());
+        return std::shared_ptr<std::deque<std::pair<std::chrono::milliseconds, std::string>>>(new std::deque<std::pair<std::chrono::milliseconds, std::string>>());
     }
 
     Client c(global_server);
     return c.lastn(key, num_entries);
 }
 
-std::shared_ptr< std::deque<sls::Value> > all(const std::string &key){
+std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > all(const std::string &key){
     assert(!key.empty());
 
     Client c(global_server);
     return c.all(key);
 }
 
-std::shared_ptr< std::deque<sls::Value> > intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
+std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
     assert(!key.empty());
     assert(start <= end);
 
@@ -47,12 +47,12 @@ std::shared_ptr< std::deque<sls::Value> > intervalt(const std::string &key, cons
     return c.intervalt(key, start, end);
 }
 
-std::string unwrap(const sls::Value &value){
-    return value.data();
+std::string unwrap(const std::pair<std::chrono::milliseconds, std::string> &value){
+    return value.second;
 }
 
-unsigned long long check_time(const sls::Value &value){
-    return value.time();
+unsigned long long check_time(const std::pair<std::chrono::milliseconds, std::string> &value){
+    return value.first.count();
 }
 
 }

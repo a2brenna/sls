@@ -33,9 +33,9 @@ std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>> sls::Cli
     return std::pair<sls::Response, std::vector<std::pair<uint64_t, std::string>>>(response, data_vector);
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
+std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::_interval(const std::string &key, const unsigned long long &start, const unsigned long long &end, const bool &is_time){
     assert(key.size() > 0);
-    std::shared_ptr<std::deque<sls::Value> > result_deque(new std::deque<sls::Value>);
+    std::shared_ptr<std::deque<std::pair<std::chrono::milliseconds, std::string>> > result_deque(new std::deque<std::pair<std::chrono::milliseconds, std::string>>);
 
     sls::Request request;
     request.mutable_req_range()->set_start(start);
@@ -47,9 +47,9 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::_interval(const std::stri
 
     if (response.first.success()){
         for(const auto &d: response.second){
-            sls::Value v;
-            v.set_time(d.first);
-            v.set_data(d.second);
+            std::pair<std::chrono::milliseconds, std::string> v;
+            v.first = std::chrono::milliseconds(d.first);
+            v.second = d.second;
 
             result_deque->push_back(v);
         }
@@ -87,10 +87,10 @@ bool sls::Client::append(const std::string &key, const std::chrono::milliseconds
     return retval.success();
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const std::string &key, const unsigned long long &num_entries){
+std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::lastn(const std::string &key, const unsigned long long &num_entries){
     assert(key.size() > 0);
 
-    std::shared_ptr<std::deque<sls::Value> > result_deque(new std::deque<sls::Value>);
+    std::shared_ptr<std::deque<std::pair<std::chrono::milliseconds, std::string>> > result_deque(new std::deque<std::pair<std::chrono::milliseconds, std::string>>);
 
     sls::Request request;
     request.mutable_last()->set_max_values(num_entries);
@@ -100,9 +100,9 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const std::string &
 
     if (response.first.success()){
         for(const auto &d: response.second){
-            sls::Value v;
-            v.set_time(d.first);
-            v.set_data(d.second);
+            std::pair<std::chrono::milliseconds, std::string> v;
+            v.first = std::chrono::milliseconds(d.first);
+            v.second = d.second;
 
             result_deque->push_back(v);
         }
@@ -111,12 +111,12 @@ std::shared_ptr< std::deque<sls::Value> > sls::Client::lastn(const std::string &
     return result_deque;
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::all(const std::string &key){
+std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::all(const std::string &key){
     assert(key.size() > 0);
     return _interval(key, 0, ULONG_MAX, false);
 }
 
-std::shared_ptr< std::deque<sls::Value> > sls::Client::intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
+std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > sls::Client::intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
     assert(key.size() > 0);
     return _interval(key, start, end, true);
 }

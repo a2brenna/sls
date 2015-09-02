@@ -30,8 +30,3 @@ message Response{
     required bool success = 1;
     optional bool data_to_follow = 2;
 }
-
-message Value{
-    required uint64 time = 1;
-    required bytes data = 2;
-}
