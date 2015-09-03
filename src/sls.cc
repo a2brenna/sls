@@ -126,7 +126,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client){
                 const bool is_time = request.mutable_req_range()->is_time();
 
                 if(is_time){
-                    data_string = s->time_lookup(key, start, end);
+                    data_string = s->time_lookup(key, std::chrono::milliseconds(start), std::chrono::milliseconds(end));
                 }
                 else{
                     data_string = s->index_lookup(key, start, end);

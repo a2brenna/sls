@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
+Index_Record::Index_Record(const std::chrono::milliseconds &timestamp, const uint64_t &position, const std::string &filename, const uint64_t &offset){
     _timestamp = timestamp;
     _position = position;
     _filename = filename;
@@ -19,7 +19,7 @@ Index_Record::Index_Record(const uint64_t &timestamp, const uint64_t &position, 
 Index_Record::Index_Record(){
 }
 
-uint64_t Index_Record::timestamp() const{
+std::chrono::milliseconds Index_Record::timestamp() const{
     return _timestamp;
 }
 
@@ -48,7 +48,7 @@ const std::vector<Index_Record> &Index::index() const{
 }
 
 std::ostream& operator<<(std::ostream& out, const Index_Record &i){
-    out << i.timestamp() << " ";
+    out << i.timestamp().count() << " ";
     out << i.position() << " ";
     out << i.filename() << " ";
     out << i.offset() << std::endl;
@@ -65,7 +65,7 @@ std::istream& operator>>(std::istream& in, Index_Record &i){
     uint64_t offset;
     in >> offset;
 
-    Index_Record r(timestamp, position, filename, offset);
+    Index_Record r(std::chrono::milliseconds(timestamp), position, filename, offset);
     i = r;
 
     return in;
@@ -122,7 +122,7 @@ const std::vector<Index_Record> Index::get_records(const std::string &chunk_name
     return records;
 }
 
-const std::vector<Index_Record> Index::time_lookup(const uint64_t &start, const uint64_t &end){
+const std::vector<Index_Record> Index::time_lookup(const std::chrono::milliseconds &start, const std::chrono::milliseconds &end){
     assert(start <= end);
     std::vector<Index_Record> files;
 
@@ -214,7 +214,7 @@ size_t Index::num_elements() const{
 }
 
 Index build_index(const Path &directory, const size_t &resolution){
-    std::vector<std::pair<uint64_t, Index_Record>> timestamp_records;
+    std::vector<std::pair<std::chrono::milliseconds, Index_Record>> timestamp_records;
     std::vector<std::string> files;
     const auto m = getdir(directory.str(), files);
     assert(m == 0);
@@ -229,18 +229,18 @@ Index build_index(const Path &directory, const size_t &resolution){
         Path arch_path(directory.str() + "/" + file);
         Archive arch(arch_path);
 
-        const uint64_t first_timestamp = arch.head_time();
-        timestamp_records.push_back(std::pair<uint64_t, Index_Record>(first_timestamp, Index_Record(first_timestamp, 0, file, 0)));
+        const std::chrono::milliseconds first_timestamp = arch.head_time();
+        timestamp_records.push_back(std::pair<std::chrono::milliseconds, Index_Record>(first_timestamp, Index_Record(first_timestamp, 0, file, 0)));
 
         size_t count = 1;
         uint64_t last_index = 0;
 
-        uint64_t last_timestamp = first_timestamp;
+        std::chrono::milliseconds last_timestamp = first_timestamp;
 
         for(;;){
             try{
                 if( (count % resolution == 0) && dirty ){
-                    timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
+                    timestamp_records.push_back(std::pair<std::chrono::milliseconds, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
                     dirty = false;
                 }
                 arch.advance_index();
@@ -259,7 +259,7 @@ Index build_index(const Path &directory, const size_t &resolution){
         assert(last_index > 0);
 
         if(dirty){
-            timestamp_records.push_back(std::pair<uint64_t, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
+            timestamp_records.push_back(std::pair<std::chrono::milliseconds, Index_Record>(last_timestamp, Index_Record(last_timestamp, count - 1, file, last_index)));
         }
         size_map[file] = count;
     }

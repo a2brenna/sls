@@ -3,6 +3,7 @@
 
 #include "file.h"
 #include <mutex>
+#include <chrono>
 
 class Active_Key{
 
@@ -15,7 +16,7 @@ class Active_Key{
         void sync();
         size_t num_elements() const;
         std::string index_lookup(const size_t &start, const size_t &end) const;
-        std::string time_lookup(const uint64_t &begin, const uint64_t &end) const;
+        std::string time_lookup(const std::chrono::milliseconds &begin, const std::chrono::milliseconds &end) const;
         std::string last_lookup(const size_t &max_values) const;
 
     private:
@@ -29,7 +30,7 @@ class Active_Key{
         size_t _last_element_start;
         size_t _filesize;
         bool _synced;
-        uint64_t _last_time;
+        std::chrono::milliseconds _last_time;
 
         Path _filepath() const;
         void _append(const std::string &new_val, const std::chrono::milliseconds &time);

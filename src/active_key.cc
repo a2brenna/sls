@@ -23,7 +23,7 @@ void Active_Key::_initialize(const std::string key){
     _start_pos = index.num_elements();
     _num_elements = 0;
     _synced = true;
-    _last_time = 0;
+    _last_time = std::chrono::milliseconds(0);
     _filesize = 0;
     _last_element_start = 0;
 }
@@ -38,8 +38,7 @@ Active_Key::~Active_Key(){
 }
 
 void Active_Key::_append(const std::string &new_val, const std::chrono::milliseconds &time){
-    const uint64_t current_time = time.count();
-    if(_last_time > current_time){
+    if(_last_time > time){
         throw Out_of_Order();
     }
 
@@ -48,7 +47,8 @@ void Active_Key::_append(const std::string &new_val, const std::chrono::millisec
     std::ofstream o(_filepath().str(), std::ofstream::app | std::ofstream::binary);
     assert(o);
 
-    o.write((char *)&current_time, sizeof(uint64_t));
+    const uint64_t c_time = time.count();
+    o.write((char *)&c_time, sizeof(uint64_t));
     assert(o);
     o.write((char *)&val_length, sizeof(uint64_t));
     assert(o);
@@ -61,7 +61,7 @@ void Active_Key::_append(const std::string &new_val, const std::chrono::millisec
     _last_element_start = _filesize;
     _filesize = _filesize + written;
 
-    _last_time = current_time;
+    _last_time = time;
     _synced = false;
     _num_elements++;
 
@@ -125,7 +125,7 @@ size_t Active_Key::num_elements() const{
     return _num_elements;
 }
 
-std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end) const{
+std::string Active_Key::time_lookup(const std::chrono::milliseconds &start, const std::chrono::milliseconds &end) const{
     std::unique_lock<std::mutex> l(_lock);
 
     std::string result;
@@ -141,7 +141,7 @@ std::string Active_Key::time_lookup(const uint64_t &start, const uint64_t &end) 
         arch.set_offset(f.offset());
         while(true){
             try{
-                const uint64_t current_time = arch.head_time();
+                const std::chrono::milliseconds current_time = arch.head_time();
 
                 if( current_time < start ){
                     arch.advance_index();

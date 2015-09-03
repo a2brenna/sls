@@ -5,6 +5,7 @@
 #include <mutex>
 #include <deque>
 #include <memory>
+#include <chrono>
 #include "sls.pb.h"
 #include "index.h"
 #include "active_key.h"
@@ -22,7 +23,7 @@ namespace sls{
             void append(const std::string &key, const std::chrono::milliseconds &time, const std::string &value);
 
             std::string index_lookup(const std::string &key, const size_t &start, const size_t &end);
-            std::string time_lookup(const std::string &key, const uint64_t &begin, const uint64_t &end);
+            std::string time_lookup(const std::string &key, const std::chrono::milliseconds &begin, const std::chrono::milliseconds &end);
             std::string last_lookup(const std::string &key, const size_t &max_values);
 
         private:
