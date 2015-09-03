@@ -11,10 +11,13 @@ all: sls libsls.so libsls.a migrate fsck sls_query
 test: test_client
 
 install: libsls.so libsls.a src/sls.h src/sls.pb.h
+	mkdir -p ${DESTDIR}/${PREFIX}/lib
+	mkdir -p ${DESTDIR}/${PREFIX}/include/sls
 	cp *.a ${DESTDIR}/${PREFIX}/lib
 	cp *.so ${DESTDIR}/${PREFIX}/lib
-	cp src/sls.h ${DESTDIR}/${PREFIX}/include
-	cp src/sls.pb.h ${DESTDIR}/${PREFIX}/include
+	cp src/sls.h ${DESTDIR}/${PREFIX}/include/sls/
+	cp src/sls.pb.h ${DESTDIR}/${PREFIX}/include/sls/
+	cp src/client.h ${DESTDIR}/${PREFIX}/include/sls/
 
 uninstall:
 	rm ${DESTDIR}/${PREFIX}/lib/libsls.a
