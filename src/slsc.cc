@@ -1,4 +1,4 @@
-#include <deque>
+#include <vector>
 #include <string>
 
 #include "client.h"
@@ -21,25 +21,25 @@ bool append(const std::string &key, const std::chrono::milliseconds &time, const
     return c.append(key, time, data);
 }
 
-std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > lastn(const std::string &key, const unsigned long long &num_entries){
+std::vector<std::pair<std::chrono::milliseconds, std::string>> lastn(const std::string &key, const unsigned long long &num_entries){
     assert(!key.empty());
 
     if( num_entries == 0){
-        return std::shared_ptr<std::deque<std::pair<std::chrono::milliseconds, std::string>>>(new std::deque<std::pair<std::chrono::milliseconds, std::string>>());
+        return std::vector<std::pair<std::chrono::milliseconds, std::string>>();
     }
 
     Client c(global_server);
     return c.lastn(key, num_entries);
 }
 
-std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > all(const std::string &key){
+std::vector<std::pair<std::chrono::milliseconds, std::string>> all(const std::string &key){
     assert(!key.empty());
 
     Client c(global_server);
     return c.all(key);
 }
 
-std::shared_ptr< std::deque<std::pair<std::chrono::milliseconds, std::string>> > intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
+std::vector<std::pair<std::chrono::milliseconds, std::string>> intervalt(const std::string &key, const unsigned long long &start, const unsigned long long &end){
     assert(!key.empty());
     assert(start <= end);
 
