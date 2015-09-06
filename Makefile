@@ -34,8 +34,8 @@ fsck: src/fsck.cc sls.pb.o index.o archive.o file.o
 migrate: src/migrate.cc legacy.pb.o file.o
 	${CXX} ${CXXFLAGS} src/migrate.cc legacy.pb.o file.o -o migrate -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
 
-sls_query: src/sls_query.cc
-	${CXX} ${CXXFLAGS} src/sls_query.cc -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsls -lsmplsocket
+sls_query: src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o
+	${CXX} ${CXXFLAGS} src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
 
 test_client: src/test_client.cc util.o
 	${CXX} ${CXXFLAGS} src/test_client.cc util.o -o test_client -lprotobuf -lpthread -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
