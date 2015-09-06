@@ -76,7 +76,7 @@ int main(int argc, char *argv[]){
         }
     }
     else{
-        std::shared_ptr<std::deque<std::pair<std::chrono::milliseconds, std::string>>> result;
+        std::vector<std::pair<std::chrono::milliseconds, std::string>> result;
         if(LAST > 0){
             result = sls::lastn(KEY, LAST);
         }
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]){
             return -1;
         }
 
-        for(const auto &r: *result){
+        for(const auto &r: result){
             std::cout << r.first.count() << " " << r.second << std::endl;
         }
     }
