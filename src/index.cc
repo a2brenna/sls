@@ -151,6 +151,8 @@ const std::vector<Index_Record> Index::time_lookup(const std::chrono::millisecon
         assert( is <= ie);
         assert( ie < _index.size() );
 
+        //"Compress" the lookup by ignoring repeated sequential records for
+        //the same file
         for(size_t i = is; i <= ie; i++){
             if( _index[i].filename() !=  last_file ){
                 files.push_back(_index[i]);
@@ -193,6 +195,8 @@ const std::vector<Index_Record> Index::position_lookup(const uint64_t &start, co
         assert( is <= ie);
         assert( ie < _index.size() );
 
+        //"Compress" the lookup by ignoring repeated sequential records for
+        //the same file
         for(size_t i = is; i <= ie; i++){
             if( _index[i].filename() !=  last_file ){
                 records.push_back(_index[i]);
