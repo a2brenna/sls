@@ -6,6 +6,7 @@
 #include<mutex>
 #include<stack>
 #include<chrono>
+#include<memory>
 #include<smpl.h>
 
 #include"sls.pb.h"
