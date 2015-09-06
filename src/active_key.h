@@ -38,7 +38,6 @@ private:
   void _append(const std::string &new_val,
                const std::chrono::milliseconds &time);
   std::string _index_lookup(const size_t &start, const size_t &end) const;
-  void _initialize(const std::string key);
   void _sync();
 };
 

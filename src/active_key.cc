@@ -9,12 +9,6 @@
 
 Active_Key::Active_Key(const Path &base_dir, const std::string &key)
     : _base_dir(base_dir), _index(base_dir.str() + key + "/index") {
-  _initialize(key);
-}
-
-// key is deliberately pass by value here because I'm afraid of problems when
-// Active_Key _initialize(...)s itself in Active_Key::append(...);
-void Active_Key::_initialize(const std::string key) {
   _key = key;
   _name = RandomString(32);
   Index index(_index);
@@ -70,9 +64,6 @@ void Active_Key::_append(const std::string &new_val,
       _sync();
     } else if ((_num_elements % CONFIG_RESOLUTION) == 0) {
       _sync();
-      // Starts a new randomly named file, thus limiting max datapoints
-      // per file to CONFIG_RESOLUTION.
-      _initialize(_key);
     }
   }
 }
