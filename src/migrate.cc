@@ -1,3 +1,5 @@
+//WARNING: The following code may be terrible, it was write once, run once.
+
 #include <boost/program_options.hpp>
 #include <cassert>
 #include <sys/stat.h>//for mkdir()
