@@ -59,7 +59,7 @@ int main(int argc, char* argv[]){
 
             const auto all = sls::all(test_key);
 
-            for(const auto &r: *all){
+            for(const auto &r: all){
                 actual_response.push_back(r.data());
             }
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]){
 
             const auto last = sls::lastn(test_key, 3);
 
-            for(const auto &r: *last){
+            for(const auto &r: last){
                 actual_response.push_back(r.data());
             }
 
@@ -144,7 +144,7 @@ int main(int argc, char* argv[]){
             std::cout << "Test Data Stored" << std::endl;
 
             const auto retrieve_start = std::chrono::high_resolution_clock::now();
-            auto l = sls::lastn(key, 5000000);
+            const auto l = sls::lastn(key, 5000000);
             const auto retrieve_end = std::chrono::high_resolution_clock::now();
 
             std::cout << "Retrieved: " << l->size() << std::endl;
