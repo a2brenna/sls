@@ -22,10 +22,6 @@ message Request{
     optional Last last = 4;
 }
 
-message Data{
-    required bytes data = 1;
-}
-
 message Response{
     required bool success = 1;
     optional bool data_to_follow = 2;
