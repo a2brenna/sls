@@ -9,7 +9,7 @@ int getdir(std::string dir, std::vector<std::string> &files) {
   struct dirent *dirp;
   DIR *dp = opendir(dir.c_str());
   if (dp == nullptr) {
-      return -1;
+    return -1;
   }
 
   while ((dirp = readdir(dp)) != nullptr) {
@@ -25,20 +25,19 @@ int getdir(std::string dir, std::vector<std::string> &files) {
   return 0;
 }
 
-std::string readfile(const Path &filepath, const size_t &offset, const size_t &max_size){
-    std::ifstream i(filepath.str(), std::ios_base::in);
-    i.seekg(offset, i.beg);
+std::string readfile(const Path &filepath, const size_t &offset,
+                     const size_t &max_size) {
+  std::ifstream i(filepath.str(), std::ios_base::in);
+  i.seekg(offset, i.beg);
 
-    if(max_size > 0){
-        std::string output;
-        output.resize(max_size);
-        i.get(&output[0], max_size);
-        return output;
-    }
-    else{
-        std::stringstream s;
-        s << i.rdbuf();
-        return s.str();
-    }
-
+  if (max_size > 0) {
+    std::string output;
+    output.resize(max_size);
+    i.get(&output[0], max_size);
+    return output;
+  } else {
+    std::stringstream s;
+    s << i.rdbuf();
+    return s.str();
+  }
 }

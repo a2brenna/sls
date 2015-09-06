@@ -41,148 +41,145 @@ bool shutting_down = false;
  * requests_in_progress goes to 0, but before the shutdown thread can acquire
  * requests_in_progress_lock and complete shutdown.
  */
-void shutdown(int signal){
-    //Main thread can no longer accept new connections...
-    (void)signal;
+void shutdown(int signal) {
+  // Main thread can no longer accept new connections...
+  (void)signal;
 
-    for(;;){
-        //supposed to leak...
-        requests_in_progress_lock.lock();
-        assert(requests_in_progress >= 0);
-        shutting_down = true;
-        if(requests_in_progress == 0){
-            //All threads dead or safe to kill
-            break;
-        }
-        else{
-            //Need to unlock so one or more thread(s) can complete event loop
-            //(and decrement requests_in_progress)
-            requests_in_progress_lock.unlock();
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
+  for (;;) {
+    // supposed to leak...
+    requests_in_progress_lock.lock();
+    assert(requests_in_progress >= 0);
+    shutting_down = true;
+    if (requests_in_progress == 0) {
+      // All threads dead or safe to kill
+      break;
+    } else {
+      // Need to unlock so one or more thread(s) can complete event loop
+      //(and decrement requests_in_progress)
+      requests_in_progress_lock.unlock();
+      std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+  }
 
-    //all handle_channel() threads should have terminated OR are blocked
-    //in recv() or otherwise safe to kill.
+  // all handle_channel() threads should have terminated OR are blocked
+  // in recv() or otherwise safe to kill.
 
-    delete s; //Causes indices to be synced to disk
+  delete s; // Causes indices to be synced to disk
 
-    exit(0);
+  exit(0);
 }
 
-void handle_channel(std::shared_ptr<smpl::Channel> client){
-    for(;;){
-        std::string request_string;
-        try{
-            request_string = client->recv();
-        }
-        catch(smpl::Transport_Failed e){
-            break;
-        }
-
-        {
-            std::lock_guard<std::mutex> l(requests_in_progress_lock);
-            if(shutting_down){
-                break;
-            }
-            assert(requests_in_progress >= 0);
-            requests_in_progress++;
-        }
-        //Very important that the following code completes and requests_in_progress
-        //gets decremented.
-
-        sls::Request request;
-        request.ParseFromString(request_string);
-
-        sls::Response response;
-        response.set_success(false);
-
-        std::string data_string;
-
-        if(request.IsInitialized()){
-            const std::string key = request.key();
-            assert(key.size() > 0);
-            if(request.has_req_append()){
-                sls::Append a = request.req_append();
-                const std::string data = a.data();
-
-                try{
-                    if(a.has_time()){
-                        const std::chrono::milliseconds time(a.time());
-                        s->append(key, time, data);
-                    }
-                    else{
-                        s->append(key, data);
-                    }
-                    response.set_success(true);
-                }
-                catch(Out_of_Order){
-                    response.set_success(false);
-                }
-            }
-            else if(request.has_req_range()){
-                const uint64_t start = request.mutable_req_range()->start();
-                const uint64_t end = request.mutable_req_range()->end();
-                const bool is_time = request.mutable_req_range()->is_time();
-
-                if(is_time){
-                    data_string = s->time_lookup(key, std::chrono::milliseconds(start), std::chrono::milliseconds(end));
-                }
-                else{
-                    data_string = s->index_lookup(key, start, end);
-                }
-
-                if(!data_string.empty()){
-                    response.set_data_to_follow(true);
-                }
-                response.set_success(true);
-
-            }
-            else if(request.has_last()){
-                const unsigned long long max_values = request.last().max_values();
-                data_string = s->last_lookup(key, max_values);
-                if(!data_string.empty()){
-                    response.set_data_to_follow(true);
-                }
-                response.set_success(true);
-            }
-            else{
-                *Error << "Cannot handle request" << std::endl;;
-            }
-        }
-        else{
-            *Error << "Got invalid request" << std::endl;;
-        }
-
-        std::string response_string;
-        response.SerializeToString(&response_string);
-        client->send(response_string);
-        if(response.data_to_follow()){
-            client->send(data_string);
-        }
-
-        std::lock_guard<std::mutex> l(requests_in_progress_lock);
-        assert(requests_in_progress > 0);
-        requests_in_progress--;
+void handle_channel(std::shared_ptr<smpl::Channel> client) {
+  for (;;) {
+    std::string request_string;
+    try {
+      request_string = client->recv();
+    } catch (smpl::Transport_Failed e) {
+      break;
     }
+
+    {
+      std::lock_guard<std::mutex> l(requests_in_progress_lock);
+      if (shutting_down) {
+        break;
+      }
+      assert(requests_in_progress >= 0);
+      requests_in_progress++;
+    }
+    // Very important that the following code completes and requests_in_progress
+    // gets decremented.
+
+    sls::Request request;
+    request.ParseFromString(request_string);
+
+    sls::Response response;
+    response.set_success(false);
+
+    std::string data_string;
+
+    if (request.IsInitialized()) {
+      const std::string key = request.key();
+      assert(key.size() > 0);
+      if (request.has_req_append()) {
+        sls::Append a = request.req_append();
+        const std::string data = a.data();
+
+        try {
+          if (a.has_time()) {
+            const std::chrono::milliseconds time(a.time());
+            s->append(key, time, data);
+          } else {
+            s->append(key, data);
+          }
+          response.set_success(true);
+        } catch (Out_of_Order) {
+          response.set_success(false);
+        }
+      } else if (request.has_req_range()) {
+        const uint64_t start = request.mutable_req_range()->start();
+        const uint64_t end = request.mutable_req_range()->end();
+        const bool is_time = request.mutable_req_range()->is_time();
+
+        if (is_time) {
+          data_string = s->time_lookup(key, std::chrono::milliseconds(start),
+                                       std::chrono::milliseconds(end));
+        } else {
+          data_string = s->index_lookup(key, start, end);
+        }
+
+        if (!data_string.empty()) {
+          response.set_data_to_follow(true);
+        }
+        response.set_success(true);
+
+      } else if (request.has_last()) {
+        const unsigned long long max_values = request.last().max_values();
+        data_string = s->last_lookup(key, max_values);
+        if (!data_string.empty()) {
+          response.set_data_to_follow(true);
+        }
+        response.set_success(true);
+      } else {
+        *Error << "Cannot handle request" << std::endl;
+        ;
+      }
+    } else {
+      *Error << "Got invalid request" << std::endl;
+      ;
+    }
+
+    std::string response_string;
+    response.SerializeToString(&response_string);
+    client->send(response_string);
+    if (response.data_to_follow()) {
+      client->send(data_string);
+    }
+
+    std::lock_guard<std::mutex> l(requests_in_progress_lock);
+    assert(requests_in_progress > 0);
+    requests_in_progress--;
+  }
 }
 
-int main(int argc, char* argv[]){
-    srand(time(0));
-    slog::initialize_syslog("sls", LOG_USER);
-    Error = std::unique_ptr<slog::Log>( new slog::Log(std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogErr)), slog::kLogErr, "ERROR"));
-    get_config(argc, argv);
+int main(int argc, char *argv[]) {
+  srand(time(0));
+  slog::initialize_syslog("sls", LOG_USER);
+  Error = std::unique_ptr<slog::Log>(new slog::Log(
+      std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogErr)),
+      slog::kLogErr, "ERROR"));
+  get_config(argc, argv);
 
-    s = new sls::SLS(CONFIG_DISK_DIR);
+  s = new sls::SLS(CONFIG_DISK_DIR);
 
-    signal(SIGINT, shutdown);
+  signal(SIGINT, shutdown);
 
-    std::unique_ptr<smpl::Local_Address> incoming(new smpl::Local_UDS(CONFIG_UNIX_DOMAIN_FILE));
+  std::unique_ptr<smpl::Local_Address> incoming(
+      new smpl::Local_UDS(CONFIG_UNIX_DOMAIN_FILE));
 
-    while (true){
-        std::shared_ptr<smpl::Channel> new_client(incoming->listen());
-        auto t = std::thread(std::bind(handle_channel, new_client));
-        t.detach();
-    }
-    return 0;
+  while (true) {
+    std::shared_ptr<smpl::Channel> new_client(incoming->listen());
+    auto t = std::thread(std::bind(handle_channel, new_client));
+    t.detach();
+  }
+  return 0;
 }
