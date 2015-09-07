@@ -38,6 +38,7 @@ public:
   Metadata check() const;
   const std::string str() const;
   size_t append(const std::chrono::milliseconds &timestamp, const std::string &value);
+  size_t append(const Archive &archive);
 
 private:
   std::string _raw;

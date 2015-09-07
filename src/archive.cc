@@ -164,3 +164,8 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
 
     return value.size() + (2 *sizeof(uint64_t));
 }
+
+size_t Archive::append(const Archive &archive){
+    _raw.append(archive.str());
+    return archive.size();
+}
