@@ -137,3 +137,72 @@ sls::Client::intervalt(const std::string &key, const unsigned long long &start,
   assert(key.size() > 0);
   return _interval(key, start, end, true);
 }
+
+sls::Cached_Client::Cached_Client(std::shared_ptr<smpl::Remote_Address> server, const size_t max_cache_size):
+    _client(server){
+        _max_cache_size = max_cache_size;
+        _current_cache_size = 0;
+}
+
+sls::Cached_Client::~Cached_Client(){
+    _flush();
+}
+
+bool sls::Cached_Client::_flush(){
+    bool success = true;
+    for(const auto &c: _cache){
+        const auto r = _client.append_archive(c.first, c.second);
+        success = success && r;
+    }
+    _cache.clear();
+    _current_cache_size = 0;
+    return success;
+}
+
+bool sls::Cached_Client::_check(){
+    if(_current_cache_size > _max_cache_size){
+        return _flush();
+    }
+    return true;
+}
+
+bool sls::Cached_Client::append(const std::string &key, const std::string &data){
+    const std::chrono::milliseconds timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+    size_t bytes_appended = _cache[key].append(timestamp, data);
+    _current_cache_size = _current_cache_size + bytes_appended;
+    return _check();
+}
+
+bool sls::Cached_Client::flush(){
+    return _flush();
+}
+
+bool sls::Cached_Client::append(const std::string &key, const std::chrono::milliseconds &time,
+            const std::string &data){
+    size_t bytes_appended = _cache[key].append(time, data);
+    _current_cache_size = _current_cache_size + bytes_appended;
+    return _check();
+}
+
+bool sls::Cached_Client::append_archive(const std::string &key, const Archive &archive){
+    size_t bytes_appended = _cache[key].append(archive);
+    _current_cache_size = _current_cache_size + bytes_appended;
+    return _check();
+}
+
+std::vector<std::pair<std::chrono::milliseconds, std::string>>
+sls::Cached_Client::lastn(const std::string &key, const unsigned long long &num_entries){
+return _client.lastn(key, num_entries);
+}
+
+
+std::vector<std::pair<std::chrono::milliseconds, std::string>>
+sls::Cached_Client::all(const std::string &key){
+return _client.all(key);
+}
+
+std::vector<std::pair<std::chrono::milliseconds, std::string>>
+sls::Cached_Client::intervalt(const std::string &key, const unsigned long long &start,
+        const unsigned long long &end){
+return _client.intervalt(key, start, end);
+}

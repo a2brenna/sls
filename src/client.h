@@ -90,6 +90,57 @@ public:
   intervalt(const std::string &key, const unsigned long long &start,
             const unsigned long long &end);
 };
+
+class Cached_Client{
+
+private:
+
+    Client _client;
+    std::map<std::string, Archive> _cache;
+    size_t _max_cache_size = 4000000000;
+    size_t _current_cache_size = 0;
+
+    bool _check();
+    bool _flush();
+
+public:
+  // IMPORTANT
+  // All of the following transactions occur with respect to the set
+  // of lists stored on the Server as indicated by server_connection.
+  // This Cached_Client caches writes as the name suggests, for much
+  // improved throughput, particularly for large import jobs.
+  // The method signatures are the same as Client, and their behaviours
+  // should be identical, with relaxed consistency constraints due to
+  // cacheing.
+
+  Cached_Client(std::shared_ptr<smpl::Remote_Address> server, const size_t max_cache_size);
+  ~Cached_Client();
+
+  /* Flush the cache.  If this returns true, then all data was successfully
+   * written to the database. If false, then some/all of the data may have
+   * failed to be written.
+   */
+  bool flush();
+
+  bool append(const std::string &key, const std::string &data);
+
+  bool append(const std::string &key, const std::chrono::milliseconds &time,
+              const std::string &data);
+
+  bool append_archive(const std::string &key, const Archive &archive);
+
+  std::vector<std::pair<std::chrono::milliseconds, std::string>>
+  lastn(const std::string &key, const unsigned long long &num_entries);
+
+  std::vector<std::pair<std::chrono::milliseconds, std::string>>
+  all(const std::string &key);
+
+  std::vector<std::pair<std::chrono::milliseconds, std::string>>
+  intervalt(const std::string &key, const unsigned long long &start,
+            const unsigned long long &end);
+
+};
+
 }
 
 #endif
