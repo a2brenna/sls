@@ -24,6 +24,7 @@ public:
   Archive(const Path &file, const size_t &offset);
   Archive(const Path &file, const size_t &offset, const size_t &max_size);
   Archive(const std::string &raw);
+  Archive();
 
   void advance_index();
   void set_offset(const size_t &offset);
@@ -36,7 +37,7 @@ public:
   size_t size() const;
   Metadata check() const;
   const std::string str() const;
-  void append(const std::chrono::milliseconds &timestamp, const std::string &value);
+  size_t append(const std::chrono::milliseconds &timestamp, const std::string &value);
 
 private:
   std::string _raw;
