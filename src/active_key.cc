@@ -68,6 +68,51 @@ void Active_Key::_append(const std::string &new_val,
   }
 }
 
+void Active_Key::_append_archive(const std::string &archive) {
+  const auto elements_past_index_point = _num_elements % CONFIG_RESOLUTION;
+
+  Archive new_archive(archive);
+
+  //Ensure new data comes after existing data
+  try {
+    const auto archive_start_time = new_archive.head_time();
+    if (archive_start_time < _last_time) {
+      throw Out_of_Order();
+    }
+  } catch (End_Of_Archive e) {
+    throw Bad_Archive();
+  }
+
+  // verify packed archive and take some measurements
+  const Metadata archive_metadata = new_archive.check();
+
+  std::ofstream o(_filepath().str(),
+                  std::ofstream::app | std::ofstream::binary);
+  assert(o);
+
+  o.write(archive.c_str(), new_archive.size());
+  assert(o);
+
+  o.close();
+
+  const auto written = new_archive.size();
+  _filesize = _filesize + written;
+  _last_element_start = _filesize + archive_metadata.index;
+  _last_time = archive_metadata.timestamp;
+  _num_elements = _num_elements + archive_metadata.elements;
+
+  _synced = false;
+
+  if (_num_elements > 0) {
+    if (_num_elements == 1) {
+      _sync();
+    } else if ((elements_past_index_point + archive_metadata.elements) >
+               CONFIG_RESOLUTION) {
+      _sync();
+    }
+  }
+}
+
 void Active_Key::append(const std::string &new_val,
                         const std::chrono::milliseconds &time) {
   std::unique_lock<std::mutex> l(_lock);
@@ -81,6 +126,11 @@ void Active_Key::append(const std::string &new_val) {
 
   std::unique_lock<std::mutex> l(_lock);
   _append(new_val, current_time);
+}
+
+void Active_Key::append_archive(const std::string &archive) {
+  std::unique_lock<std::mutex> l(_lock);
+  _append_archive(archive);
 }
 
 void Active_Key::_sync() {

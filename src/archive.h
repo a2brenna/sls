@@ -8,6 +8,15 @@
 
 class End_Of_Archive {};
 
+class Bad_Archive {};
+
+class Metadata {
+public:
+  size_t elements = 0;
+  uint64_t index = 0;
+  std::chrono::milliseconds timestamp;
+};
+
 class Archive {
 
 public:
@@ -25,6 +34,7 @@ public:
   extract() const;
   uint64_t index() const;
   size_t size() const;
+  Metadata check() const;
 
 private:
   std::string _raw;

@@ -23,6 +23,8 @@ public:
   void append(const std::string &key, const std::chrono::milliseconds &time,
               const std::string &value);
 
+  void append_archive(const std::string &key, const std::string &archive);
+
   std::string index_lookup(const std::string &key, const size_t &start,
                            const size_t &end);
   std::string time_lookup(const std::string &key,

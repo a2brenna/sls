@@ -61,6 +61,45 @@ std::string Archive::head_record() const {
   return std::string(i, record_length);
 }
 
+Metadata Archive::check() const {
+  uint64_t last_index = 0;
+  size_t num_elements = 0;
+  uint64_t milliseconds_from_epoch = 0;
+
+  uint64_t index = 0;
+  for (;;) {
+
+    const char *i = _raw.c_str() + index;
+    // Check that index is inside Archive
+    if (i == (_raw.c_str() + _raw.size())) {
+      break;
+    } else if (i > (_raw.c_str() + _raw.size())) {
+      throw Bad_Archive();
+    }
+    assert(i < (_raw.c_str() + _raw.size()));
+
+    // Ensure time goes forward
+    const uint64_t new_milliseconds_from_epoch = *((uint64_t *)(i));
+    if (new_milliseconds_from_epoch < milliseconds_from_epoch) {
+      throw Bad_Archive();
+    }
+
+    milliseconds_from_epoch = new_milliseconds_from_epoch;
+    last_index = index;
+    num_elements++;
+
+    const uint64_t blob_length = *((uint64_t *)(i + sizeof(uint64_t)));
+    index = index + sizeof(uint64_t) * 2 + blob_length;
+  }
+
+  Metadata m;
+  m.elements = num_elements;
+  m.index = last_index;
+  m.timestamp = std::chrono::milliseconds(milliseconds_from_epoch);
+
+  return m;
+}
+
 std::vector<std::pair<std::chrono::milliseconds, std::string>>
 Archive::extract() const {
   const char *i = _raw.c_str() + _index;

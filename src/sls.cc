@@ -6,6 +6,7 @@
 #include "sls.h"
 #include "sls.pb.h"
 #include "config.h"
+#include "archive.h"
 
 #include <smpl.h>
 #include <smplsocket.h>
@@ -76,6 +77,8 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
       request_string = client->recv();
     } catch (smpl::Transport_Failed e) {
       break;
+    } catch (...) {
+      assert(false);
     }
 
     {
@@ -114,6 +117,8 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
           response.set_success(true);
         } catch (Out_of_Order) {
           response.set_success(false);
+        } catch (...) {
+          assert(false);
         }
       } else if (request.has_req_range()) {
         const uint64_t start = request.mutable_req_range()->start();
@@ -139,13 +144,22 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
           response.set_data_to_follow(true);
         }
         response.set_success(true);
+      } else if (request.has_packed_archive()) {
+        try {
+          s->append_archive(key, request.packed_archive());
+          response.set_success(true);
+        } catch (Bad_Archive e) {
+          response.set_success(false);
+        } catch (Out_of_Order e) {
+          response.set_success(false);
+        } catch (...) {
+          assert(false);
+        }
       } else {
         *Error << "Cannot handle request" << std::endl;
-        ;
       }
     } else {
       *Error << "Got invalid request" << std::endl;
-      ;
     }
 
     std::string response_string;
