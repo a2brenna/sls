@@ -22,6 +22,13 @@ bool append(const std::string &key, const std::chrono::milliseconds &time,
   return c.append(key, time, data);
 }
 
+bool append_archive(const std::string &key, const Archive &archive){
+  assert(!key.empty());
+
+  Client c(global_server);
+  return c.append_archive(key, archive);
+}
+
 std::vector<std::pair<std::chrono::milliseconds, std::string>>
 lastn(const std::string &key, const unsigned long long &num_entries) {
   assert(!key.empty());

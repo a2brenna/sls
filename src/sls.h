@@ -9,6 +9,7 @@
 #include <memory>
 #include <smpl.h>
 
+#include "archive.h"
 #include "sls.pb.h"
 
 namespace sls {
@@ -33,6 +34,14 @@ bool append(const std::string &key, const std::string &data);
  */
 bool append(const std::string &key, const std::chrono::milliseconds &time,
             const std::string &data);
+
+/* Append entire archive to the list indicated by key
+*
+* key: Any std::string such that key.empty() = false
+* archive: An Archive file, such that archive.head_time() >= the timestamp
+* of the current last element of the timeseries associated with key.
+*/
+bool append_archive(const std::string &key, const Archive &archive);
 
 /* Returns a vector of at most the N most recent entries in the list for key
  * in chronological order.  If the list for key contains less than

@@ -75,6 +75,18 @@ bool sls::Client::append(const std::string &key, const std::string &data) {
   return retval.success();
 }
 
+bool sls::Client::append_archive(const std::string &key, const Archive &archive) {
+  assert(key.size() > 0);
+  sls::Request request;
+  request.set_key(key);
+
+  request.set_packed_archive(archive.str());
+
+  sls::Response retval = _request(request).first;
+
+  return retval.success();
+}
+
 bool sls::Client::append(const std::string &key,
                          const std::chrono::milliseconds &time,
                          const std::string &data) {

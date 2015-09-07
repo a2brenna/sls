@@ -35,6 +35,7 @@ public:
   uint64_t index() const;
   size_t size() const;
   Metadata check() const;
+  const std::string str() const;
 
 private:
   std::string _raw;

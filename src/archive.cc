@@ -128,6 +128,10 @@ Archive::extract() const {
   return output;
 }
 
+const std::string Archive::str() const{
+    return _raw;
+}
+
 void Archive::advance_index() {
   const char *i = _raw.c_str() + _index;
   if (i == (_raw.c_str() + _raw.size())) {
