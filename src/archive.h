@@ -36,6 +36,7 @@ public:
   size_t size() const;
   Metadata check() const;
   const std::string str() const;
+  void append(const std::chrono::milliseconds &timestamp, const std::string &value);
 
 private:
   std::string _raw;

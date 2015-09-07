@@ -148,3 +148,12 @@ void Archive::advance_index() {
 }
 
 void Archive::set_offset(const size_t &offset) { _index = offset; }
+
+void Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){
+    const uint64_t milliseconds_since_epoch = timestamp.count();
+    const uint64_t value_size = value.size();
+
+    _raw.append( (const char *)(&milliseconds_since_epoch), sizeof(uint64_t) );
+    _raw.append( (const char *)(&value_size), sizeof(uint64_t) );
+    _raw.append(value);
+}
