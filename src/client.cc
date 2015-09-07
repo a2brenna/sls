@@ -166,28 +166,47 @@ bool sls::Cached_Client::_check(){
     return true;
 }
 
-bool sls::Cached_Client::append(const std::string &key, const std::string &data){
-    const std::chrono::milliseconds timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
-    size_t bytes_appended = _cache[key].append(timestamp, data);
-    _current_cache_size = _current_cache_size + bytes_appended;
-    return _check();
+bool sls::Cached_Client::_flush_key(const std::string &key){
+    const size_t bytes_to_be_flushed = _cache[key].size();
+    const auto success = _client.append_archive(key, _cache[key]);
+
+    _cache.erase(key);
+    _current_cache_size = _current_cache_size - bytes_to_be_flushed;
+
+    return success;
+}
+
+bool sls::Cached_Client::_check_key(const std::string &key){
+    if (_cache[key].size() > (_max_cache_size / _cache.size())){
+        return _flush_key(key);
+    }
+    else{
+        return true;
+    }
 }
 
 bool sls::Cached_Client::flush(){
     return _flush();
 }
 
+bool sls::Cached_Client::append(const std::string &key, const std::string &data){
+    const std::chrono::milliseconds timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+    size_t bytes_appended = _cache[key].append(timestamp, data);
+    _current_cache_size = _current_cache_size + bytes_appended;
+    return _check_key(key);
+}
+
 bool sls::Cached_Client::append(const std::string &key, const std::chrono::milliseconds &time,
             const std::string &data){
     size_t bytes_appended = _cache[key].append(time, data);
     _current_cache_size = _current_cache_size + bytes_appended;
-    return _check();
+    return _check_key(key);
 }
 
 bool sls::Cached_Client::append_archive(const std::string &key, const Archive &archive){
     size_t bytes_appended = _cache[key].append(archive);
     _current_cache_size = _current_cache_size + bytes_appended;
-    return _check();
+    return _check_key(key);
 }
 
 std::vector<std::pair<std::chrono::milliseconds, std::string>>

@@ -103,6 +103,9 @@ private:
     bool _check();
     bool _flush();
 
+    bool _check_key(const std::string &key);
+    bool _flush_key(const std::string &key);
+
 public:
   // IMPORTANT
   // All of the following transactions occur with respect to the set
