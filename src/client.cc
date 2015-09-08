@@ -191,21 +191,29 @@ bool sls::Cached_Client::flush(){
 
 bool sls::Cached_Client::append(const std::string &key, const std::string &data){
     const std::chrono::milliseconds timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
-    size_t bytes_appended = _cache[key].append(timestamp, data);
-    _current_cache_size = _current_cache_size + bytes_appended;
-    return _check_key(key);
+    return append(key, timestamp, data);
 }
 
 bool sls::Cached_Client::append(const std::string &key, const std::chrono::milliseconds &time,
             const std::string &data){
-    size_t bytes_appended = _cache[key].append(time, data);
-    _current_cache_size = _current_cache_size + bytes_appended;
+    try{
+        size_t bytes_appended = _cache[key].append(time, data);
+        _current_cache_size = _current_cache_size + bytes_appended;
+    }
+    catch(Out_Of_Order e){
+        return false;
+    }
     return _check_key(key);
 }
 
 bool sls::Cached_Client::append_archive(const std::string &key, const Archive &archive){
-    size_t bytes_appended = _cache[key].append(archive);
-    _current_cache_size = _current_cache_size + bytes_appended;
+    try{
+        size_t bytes_appended = _cache[key].append(archive);
+        _current_cache_size = _current_cache_size + bytes_appended;
+    }
+    catch(Out_Of_Order e){
+        return false;
+    }
     return _check_key(key);
 }
 
