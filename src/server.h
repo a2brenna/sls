@@ -6,6 +6,7 @@
 #include <deque>
 #include <memory>
 #include <chrono>
+#include "archive.h"
 #include "sls.pb.h"
 #include "index.h"
 #include "active_key.h"
@@ -23,7 +24,7 @@ public:
   void append(const std::string &key, const std::chrono::milliseconds &time,
               const std::string &value);
 
-  void append_archive(const std::string &key, const std::string &archive);
+  void append_archive(const std::string &key, const Archive &archive);
 
   std::string index_lookup(const std::string &key, const size_t &start,
                            const size_t &end);

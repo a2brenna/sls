@@ -146,7 +146,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
         response.set_success(true);
       } else if (request.has_packed_archive()) {
         try {
-          s->append_archive(key, request.packed_archive());
+          s->append_archive(key, Archive(request.packed_archive()));
           response.set_success(true);
         } catch (Bad_Archive e) {
           response.set_success(false);
