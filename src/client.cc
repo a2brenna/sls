@@ -177,7 +177,7 @@ bool sls::Cached_Client::_flush_key(const std::string &key){
 }
 
 bool sls::Cached_Client::_check_key(const std::string &key){
-    if (_cache[key].size() > (_max_cache_size / _cache.size())){
+    if( (_current_cache_size > _max_cache_size) && (_cache[key].size() > (_max_cache_size / _cache.size())) ){
         return _flush_key(key);
     }
     else{
