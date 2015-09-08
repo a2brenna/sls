@@ -1,31 +1,40 @@
 #include "archive.h"
 #include <fstream>
 #include <cassert>
+#include "index.h"
 #include "file.h"
 
 Archive::Archive(){
     _raw.clear();
     _index = 0;
+    _last_time = std::chrono::milliseconds(0);
 }
 
 Archive::Archive(const Path &file) {
   _raw = readfile(file, 0, 0);
   _index = 0;
+_last_time = std::chrono::milliseconds(0);
 }
 
 Archive::Archive(const Path &file, const size_t &offset) {
   _raw = readfile(file, offset, 0);
   _index = 0;
+_last_time = std::chrono::milliseconds(0);
 }
 
 Archive::Archive(const std::string &raw) {
   _raw = raw;
   _index = 0;
+_last_time = std::chrono::milliseconds(0);
 }
 
 uint64_t Archive::index() const { return _index; }
 
 size_t Archive::size() const { return _raw.size(); }
+
+std::chrono::milliseconds Archive::last_time() const {
+    return _last_time;
+}
 
 std::chrono::milliseconds Archive::head_time() const {
   const char *i = _raw.c_str() + _index;
@@ -155,6 +164,10 @@ void Archive::advance_index() {
 void Archive::set_offset(const size_t &offset) { _index = offset; }
 
 size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){
+    if(timestamp < _last_time){
+        throw Out_of_Order();
+    }
+
     const uint64_t milliseconds_since_epoch = timestamp.count();
     const uint64_t value_size = value.size();
 
@@ -162,10 +175,18 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
     _raw.append( (const char *)(&value_size), sizeof(uint64_t) );
     _raw.append(value);
 
+    _last_time = timestamp;
     return value.size() + (2 *sizeof(uint64_t));
 }
 
 size_t Archive::append(const Archive &archive){
-    _raw.append(archive.str());
-    return archive.size();
+    const std::chrono::milliseconds next_timestamp = archive.head_time();
+    if(next_timestamp < _last_time){
+        throw Out_of_Order();
+    }
+    else{
+        _raw.append(archive.str());
+        _last_time = archive.last_time();
+        return archive.size();
+    }
 }

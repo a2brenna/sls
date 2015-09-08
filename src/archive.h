@@ -19,6 +19,9 @@ public:
 
 class Archive {
 
+    private:
+        std::chrono::milliseconds _last_time;
+
 public:
   Archive(const Path &file);
   Archive(const Path &file, const size_t &offset);
@@ -29,6 +32,7 @@ public:
   void advance_index();
   void set_offset(const size_t &offset);
   std::chrono::milliseconds head_time() const;
+  std::chrono::milliseconds last_time() const;
   std::string head_data() const;
   std::string head_record() const;
   std::vector<std::pair<std::chrono::milliseconds, std::string>>
