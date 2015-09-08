@@ -115,7 +115,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
             s->append(key, data);
           }
           response.set_success(true);
-        } catch (Out_of_Order) {
+        } catch (Out_Of_Order) {
           response.set_success(false);
         } catch (...) {
           assert(false);
@@ -150,7 +150,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
           response.set_success(true);
         } catch (Bad_Archive e) {
           response.set_success(false);
-        } catch (Out_of_Order e) {
+        } catch (Out_Of_Order e) {
           response.set_success(false);
         } catch (...) {
           assert(false);

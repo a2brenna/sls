@@ -32,7 +32,7 @@ Active_Key::~Active_Key() {
 void Active_Key::_append(const std::string &new_val,
                          const std::chrono::milliseconds &time) {
   if (_last_time > time) {
-    throw Out_of_Order();
+    throw Out_Of_Order();
   }
 
   const uint64_t val_length = new_val.size();
@@ -75,7 +75,7 @@ void Active_Key::_append_archive(const Archive &archive) {
   try {
     const auto archive_start_time = archive.head_time();
     if (archive_start_time < _last_time) {
-      throw Out_of_Order();
+      throw Out_Of_Order();
     }
   } catch (End_Of_Archive e) {
     throw Bad_Archive();

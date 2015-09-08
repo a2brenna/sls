@@ -10,6 +10,8 @@ class End_Of_Archive {};
 
 class Bad_Archive {};
 
+class Out_Of_Order {};
+
 class Metadata {
 public:
   size_t elements = 0;

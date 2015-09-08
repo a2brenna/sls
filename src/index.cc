@@ -98,7 +98,7 @@ void Index::append(const Index_Record &r) {
         (r.timestamp() >= _index.back().timestamp())) {
       _index.push_back(r);
     } else {
-      throw Out_of_Order();
+      throw Out_Of_Order();
     }
   }
 }
@@ -283,7 +283,7 @@ Index build_index(const Path &directory, const size_t &resolution) {
       index.append(Index_Record(r.second.timestamp(),
                                 count + r.second.position(),
                                 r.second.filename(), r.second.offset()));
-    } catch (Out_of_Order o) {
+    } catch (Out_Of_Order o) {
       std::cerr << directory.str() << "/" + r.second.filename()
                 << " contains out of order data " << std::endl;
     }

@@ -33,8 +33,6 @@ bool operator>(const Index_Record &rhs, const Index_Record &lhs);
 std::ostream &operator<<(std::ostream &out, const Index_Record &i);
 std::istream &operator>>(std::istream &in, Index_Record &i);
 
-class Out_of_Order {};
-
 class Index {
 
 public:

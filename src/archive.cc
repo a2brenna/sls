@@ -1,7 +1,6 @@
 #include "archive.h"
 #include <fstream>
 #include <cassert>
-#include "index.h"
 #include "file.h"
 
 Archive::Archive(){
@@ -165,7 +164,7 @@ void Archive::set_offset(const size_t &offset) { _index = offset; }
 
 size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){
     if(timestamp < _last_time){
-        throw Out_of_Order();
+        throw Out_Of_Order();
     }
 
     const uint64_t milliseconds_since_epoch = timestamp.count();
@@ -182,7 +181,7 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
 size_t Archive::append(const Archive &archive){
     const std::chrono::milliseconds next_timestamp = archive.head_time();
     if(next_timestamp < _last_time){
-        throw Out_of_Order();
+        throw Out_Of_Order();
     }
     else{
         _raw.append(archive.str());
