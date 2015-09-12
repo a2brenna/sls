@@ -30,7 +30,7 @@ sls::Client::_request(const sls::Request &request) {
 
   if (response.data_to_follow()) {
     const Archive data(server_connection->recv());
-    data_vector = data.extract();
+    data_vector = data.unpack();
   }
   return std::pair<
       sls::Response,

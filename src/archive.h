@@ -37,8 +37,8 @@ public:
   std::chrono::milliseconds last_time() const;
   std::string head_data() const;
   std::string head_record() const;
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  extract() const;
+  std::vector<std::pair<std::chrono::milliseconds, std::string>> unpack() const;
+  std::vector<std::string> extract() const;
   uint64_t index() const;
   size_t size() const;
   Metadata check() const;

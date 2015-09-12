@@ -114,7 +114,7 @@ Metadata Archive::check() const {
 }
 
 std::vector<std::pair<std::chrono::milliseconds, std::string>>
-Archive::extract() const {
+Archive::unpack() const {
   const char *i = _raw.c_str() + _index;
   if (i == (_raw.c_str() + _raw.size())) {
     throw End_Of_Archive();
@@ -135,6 +135,31 @@ Archive::extract() const {
 
     output.push_back(std::pair<std::chrono::milliseconds, std::string>(
         timestamp, std::string(i, blob_length)));
+    i += blob_length;
+  }
+
+  return output;
+}
+
+std::vector<std::string> Archive::extract() const {
+  const char *i = _raw.c_str() + _index;
+  if (i == (_raw.c_str() + _raw.size())) {
+    throw End_Of_Archive();
+  }
+  assert(i < (_raw.c_str() + _raw.size()));
+
+  std::vector<std::string> output;
+
+  const char *end = _raw.c_str() + _raw.size();
+  assert(*end == '\0');
+
+  while (i < end) {
+    i += sizeof(uint64_t);
+
+    const uint64_t blob_length = *((uint64_t *)(i));
+    i += sizeof(uint64_t);
+
+    output.push_back(std::string(i, blob_length));
     i += blob_length;
   }
 
