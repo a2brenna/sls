@@ -10,11 +10,13 @@ all: sls libsls.so libsls.a migrate fsck
 
 test: test_client
 
-install: libsls.so libsls.a src/sls.h src/sls.pb.h
+install: install_headers libsls.so libsls.a
 	mkdir -p ${DESTDIR}/${PREFIX}/lib
 	mkdir -p ${DESTDIR}/${PREFIX}/include/sls
 	cp *.a ${DESTDIR}/${PREFIX}/lib
 	cp *.so ${DESTDIR}/${PREFIX}/lib
+
+install_headers: src/sls.h src/sls.pb.h src/client.h src/archive.h src/file.h
 	cp src/sls.h ${DESTDIR}/${PREFIX}/include/sls/
 	cp src/sls.pb.h ${DESTDIR}/${PREFIX}/include/sls/
 	cp src/client.h ${DESTDIR}/${PREFIX}/include/sls/
@@ -76,16 +78,16 @@ slsc.o: src/slsc.cc
 config.o: src/config.cc
 	${CXX} ${CXXFLAGS} -c src/config.cc -o config.o
 
-sls.pb.o: src/sls.pb.cc
+sls.pb.o: src/sls.pb.h
 	${CXX} ${CXXFLAGS} -c src/sls.pb.cc -o sls.pb.o
 
-legacy.pb.o: src/legacy.pb.cc
+legacy.pb.o: src/legacy.pb.h
 	${CXX} ${CXXFLAGS} -c src/legacy.pb.cc -o legacy.pb.o
 
-src/legacy.pb.cc: legacy.proto
+src/legacy.pb.h: legacy.proto
 	protoc --cpp_out=src/ legacy.proto
 
-src/sls.pb.cc: sls.proto
+src/sls.pb.h: sls.proto
 	protoc --cpp_out=src/ sls.proto
 
 clean:
