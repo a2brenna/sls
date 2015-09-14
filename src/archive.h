@@ -6,6 +6,8 @@
 #include <string>
 #include <chrono>
 
+namespace sls{
+
 class End_Of_Archive {};
 
 class Bad_Archive {};
@@ -41,7 +43,7 @@ public:
   std::vector<std::string> extract() const;
   uint64_t index() const;
   size_t size() const;
-  Metadata check() const;
+  sls::Metadata check() const;
   const std::string str() const;
   size_t append(const std::chrono::milliseconds &timestamp, const std::string &value);
   size_t append(const Archive &archive);
@@ -50,5 +52,7 @@ private:
   std::string _raw;
   size_t _index;
 };
+
+}
 
 #endif

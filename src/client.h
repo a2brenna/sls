@@ -16,11 +16,8 @@ extern std::shared_ptr<smpl::Remote_Address> global_server;
 class Client {
 private:
   std::unique_ptr<smpl::Channel> server_connection;
-  std::pair<sls::Response,
-            std::vector<std::pair<std::chrono::milliseconds, std::string>>>
-  _request(const sls::Request &request);
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  _interval(const std::string &key, const unsigned long long &start,
+  std::pair<sls::Response, Archive> _request(const sls::Request &request);
+  Archive _interval(const std::string &key, const unsigned long long &start,
             const unsigned long long &end, const bool &is_time);
 
 public:
@@ -66,8 +63,7 @@ public:
   * key: Any std::string such that key.empty() = false
   * num_entries: >= 0
   */
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  lastn(const std::string &key, const unsigned long long &num_entries);
+  Archive lastn(const std::string &key, const unsigned long long &num_entries);
 
   /* Returns a vector contains all the entries in the list for key in
   * chronological order.  If the list is empty or no list exists, a vector
@@ -75,8 +71,7 @@ public:
   *
   * key: Any std::string such that key.empty() = false
   */
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  all(const std::string &key);
+  Archive all(const std::string &key);
 
   /* Returns a vector of all the values in the list for key between time
   * index start and end, inclusive.  start and end must be milliseconds
@@ -86,8 +81,7 @@ public:
   * start: 0 <= end
   * end: 0 >= start
   */
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  intervalt(const std::string &key, const unsigned long long &start,
+  Archive intervalt(const std::string &key, const unsigned long long &start,
             const unsigned long long &end);
 };
 
@@ -132,14 +126,11 @@ public:
 
   bool append_archive(const std::string &key, const Archive &archive);
 
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  lastn(const std::string &key, const unsigned long long &num_entries);
+  Archive lastn(const std::string &key, const unsigned long long &num_entries);
 
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  all(const std::string &key);
+  Archive all(const std::string &key);
 
-  std::vector<std::pair<std::chrono::milliseconds, std::string>>
-  intervalt(const std::string &key, const unsigned long long &start,
+  Archive intervalt(const std::string &key, const unsigned long long &start,
             const unsigned long long &end);
 
 };

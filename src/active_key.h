@@ -15,7 +15,7 @@ public:
   void append(const std::string &new_val);
   void append(const std::string &new_val,
               const std::chrono::milliseconds &time);
-  void append_archive(const Archive &archive);
+  void append_archive(const sls::Archive &archive);
   void sync();
   size_t num_elements() const;
   std::string index_lookup(const size_t &start, const size_t &end) const;
@@ -39,7 +39,7 @@ private:
   Path _filepath() const;
   void _append(const std::string &new_val,
                const std::chrono::milliseconds &time);
-  void _append_archive(const Archive &archive);
+  void _append_archive(const sls::Archive &archive);
   std::string _index_lookup(const size_t &start, const size_t &end) const;
   void _sync();
 };

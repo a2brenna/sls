@@ -24,7 +24,7 @@ public:
   void append(const std::string &key, const std::chrono::milliseconds &time,
               const std::string &value);
 
-  void append_archive(const std::string &key, const Archive &archive);
+  void append_archive(const std::string &key, const sls::Archive &archive);
 
   std::string index_lookup(const std::string &key, const size_t &start,
                            const size_t &end);

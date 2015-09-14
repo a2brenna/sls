@@ -115,7 +115,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
             s->append(key, data);
           }
           response.set_success(true);
-        } catch (Out_Of_Order) {
+        } catch (sls::Out_Of_Order) {
           response.set_success(false);
         } catch (...) {
           assert(false);
@@ -146,11 +146,11 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
         response.set_success(true);
       } else if (request.has_packed_archive()) {
         try {
-          s->append_archive(key, Archive(request.packed_archive()));
+          s->append_archive(key, sls::Archive(request.packed_archive()));
           response.set_success(true);
-        } catch (Bad_Archive e) {
+        } catch (sls::Bad_Archive e) {
           response.set_success(false);
-        } catch (Out_Of_Order e) {
+        } catch (sls::Out_Of_Order e) {
           response.set_success(false);
         } catch (...) {
           assert(false);

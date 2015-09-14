@@ -12,9 +12,7 @@ sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server) {
   server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 
-std::pair<sls::Response,
-          std::vector<std::pair<std::chrono::milliseconds, std::string>>>
-sls::Client::_request(const sls::Request &request) {
+std::pair<sls::Response, sls::Archive> sls::Client::_request(const sls::Request &request) {
   assert(request.key().size() > 0);
 
   std::string request_string;
@@ -26,20 +24,17 @@ sls::Client::_request(const sls::Request &request) {
   sls::Response response;
   response.ParseFromString(returned);
 
-  std::vector<std::pair<std::chrono::milliseconds, std::string>> data_vector;
-
   if (response.data_to_follow()) {
-    const Archive data(server_connection->recv());
-    data_vector = data.unpack();
+    const sls::Archive data(server_connection->recv());
+    return std::pair<sls::Response, sls::Archive>(response, data);
   }
-  return std::pair<
-      sls::Response,
-      std::vector<std::pair<std::chrono::milliseconds, std::string>>>(
-      response, data_vector);
+  else{
+    const sls::Archive data("");
+    return std::pair<sls::Response, sls::Archive>(response, data);
+  }
 }
 
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
-sls::Client::_interval(const std::string &key, const unsigned long long &start,
+sls::Archive sls::Client::_interval(const std::string &key, const unsigned long long &start,
                        const unsigned long long &end, const bool &is_time) {
   assert(key.size() > 0);
 
@@ -49,16 +44,12 @@ sls::Client::_interval(const std::string &key, const unsigned long long &start,
   request.mutable_req_range()->set_is_time(is_time);
   request.set_key(key);
 
-  std::pair<sls::Response,
-            std::vector<std::pair<std::chrono::milliseconds, std::string>>>
-      response = _request(request);
+  const auto response = _request(request);
 
   if (response.first.success()) {
     return response.second;
   } else {
-    const std::vector<std::pair<std::chrono::milliseconds, std::string>>
-        empty_vector;
-    return empty_vector;
+    return sls::Archive("");
   }
 }
 
@@ -75,7 +66,7 @@ bool sls::Client::append(const std::string &key, const std::string &data) {
   return retval.success();
 }
 
-bool sls::Client::append_archive(const std::string &key, const Archive &archive) {
+bool sls::Client::append_archive(const std::string &key, const sls::Archive &archive) {
   assert(key.size() > 0);
   sls::Request request;
   request.set_key(key);
@@ -103,8 +94,7 @@ bool sls::Client::append(const std::string &key,
   return retval.success();
 }
 
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
-sls::Client::lastn(const std::string &key,
+sls::Archive sls::Client::lastn(const std::string &key,
                    const unsigned long long &num_entries) {
   assert(key.size() > 0);
 
@@ -112,27 +102,21 @@ sls::Client::lastn(const std::string &key,
   request.mutable_last()->set_max_values(num_entries);
   request.set_key(key);
 
-  std::pair<sls::Response,
-            std::vector<std::pair<std::chrono::milliseconds, std::string>>>
-      response = _request(request);
+  const auto response = _request(request);
 
   if (response.first.success()) {
     return response.second;
   } else {
-    const std::vector<std::pair<std::chrono::milliseconds, std::string>>
-        empty_vector;
-    return empty_vector;
+    return sls::Archive("");
   }
 }
 
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
-sls::Client::all(const std::string &key) {
+sls::Archive sls::Client::all(const std::string &key) {
   assert(key.size() > 0);
   return _interval(key, 0, ULONG_MAX, false);
 }
 
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
-sls::Client::intervalt(const std::string &key, const unsigned long long &start,
+sls::Archive sls::Client::intervalt(const std::string &key, const unsigned long long &start,
                        const unsigned long long &end) {
   assert(key.size() > 0);
   return _interval(key, start, end, true);
@@ -206,7 +190,7 @@ bool sls::Cached_Client::append(const std::string &key, const std::chrono::milli
     return _check_key(key);
 }
 
-bool sls::Cached_Client::append_archive(const std::string &key, const Archive &archive){
+bool sls::Cached_Client::append_archive(const std::string &key, const sls::Archive &archive){
     try{
         size_t bytes_appended = _cache[key].append(archive);
         _current_cache_size = _current_cache_size + bytes_appended;
@@ -217,19 +201,15 @@ bool sls::Cached_Client::append_archive(const std::string &key, const Archive &a
     return _check_key(key);
 }
 
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
-sls::Cached_Client::lastn(const std::string &key, const unsigned long long &num_entries){
+sls::Archive sls::Cached_Client::lastn(const std::string &key, const unsigned long long &num_entries){
 return _client.lastn(key, num_entries);
 }
 
-
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
-sls::Cached_Client::all(const std::string &key){
+sls::Archive sls::Cached_Client::all(const std::string &key){
 return _client.all(key);
 }
 
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
-sls::Cached_Client::intervalt(const std::string &key, const unsigned long long &start,
+sls::Archive sls::Cached_Client::intervalt(const std::string &key, const unsigned long long &start,
         const unsigned long long &end){
 return _client.intervalt(key, start, end);
 }

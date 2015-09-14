@@ -32,7 +32,7 @@ Active_Key::~Active_Key() {
 void Active_Key::_append(const std::string &new_val,
                          const std::chrono::milliseconds &time) {
   if (_last_time > time) {
-    throw Out_Of_Order();
+    throw sls::Out_Of_Order();
   }
 
   const uint64_t val_length = new_val.size();
@@ -68,21 +68,21 @@ void Active_Key::_append(const std::string &new_val,
   }
 }
 
-void Active_Key::_append_archive(const Archive &archive) {
+void Active_Key::_append_archive(const sls::Archive &archive) {
   const auto elements_past_index_point = _num_elements % CONFIG_RESOLUTION;
 
   //Ensure new data comes after existing data
   try {
     const auto archive_start_time = archive.head_time();
     if (archive_start_time < _last_time) {
-      throw Out_Of_Order();
+      throw sls::Out_Of_Order();
     }
-  } catch (End_Of_Archive e) {
-    throw Bad_Archive();
+  } catch (sls::End_Of_Archive e) {
+    throw sls::Bad_Archive();
   }
 
   // verify packed archive and take some measurements
-  const Metadata archive_metadata = archive.check();
+  const sls::Metadata archive_metadata = archive.check();
 
   std::ofstream o(_filepath().str(),
                   std::ofstream::app | std::ofstream::binary);
@@ -126,7 +126,7 @@ void Active_Key::append(const std::string &new_val) {
   _append(new_val, current_time);
 }
 
-void Active_Key::append_archive(const Archive &archive) {
+void Active_Key::append_archive(const sls::Archive &archive) {
   std::unique_lock<std::mutex> l(_lock);
   _append_archive(archive);
 }
@@ -181,7 +181,7 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
   }
   for (const auto &f : files) {
     Path path(_base_dir.str() + _key + "/" + f.filename());
-    Archive arch(path);
+    sls::Archive arch(path);
     arch.set_offset(f.offset());
     while (true) {
       try {
@@ -197,7 +197,7 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
         } else {
           assert(false);
         }
-      } catch (End_Of_Archive e) {
+      } catch (sls::End_Of_Archive e) {
         break;
       }
     }
@@ -224,7 +224,7 @@ std::string Active_Key::_index_lookup(const size_t &start,
   for (const auto &f : files) {
     size_t current_index = f.position();
     Path path(_base_dir.str() + _key + "/" + f.filename());
-    Archive arch(path);
+    sls::Archive arch(path);
     arch.set_offset(f.offset());
     while (true) {
       try {
@@ -240,7 +240,7 @@ std::string Active_Key::_index_lookup(const size_t &start,
         } else {
           assert(false);
         }
-      } catch (End_Of_Archive e) {
+      } catch (sls::End_Of_Archive e) {
         break;
       }
     }

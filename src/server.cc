@@ -39,7 +39,7 @@ void SLS::append(const std::string &key, const std::chrono::milliseconds &time,
   active_key->append(data, time);
 }
 
-void SLS::append_archive(const std::string &key, const Archive &archive) {
+void SLS::append_archive(const std::string &key, const sls::Archive &archive) {
   std::shared_ptr<Active_Key> active_key = _get_active_file(key, true);
   active_key->append_archive(archive);
 }

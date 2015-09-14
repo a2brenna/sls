@@ -3,6 +3,8 @@
 #include <cassert>
 #include "file.h"
 
+namespace sls{
+
 Archive::Archive(){
     _raw.clear();
     _index = 0;
@@ -105,7 +107,7 @@ Metadata Archive::check() const {
     index = index + sizeof(uint64_t) * 2 + blob_length;
   }
 
-  Metadata m;
+  sls::Metadata m;
   m.elements = num_elements;
   m.index = last_index;
   m.timestamp = std::chrono::milliseconds(milliseconds_from_epoch);
@@ -203,7 +205,7 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
     return value.size() + (2 *sizeof(uint64_t));
 }
 
-size_t Archive::append(const Archive &archive){
+size_t Archive::append(const sls::Archive &archive){
     const std::chrono::milliseconds next_timestamp = archive.head_time();
     if(next_timestamp < _last_time){
         throw Out_Of_Order();
@@ -213,4 +215,6 @@ size_t Archive::append(const Archive &archive){
         _last_time = archive.last_time();
         return archive.size();
     }
+}
+
 }
