@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: sls libsls.so libsls.a migrate fsck
+all: install_headers sls libsls.so libsls.a migrate fsck
 
 test: test_client
 
@@ -15,6 +15,8 @@ install: libsls.so libsls.a src/sls.h src/sls.pb.h
 	mkdir -p ${DESTDIR}/${PREFIX}/include/sls
 	cp *.a ${DESTDIR}/${PREFIX}/lib
 	cp *.so ${DESTDIR}/${PREFIX}/lib
+
+install_headers: src/sls.h src/sls.pb.h src/client.h src/archive.h src/file.h
 	cp src/sls.h ${DESTDIR}/${PREFIX}/include/sls/
 	cp src/sls.pb.h ${DESTDIR}/${PREFIX}/include/sls/
 	cp src/client.h ${DESTDIR}/${PREFIX}/include/sls/
