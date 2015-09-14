@@ -9,7 +9,7 @@
 #include <memory>
 #include <smpl.h>
 
-#include "archive.h"
+#include <sls/archive.h>
 #include "sls.pb.h"
 
 namespace sls {
@@ -51,7 +51,7 @@ bool append_archive(const std::string &key, const Archive &archive);
  * key: Any std::string such that key.empty() = false
  * num_entries: >= 0
  */
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
+Archive
 lastn(const std::string &key, const unsigned long long &num_entries);
 
 /* Returns a vector contains all the entries in the list for key in
@@ -60,7 +60,7 @@ lastn(const std::string &key, const unsigned long long &num_entries);
  *
  * key: Any std::string such that key.empty() = false
  */
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
+Archive
 all(const std::string &key);
 
 /* Returns a vector of all the values in the list for key between time
@@ -71,7 +71,7 @@ all(const std::string &key);
  * start: 0 <= end
  * end: 0 >= start
  */
-std::vector<std::pair<std::chrono::milliseconds, std::string>>
+Archive
 intervalt(const std::string &key, const unsigned long long &start,
           const unsigned long long &end);
 
