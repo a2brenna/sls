@@ -78,11 +78,11 @@ int main(int argc, char *argv[]) {
   } else {
     std::vector<std::pair<std::chrono::milliseconds, std::string>> result;
     if (LAST > 0) {
-      result = sls::lastn(KEY, LAST);
+      result = sls::lastn(KEY, LAST).unpack();
     } else if (TIME_END > TIME_START) {
-      result = sls::intervalt(KEY, TIME_START, TIME_END);
+      result = sls::intervalt(KEY, TIME_START, TIME_END).unpack();
     } else if (ALL) {
-      result = sls::all(KEY);
+      result = sls::all(KEY).unpack();
     } else {
       return -1;
     }
