@@ -12,11 +12,11 @@ test: test_client
 
 install: install_headers libsls.so libsls.a
 	mkdir -p ${DESTDIR}/${PREFIX}/lib
-	mkdir -p ${DESTDIR}/${PREFIX}/include/sls
 	cp *.a ${DESTDIR}/${PREFIX}/lib
 	cp *.so ${DESTDIR}/${PREFIX}/lib
 
 install_headers: src/sls.h src/sls.pb.h src/client.h src/archive.h src/file.h
+	mkdir -p ${DESTDIR}/${PREFIX}/include/sls/
 	cp src/sls.h ${DESTDIR}/${PREFIX}/include/sls/
 	cp src/sls.pb.h ${DESTDIR}/${PREFIX}/include/sls/
 	cp src/client.h ${DESTDIR}/${PREFIX}/include/sls/
@@ -24,11 +24,9 @@ install_headers: src/sls.h src/sls.pb.h src/client.h src/archive.h src/file.h
 	cp src/file.h ${DESTDIR}/${PREFIX}/include/sls/
 
 uninstall:
-	rm ${DESTDIR}/${PREFIX}/lib/libsls.a
-	rm ${DESTDIR}/${PREFIX}/lib/libsls.so
-	rm ${DESTDIR}/${PREFIX}/include/sls.h
-	rm ${DESTDIR}/${PREFIX}/include/sls.pb.h
-	rm -r ${DESTDIR}/${PREFIX}/include/sls/
+	rm -f ${DESTDIR}/${PREFIX}/lib/libsls.a
+	rm -f ${DESTDIR}/${PREFIX}/lib/libsls.so
+	rm -rf ${DESTDIR}/${PREFIX}/include/sls/
 
 sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o file.o util.o src/config.h
 	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o file.o util.o active_key.o index.o -o sls -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lslog
