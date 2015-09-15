@@ -6,7 +6,7 @@ PREFIX=/usr
 CXX=clang++
 CXXFLAGS=-L${LIBRARY_DIR} -I${INCLUDE_DIR} -O2 -g -std=c++11 -fPIC -Wall -Wextra -march=native
 
-all: install_headers sls libsls.so libsls.a migrate fsck
+all: sls libsls.so libsls.a migrate fsck
 
 test: test_client
 
