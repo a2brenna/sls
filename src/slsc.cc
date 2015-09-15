@@ -10,23 +10,47 @@ namespace sls {
 bool append(const std::string &key, const std::string &data) {
   assert(!key.empty());
 
-  Client c(global_server);
-  return c.append(key, data);
+  try{
+    Client c(global_server);
+    return c.append(key, data);
+  }
+  catch(smpl::Connection_Failed e){
+      return false;
+  }
+  catch(smpl::Transport_Failed e){
+      return false;
+  }
 }
 
 bool append(const std::string &key, const std::chrono::milliseconds &time,
             const std::string &data) {
   assert(!key.empty());
 
-  Client c(global_server);
-  return c.append(key, time, data);
+  try{
+    Client c(global_server);
+    return c.append(key, time, data);
+  }
+  catch(smpl::Connection_Failed e){
+      return false;
+  }
+  catch(smpl::Transport_Failed e){
+      return false;
+  }
 }
 
 bool append_archive(const std::string &key, const Archive &archive){
   assert(!key.empty());
 
-  Client c(global_server);
-  return c.append_archive(key, archive);
+  try{
+    Client c(global_server);
+    return c.append_archive(key, archive);
+  }
+  catch(smpl::Connection_Failed e){
+      return false;
+  }
+  catch(smpl::Transport_Failed e){
+      return false;
+  }
 }
 
 Archive lastn(const std::string &key, const unsigned long long &num_entries) {
