@@ -10,6 +10,7 @@ std::string CONFIG_DISK_DIR = "/pool/sls/";
 int port = 6998;
 std::string CONFIG_UNIX_DOMAIN_FILE = "/tmp/sls.sock";
 size_t CONFIG_RESOLUTION = 1000;
+size_t CONFIG_NUM_BUCKETS = 2048;
 
 void get_config(int argc, char *argv[]) {
   po::options_description desc("Options");
@@ -18,10 +19,12 @@ void get_config(int argc, char *argv[]) {
       ("unix_domain_file", po::value<std::string>(&CONFIG_UNIX_DOMAIN_FILE), "Path to open unix domain socket on")
       ("dir", po::value<std::string>(&CONFIG_DISK_DIR), "Root directory of backend file storage")
       ("resolution", po::value<size_t>(&CONFIG_RESOLUTION), "Indexing resolution")
+      ("num_buckets", po::value<size_t>(&CONFIG_NUM_BUCKETS), "Number of buckets to group key directories in")
       ;
 
   try {
     assert(CONFIG_RESOLUTION > 0);
+    assert(CONFIG_NUM_BUCKETS > 0);
 
     std::ifstream global(global_config_file, std::ios_base::in);
     std::string user_config_file = getenv("HOME");

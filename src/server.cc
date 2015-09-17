@@ -1,5 +1,4 @@
 #include "server.h"
-#include <sys/stat.h> //for mkdir()
 #include <map>
 #include <memory>
 #include <mutex>
@@ -14,15 +13,7 @@ SLS::_get_active_file(const std::string &key, const bool &create_if_missing) {
   try {
     return _active_files.at(key);
   } catch (std::out_of_range e) {
-    if (create_if_missing) {
-      const auto d = mkdir((_disk_dir + key).c_str(), 0755);
-      if (d != 0) {
-        if (errno != EEXIST) {
-          throw Fatal_Error();
-        }
-      }
-    }
-    std::shared_ptr<Active_Key> active_file(new Active_Key(_disk_dir, key));
+      std::shared_ptr<Active_Key> active_file(new Active_Key(_disk_dir, key, create_if_missing));
     _active_files[key] = active_file;
     return active_file;
   }

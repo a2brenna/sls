@@ -2,13 +2,28 @@
 
 #include <fstream>
 #include <cassert>
+#include <city.h>
+#include <sys/stat.h>
 #include "archive.h"
 #include "index.h"
 #include "util.h"
 #include "config.h"
 
-Active_Key::Active_Key(const Path &base_dir, const std::string &key)
-    : _base_dir(base_dir), _index(base_dir.str() + key + "/index") {
+std::string bucket_dir(const std::string &key){
+    return std::to_string(CityHash64(key.c_str(), key.size()) % CONFIG_NUM_BUCKETS);
+}
+
+Active_Key::Active_Key(const Path &base_dir, const std::string &key, const bool &make_directory):
+    _directory(base_dir.str() + bucket_dir(key) + "/" + key + "/"),
+    _index(_directory.str() + "index") {
+    if(make_directory){
+        const auto d = mkdir(_directory.str().c_str(), 0755);
+        if (d != 0) {
+            if (errno != EEXIST) {
+                assert(false);
+            }
+        }
+    }
   _key = key;
   _name = RandomString(32);
   Index index(_index);
@@ -21,7 +36,7 @@ Active_Key::Active_Key(const Path &base_dir, const std::string &key)
 }
 
 Path Active_Key::_filepath() const {
-  return Path(_base_dir.str() + _key + "/" + _name);
+  return Path(_directory.str() + _name);
 }
 
 Active_Key::~Active_Key() {
@@ -180,7 +195,7 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
     return result;
   }
   for (const auto &f : files) {
-    Path path(_base_dir.str() + _key + "/" + f.filename());
+    Path path(_directory.str() + f.filename());
     sls::Archive arch(path);
     arch.set_offset(f.offset());
     while (true) {
@@ -223,7 +238,7 @@ std::string Active_Key::_index_lookup(const size_t &start,
   }
   for (const auto &f : files) {
     size_t current_index = f.position();
-    Path path(_base_dir.str() + _key + "/" + f.filename());
+    Path path(_directory.str() + f.filename());
     sls::Archive arch(path);
     arch.set_offset(f.offset());
     while (true) {

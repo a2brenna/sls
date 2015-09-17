@@ -9,7 +9,7 @@
 class Active_Key {
 
 public:
-  Active_Key(const Path &base_dir, const std::string &key);
+  Active_Key(const Path &base_dir, const std::string &key, const bool &mkdir);
   Active_Key(const Active_Key &f) = delete;
   ~Active_Key();
   void append(const std::string &new_val);
@@ -25,7 +25,7 @@ public:
 
 private:
   mutable std::mutex _lock;
-  Path _base_dir;
+  Path _directory;
   Path _index;
   std::string _key;
   std::string _name;
