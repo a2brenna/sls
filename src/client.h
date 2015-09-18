@@ -74,15 +74,15 @@ public:
   Archive all(const std::string &key);
 
   /* Returns a vector of all the values in the list for key between time
-  * index start and end, inclusive.  start and end must be milliseconds
-  * since epoch.
+  * index start and end, inclusive. start and end must be in milliseconds since
+  * epoch.
   *
   * key: Any std::string such that key.empty() = false
   * start: 0 <= end
   * end: 0 >= start
   */
-  Archive intervalt(const std::string &key, const unsigned long long &start,
-            const unsigned long long &end);
+  Archive intervalt(const std::string &key, const std::chrono::milliseconds &start,
+            const std::chrono::milliseconds &end);
 };
 
 class Cached_Client{
@@ -130,8 +130,8 @@ public:
 
   Archive all(const std::string &key);
 
-  Archive intervalt(const std::string &key, const unsigned long long &start,
-            const unsigned long long &end);
+  Archive intervalt(const std::string &key, const std::chrono::milliseconds &start,
+            const std::chrono::milliseconds &end);
 
 };
 

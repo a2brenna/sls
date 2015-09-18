@@ -71,8 +71,8 @@ Archive all(const std::string &key) {
   return c.all(key);
 }
 
-Archive intervalt(const std::string &key, const unsigned long long &start,
-          const unsigned long long &end) {
+Archive intervalt(const std::string &key, const std::chrono::milliseconds &start,
+          const std::chrono::milliseconds &end) {
   assert(!key.empty());
   assert(start <= end);
 

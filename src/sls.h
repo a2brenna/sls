@@ -72,8 +72,8 @@ all(const std::string &key);
  * end: 0 >= start
  */
 Archive
-intervalt(const std::string &key, const unsigned long long &start,
-          const unsigned long long &end);
+intervalt(const std::string &key, const std::chrono::milliseconds &start,
+          const std::chrono::milliseconds &end);
 
 /* Given an std::pair<std::chrono::milliseconds, std::string> value, return the
  * data component without its

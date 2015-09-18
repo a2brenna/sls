@@ -116,10 +116,11 @@ sls::Archive sls::Client::all(const std::string &key) {
   return _interval(key, 0, ULONG_MAX, false);
 }
 
-sls::Archive sls::Client::intervalt(const std::string &key, const unsigned long long &start,
-                       const unsigned long long &end) {
+sls::Archive sls::Client::intervalt(const std::string &key, const std::chrono::milliseconds &start,
+                       const std::chrono::milliseconds &end) {
   assert(key.size() > 0);
-  return _interval(key, start, end, true);
+  assert(start <= end);
+  return _interval(key, start.count(), end.count(), true);
 }
 
 sls::Cached_Client::Cached_Client(std::shared_ptr<smpl::Remote_Address> server, const size_t max_cache_size):
@@ -209,7 +210,7 @@ sls::Archive sls::Cached_Client::all(const std::string &key){
 return _client.all(key);
 }
 
-sls::Archive sls::Cached_Client::intervalt(const std::string &key, const unsigned long long &start,
-        const unsigned long long &end){
+sls::Archive sls::Cached_Client::intervalt(const std::string &key, const std::chrono::milliseconds &start,
+        const std::chrono::milliseconds &end){
 return _client.intervalt(key, start, end);
 }
