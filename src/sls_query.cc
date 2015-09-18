@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     if (LAST > 0) {
       result = sls::lastn(KEY, LAST).unpack();
     } else if (TIME_END > TIME_START) {
-      result = sls::intervalt(KEY, TIME_START, TIME_END).unpack();
+      result = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).unpack();
     } else if (ALL) {
       result = sls::all(KEY).unpack();
     } else {
