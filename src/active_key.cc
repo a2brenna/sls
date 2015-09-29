@@ -194,6 +194,11 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
   if (files.empty()) {
     return result;
   }
+  else{
+      for(const auto &f: files){
+        *Info << "Reading file: " << f.filename() << std::endl;
+      }
+  }
   for (const auto &f : files) {
     Path path(_directory.str() + f.filename());
     sls::Archive arch(path);
@@ -235,6 +240,11 @@ std::string Active_Key::_index_lookup(const size_t &start,
   std::vector<Index_Record> files = index.position_lookup(start, end);
   if (files.empty()) {
     return result;
+  }
+  else{
+      for(const auto &f: files){
+        *Info << "Reading file: " << f.filename() << std::endl;
+      }
   }
   for (const auto &f : files) {
     size_t current_index = f.position();
