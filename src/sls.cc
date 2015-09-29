@@ -20,6 +20,7 @@
 sls::SLS *s;
 
 std::unique_ptr<slog::Log> Error;
+std::unique_ptr<slog::Log> Info;
 
 std::mutex requests_in_progress_lock;
 int requests_in_progress = 0;
@@ -181,6 +182,9 @@ int main(int argc, char *argv[]) {
   Error = std::unique_ptr<slog::Log>(new slog::Log(
       std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogErr)),
       slog::kLogErr, "ERROR"));
+  Info = std::unique_ptr<slog::Log>(new slog::Log(
+      std::shared_ptr<slog::Syslog>(new slog::Syslog(slog::kLogInfo)),
+      slog::kLogErr, "INFO"));
   get_config(argc, argv);
 
   s = new sls::SLS(CONFIG_DISK_DIR);
