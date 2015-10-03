@@ -7,6 +7,7 @@ namespace po = boost::program_options;
 
 std::string KEY = "";
 bool ALL = false;
+bool DISCARD = false;
 size_t LAST = 0;
 size_t INDEX_START = 0;
 size_t INDEX_END = 0;
@@ -20,20 +21,16 @@ std::string CONFIG_SERVER = "/tmp/sls.sock";
 void config(int argc, char *argv[]) {
   po::options_description desc("Options");
 
-  desc.add_options()("help", "Produce help messagwe")(
-      "key", po::value<std::string>(&KEY), "Key to retrieve values for")(
-      "append", po::value<std::string>(&VALUE),
-      "Value to append")("time", po::value<int64_t>(&TIME),
-                         "Time (milliseconds since epoch) to append at")(
-      "last", po::value<size_t>(&LAST),
-      "Number of most recent elements to retrieve")(
-      "start", po::value<uint64_t>(&TIME_START),
-      "Time to start retrieving elements")("end",
-                                           po::value<uint64_t>(&TIME_END),
-                                           "Time to start retrieving elements")(
-      "all", po::bool_switch(&ALL), "Retrieve all elements")(
-      "unix_domain_file", po::value<std::string>(&CONFIG_SERVER),
-      "Server unix domain file");
+  desc.add_options()("help", "Produce help messagwe")
+      ("key", po::value<std::string>(&KEY), "Key to retrieve values for")
+      ("append", po::value<std::string>(&VALUE), "Value to append")
+      ("time", po::value<int64_t>(&TIME), "Time (milliseconds since epoch) to append at")
+      ("last", po::value<size_t>(&LAST), "Number of most recent elements to retrieve")
+      ("start", po::value<uint64_t>(&TIME_START), "Time to start retrieving elements")
+      ("end", po::value<uint64_t>(&TIME_END), "Time to start retrieving elements")
+      ("all", po::bool_switch(&ALL), "Retrieve all elements")
+      ("discard", po::bool_switch(&DISCARD), "Discard results after fetching. Useful for testing.")
+      ("unix_domain_file", po::value<std::string>(&CONFIG_SERVER), "Server unix domain file");
 
   po::variables_map vm;
 
@@ -87,8 +84,13 @@ int main(int argc, char *argv[]) {
       return -1;
     }
 
-    for (const auto &r : result) {
-      std::cout << r.first.count() << " " << r.second << std::endl;
+    if(!DISCARD){
+        for (const auto &r : result) {
+            std::cout << r.first.count() << " " << r.second << std::endl;
+        }
+    }
+    else{
+        std::cerr << "Fetched: " << result.size() << std::endl;
     }
   }
 
