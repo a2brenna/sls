@@ -16,7 +16,6 @@ private:
 
 int getdir(std::string dir, std::vector<std::string> &files);
 
-std::string readfile(const Path &filepath, const size_t &offset,
-                     const size_t &max_size);
+std::string readfile(const Path &filepath, const size_t &offset);
 
 #endif

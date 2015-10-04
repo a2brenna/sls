@@ -12,13 +12,13 @@ Archive::Archive(){
 }
 
 Archive::Archive(const Path &file) {
-  _raw = readfile(file, 0, 0);
+  _raw = readfile(file, 0);
   _index = 0;
 _last_time = std::chrono::milliseconds(0);
 }
 
 Archive::Archive(const Path &file, const size_t &offset) {
-  _raw = readfile(file, offset, 0);
+  _raw = readfile(file, offset);
   _index = 0;
 _last_time = std::chrono::milliseconds(0);
 }

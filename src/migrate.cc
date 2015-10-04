@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
       const std::string target_file = target_path + "/" + file;
 
       std::cerr << "Reading: " << source_file << std::endl;
-      const std::string data = readfile(source_file, 0, 0);
+      const std::string data = readfile(source_file, 0);
       std::cerr << "Read: " << data.size() << std::endl;
 
       // parse

@@ -4,6 +4,11 @@
 #include <string.h>
 #include <fstream>
 #include <sstream>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+size_t MAX_SIZE = 4000000000;
 
 int getdir(std::string dir, std::vector<std::string> &files) {
   struct dirent *dirp;
@@ -25,19 +30,32 @@ int getdir(std::string dir, std::vector<std::string> &files) {
   return 0;
 }
 
-std::string readfile(const Path &filepath, const size_t &offset,
-                     const size_t &max_size) {
-  std::ifstream i(filepath.str(), std::ios_base::in);
-  i.seekg(offset, i.beg);
+std::string readfile(const Path &filepath, const size_t &offset){
+    std::string msg;
+    msg.resize(MAX_SIZE);
+    size_t read = 0;
+    char *buff = &msg[0];
 
-  if (max_size > 0) {
-    std::string output;
-    output.resize(max_size);
-    i.get(&output[0], max_size);
-    return output;
-  } else {
-    std::stringstream s;
-    s << i.rdbuf();
-    return s.str();
-  }
+    int _fd = ::open(filepath.str().c_str(), O_RDONLY);
+    ::lseek(_fd, offset, SEEK_SET);
+
+    for(;;) {
+        const size_t to_read = MAX_SIZE - read;
+
+        const auto ret = ::read(_fd, (buff + read), to_read);
+
+        if (ret == 0){
+            break;
+        }
+        else if(ret < 0){
+            msg.clear();
+            return msg;
+        }
+        else{
+            read = read + ret;
+        }
+    }
+
+    msg.resize(read);
+    return msg;
 }
