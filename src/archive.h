@@ -25,6 +25,9 @@ class Archive {
 
     private:
         std::chrono::milliseconds _last_time;
+        std::string _raw;
+        size_t _index;
+        size_t _size;
 
 public:
   Archive(const Path &file);
@@ -48,9 +51,6 @@ public:
   size_t append(const std::chrono::milliseconds &timestamp, const std::string &value);
   size_t append(const Archive &archive);
 
-private:
-  std::string _raw;
-  size_t _index;
 };
 
 }
