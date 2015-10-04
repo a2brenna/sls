@@ -189,6 +189,10 @@ void Archive::advance_index() {
 
 void Archive::set_offset(const size_t &offset) { _index = offset; }
 
+const std::string Archive::remainder() const{
+    return std::string(_raw, _index, std::string::npos);
+}
+
 size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){
     if(timestamp < _last_time){
         throw Out_Of_Order();
