@@ -8,6 +8,9 @@
 #include "index.h"
 #include "util.h"
 #include "config.h"
+#include <chrono>
+
+#include <iostream>
 
 std::string bucket_dir(const std::string &key){
     return std::to_string(CityHash64(key.c_str(), key.size()) % CONFIG_NUM_BUCKETS);
@@ -234,6 +237,8 @@ std::string Active_Key::index_lookup(const size_t &start,
 std::string Active_Key::_index_lookup(const size_t &start,
                                       const size_t &end) const {
   assert(start <= end);
+  std::cerr << "Begin index lookup" << std::endl;
+
   std::string result;
 
   Index index(_index);
@@ -246,30 +251,51 @@ std::string Active_Key::_index_lookup(const size_t &start,
         *Info << "Reading file: " << f.filename() << std::endl;
       }
   }
-  for (const auto &f : files) {
-    size_t current_index = f.position();
-    Path path(_directory.str() + f.filename());
-    sls::Archive arch(path);
-    arch.set_offset(f.offset());
-    while (true) {
-      try {
-        if (current_index < start) {
-          arch.advance_index();
-          current_index++;
-        } else if (current_index > end) {
-          break;
-        } else if (current_index >= start && current_index <= end) {
-          result.append(arch.head_record());
-          arch.advance_index();
-          current_index++;
-        } else {
-          assert(false);
-        }
-      } catch (sls::End_Of_Archive e) {
-        break;
-      }
+
+  std::cerr << "Reading from " << files.size() << " files" << std::endl;
+  const auto start_time = std::chrono::high_resolution_clock::now();
+
+    if(files.size() > 1){
+            const auto f = files[0];
+            Path path(_directory.str() + f.filename());
+            sls::Archive arch(path);
+            arch.set_offset(f.offset());
+            result.append(arch.remainder());
     }
+    if(files.size() > 2){
+        for(size_t i = 1; i < (files.size() - 1); i++){
+            const auto f = files[i];
+            Path path(_directory.str() + f.filename());
+            sls::Archive arch(path);
+            result.append(arch.str());
+        }
+    }
+    if(files.size() > 0){
+        const auto f = files.back();
+        Path path(_directory.str() + f.filename());
+        sls::Archive arch(path);
+        arch.set_offset(f.offset());
+        size_t current_index = f.position();
+        while (true) {
+            try {
+                if (current_index < start) {
+                    arch.advance_index();
+                    current_index++;
+                } else if (current_index > end) {
+                    break;
+                } else if (current_index >= start && current_index <= end) {
+                    result.append(arch.head_record());
+                    arch.advance_index();
+                    current_index++;
+                } else {
+                    assert(false);
+                }
+            } catch (sls::End_Of_Archive e) {
+                break;
+            }
+        }
   }
+    std::cerr << "Total Fetch time: " << (std::chrono::high_resolution_clock::now() - start_time).count() << std::endl;
   return result;
 }
 
