@@ -59,3 +59,26 @@ std::string readfile(const Path &filepath, const size_t &offset){
     msg.resize(read);
     return msg;
 }
+
+ssize_t readfile(const Path &filepath, const size_t &offset, char *buffer, const size_t &max_size){
+
+    int _fd = ::open(filepath.str().c_str(), O_RDONLY);
+    ::lseek(_fd, offset, SEEK_SET);
+
+    ssize_t read = 0;
+    for(;;) {
+        const size_t to_read = max_size - read;
+
+        const auto ret = ::read(_fd, (buffer + read), to_read);
+
+        if (ret == 0){
+            return read;
+        }
+        else if(ret < 0){
+            return ret;
+        }
+        else{
+            read = read + ret;
+        }
+    }
+}

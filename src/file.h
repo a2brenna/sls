@@ -18,4 +18,7 @@ int getdir(std::string dir, std::vector<std::string> &files);
 
 std::string readfile(const Path &filepath, const size_t &offset);
 
+ssize_t readfile(const Path &filepath, const size_t &offset, char *buffer, const size_t &max_size);
+
+
 #endif
