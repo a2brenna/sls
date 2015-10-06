@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-size_t MAX_SIZE = 4000000000;
+size_t MAX_SIZE = 1073741824;
 
 int getdir(std::string dir, std::vector<std::string> &files) {
   struct dirent *dirp;
