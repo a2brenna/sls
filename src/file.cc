@@ -49,6 +49,7 @@ std::string readfile(const Path &filepath, const size_t &offset){
         }
         else if(ret < 0){
             msg.clear();
+            close(_fd);
             return msg;
         }
         else{
@@ -57,6 +58,7 @@ std::string readfile(const Path &filepath, const size_t &offset){
     }
 
     msg.resize(read);
+    close(_fd);
     return msg;
 }
 
@@ -72,9 +74,11 @@ ssize_t readfile(const Path &filepath, const size_t &offset, char *buffer, const
         const auto ret = ::read(_fd, (buffer + read), to_read);
 
         if (ret == 0){
+            close(_fd);
             return read;
         }
         else if(ret < 0){
+            close(_fd);
             return ret;
         }
         else{
