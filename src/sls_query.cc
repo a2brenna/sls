@@ -73,24 +73,34 @@ int main(int argc, char *argv[]) {
       }
     }
   } else {
-    std::vector<std::pair<std::chrono::milliseconds, std::string>> result;
-    if (LAST > 0) {
-      result = sls::lastn(KEY, LAST).unpack();
-    } else if (TIME_END > TIME_START) {
-      result = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).unpack();
-    } else if (ALL) {
-      result = sls::all(KEY).unpack();
-    } else {
-      return -1;
-    }
 
     if(!DISCARD){
+        std::vector<std::pair<std::chrono::milliseconds, std::string>> result;
+        if (LAST > 0) {
+        result = sls::lastn(KEY, LAST).unpack();
+        } else if (TIME_END > TIME_START) {
+        result = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).unpack();
+        } else if (ALL) {
+        result = sls::all(KEY).unpack();
+        } else {
+        return -1;
+        }
         for (const auto &r : result) {
             std::cout << r.first.count() << " " << r.second << std::endl;
         }
     }
     else{
-        std::cerr << "Fetched: " << result.size() << std::endl;
+        size_t size;
+        if (LAST > 0) {
+        size = sls::lastn(KEY, LAST).size();
+        } else if (TIME_END > TIME_START) {
+        size = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).size();
+        } else if (ALL) {
+        size = sls::all(KEY).size();
+        } else {
+        return -1;
+        }
+        std::cerr << "Fetched: " << size << std::endl;
     }
   }
 
