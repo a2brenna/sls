@@ -25,7 +25,6 @@ public:
 class Archive {
 
     private:
-        std::chrono::milliseconds _last_time;
         std::unique_ptr<char> _buffer;
         size_t _index;
         size_t _size;
@@ -40,7 +39,6 @@ public:
   void advance_index();
   void set_offset(const size_t &offset);
   std::chrono::milliseconds head_time() const;
-  std::chrono::milliseconds last_time() const;
   std::string head_data() const;
   std::string head_record() const;
   std::vector<std::pair<std::chrono::milliseconds, std::string>> unpack() const;

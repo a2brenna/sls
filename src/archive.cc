@@ -10,9 +10,9 @@
 namespace sls{
 
 Archive::Archive():
-    _last_time(0),
     _buffer(new char[MAX_ARCHIVE_SIZE]){
         _index = 0;
+        _size = 0;
 }
 
 Archive::Archive(const Path &file):
@@ -54,10 +54,6 @@ Archive::Archive(const std::string &raw):
 uint64_t Archive::index() const { return _index; }
 
 size_t Archive::size() const { return _size; }
-
-std::chrono::milliseconds Archive::last_time() const {
-    return _last_time;
-}
 
 std::chrono::milliseconds Archive::head_time() const {
   const char *i = _buffer.get() + _index;
@@ -202,7 +198,10 @@ std::vector<std::string> Archive::extract() const {
 }
 
 const std::string Archive::str() const{
-    return std::string(_buffer.get(), size());
+    std::string foo;
+    foo.reserve(size());
+    foo.append(_buffer.get(), size());
+    return foo;
 }
 
 void Archive::advance_index() {
@@ -230,10 +229,6 @@ const std::string Archive::remainder() const{
 }
 
 size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){
-    if(timestamp < _last_time){
-        throw Out_Of_Order();
-    }
-
     const uint64_t milliseconds_since_epoch = timestamp.count();
     const uint64_t value_size = value.size();
 
@@ -252,21 +247,17 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
     assert(bytes_copied == bytes_to_copy);
     _size = _size + bytes_copied;
 
-    _last_time = timestamp;
     return bytes_copied;
 }
 
 size_t Archive::append(const sls::Archive &archive){
-    const std::chrono::milliseconds next_timestamp = archive.head_time();
-    if(next_timestamp < _last_time){
-        throw Out_Of_Order();
+    if( (size() + archive.size()) > MAX_ARCHIVE_SIZE){
+        std::cerr << "size(): " << size() << " archive.size(): " << archive.size() << " MAX_ARCHIVE_SIZE: " << MAX_ARCHIVE_SIZE << std::endl;
+        throw Bad_Archive();
     }
-    else{
-        assert( (size() + archive.size()) < MAX_ARCHIVE_SIZE);
-        memcpy(_buffer.get(), &archive.str()[0], archive.size());
-        _last_time = archive.last_time();
-        return archive.size();
-    }
+    memcpy(_buffer.get(), &archive.str()[0], archive.size());
+    _size = _size + archive.size();
+    return archive.size();
 }
 
 }
