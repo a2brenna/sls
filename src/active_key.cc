@@ -258,7 +258,14 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
     if(files.size() > 1){
             const auto f = files[0];
             Path path(_directory.str() + f.filename());
-            result.append(path, f.offset());
+            sls::Archive temp(path, f.offset());
+            size_t current_index = f.position();
+            while(current_index < start){
+                std::cerr << "current_index: " << current_index << " skipping..." << std::endl;
+                temp.advance_index();
+                current_index++;
+            }
+            result.append(temp.remainder());
     }
     if(files.size() > 2){
         for(size_t i = 1; i < (files.size() - 1); i++){
