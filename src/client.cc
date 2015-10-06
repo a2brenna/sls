@@ -108,7 +108,7 @@ sls::Archive sls::Client::lastn(const std::string &key,
   if (response.first.success()) {
     return sls::Archive(response.second);
   } else {
-    return sls::Archive();
+      throw sls::Request_Failed();
   }
 }
 

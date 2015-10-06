@@ -14,6 +14,10 @@
 
 namespace sls {
 
+/* This is thrown as an exception whenever the server returns failure
+ */
+class Request_Failed {};
+
 /* The address of the sls Server the following functions will use
  */
 extern std::shared_ptr<smpl::Remote_Address> global_server;
