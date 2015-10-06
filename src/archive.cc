@@ -225,7 +225,7 @@ void Archive::set_offset(const size_t &offset) {
 }
 
 const std::string Archive::remainder() const{
-    return std::string(_buffer.get() + _index, size());
+    return std::string(_buffer.get() + _index, _size - _index);
 }
 
 size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){
