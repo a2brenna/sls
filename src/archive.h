@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <memory>
 
 namespace sls{
 
@@ -25,7 +26,7 @@ class Archive {
 
     private:
         std::chrono::milliseconds _last_time;
-        std::string _raw;
+        std::unique_ptr<char> _buffer;
         size_t _index;
         size_t _size;
 
