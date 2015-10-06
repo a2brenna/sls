@@ -260,4 +260,25 @@ size_t Archive::append(const sls::Archive &archive){
     return archive.size();
 }
 
+size_t Archive::append(const std::string &archive){
+    if( (size() + archive.size()) > MAX_ARCHIVE_SIZE){
+        std::cerr << "size(): " << size() << " archive.size(): " << archive.size() << " MAX_ARCHIVE_SIZE: " << MAX_ARCHIVE_SIZE << std::endl;
+        throw Bad_Archive();
+    }
+    memcpy(_buffer.get(), &archive[0], archive.size());
+    _size = _size + archive.size();
+    return archive.size();
+}
+
+size_t Archive::append(const Path &file, const size_t &offset){
+    const auto size = readfile(file, offset, _buffer.get() + _size, MAX_ARCHIVE_SIZE);
+    if(size < 0){
+        throw Bad_Archive();
+    }
+    else{
+        _size = _size + size;
+        return size;
+    }
+}
+
 }

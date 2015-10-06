@@ -50,6 +50,8 @@ public:
   const std::string str() const;
   size_t append(const std::chrono::milliseconds &timestamp, const std::string &value);
   size_t append(const Archive &archive);
+  size_t append(const std::string &archive);
+  size_t append(const Path &file, const size_t &offset);
 
 };
 
