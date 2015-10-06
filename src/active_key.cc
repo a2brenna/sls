@@ -258,16 +258,13 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
     if(files.size() > 1){
             const auto f = files[0];
             Path path(_directory.str() + f.filename());
-            sls::Archive arch(path);
-            arch.set_offset(f.offset());
-            result.append(arch.remainder());
+            result.append(path, f.offset());
     }
     if(files.size() > 2){
         for(size_t i = 1; i < (files.size() - 1); i++){
             const auto f = files[i];
             Path path(_directory.str() + f.filename());
-            sls::Archive arch(path);
-            result.append(arch.str());
+            result.append(path, 0);
         }
     }
     if(files.size() > 0){
