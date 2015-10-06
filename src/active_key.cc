@@ -185,12 +185,12 @@ size_t Active_Key::num_elements() const {
   return _num_elements;
 }
 
-std::string
+sls::Archive
 Active_Key::time_lookup(const std::chrono::milliseconds &start,
                         const std::chrono::milliseconds &end) const {
   std::unique_lock<std::mutex> l(_lock);
 
-  std::string result;
+  sls::Archive result;
 
   Index index(_index);
   std::vector<Index_Record> files = index.time_lookup(start, end);
@@ -228,18 +228,18 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
   return result;
 }
 
-std::string Active_Key::index_lookup(const size_t &start,
+sls::Archive Active_Key::index_lookup(const size_t &start,
                                      const size_t &end) const {
   std::unique_lock<std::mutex> l(_lock);
   return _index_lookup(start, end);
 }
 
-std::string Active_Key::_index_lookup(const size_t &start,
+sls::Archive Active_Key::_index_lookup(const size_t &start,
                                       const size_t &end) const {
   assert(start <= end);
   std::cerr << "Begin index lookup" << std::endl;
 
-  std::string result;
+  sls::Archive result;
 
   Index index(_index);
   std::vector<Index_Record> files = index.position_lookup(start, end);
@@ -295,11 +295,13 @@ std::string Active_Key::_index_lookup(const size_t &start,
             }
         }
   }
-    std::cerr << "Total Fetch time: " << (std::chrono::high_resolution_clock::now() - start_time).count() << std::endl;
+    std::cerr << "Total Retreival Time: " << (std::chrono::high_resolution_clock::now() - start_time).count() << std::endl;
+    std::cerr << "Bytes Retreived: " << result.size() << std::endl;
+
   return result;
 }
 
-std::string Active_Key::last_lookup(const size_t &max_values) const {
+sls::Archive Active_Key::last_lookup(const size_t &max_values) const {
   std::unique_lock<std::mutex> l(_lock);
   const int total_elements = _num_elements + _start_pos;
   const int last_index = total_elements - 1;

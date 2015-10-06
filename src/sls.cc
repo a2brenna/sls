@@ -99,7 +99,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
     sls::Response response;
     response.set_success(false);
 
-    std::string data_string;
+    sls::Archive data_string;
 
     if (request.IsInitialized()) {
       const std::string key = request.key();
@@ -133,7 +133,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
           data_string = s->index_lookup(key, start, end);
         }
 
-        if (!data_string.empty()) {
+        if (!(data_string.size() == 0)) {
           response.set_data_to_follow(true);
         }
         response.set_success(true);
@@ -141,7 +141,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
       } else if (request.has_last()) {
         const unsigned long long max_values = request.last().max_values();
         data_string = s->last_lookup(key, max_values);
-        if (!data_string.empty()) {
+        if (!(data_string.size() == 0)) {
           response.set_data_to_follow(true);
         }
         response.set_success(true);
@@ -167,7 +167,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
     response.SerializeToString(&response_string);
     client->send(response_string);
     if (response.data_to_follow()) {
-      client->send(data_string);
+      client->send(data_string.str());
     }
 
     std::lock_guard<std::mutex> l(requests_in_progress_lock);

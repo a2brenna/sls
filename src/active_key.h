@@ -18,10 +18,10 @@ public:
   void append_archive(const sls::Archive &archive);
   void sync();
   size_t num_elements() const;
-  std::string index_lookup(const size_t &start, const size_t &end) const;
-  std::string time_lookup(const std::chrono::milliseconds &begin,
+  sls::Archive index_lookup(const size_t &start, const size_t &end) const;
+  sls::Archive time_lookup(const std::chrono::milliseconds &begin,
                           const std::chrono::milliseconds &end) const;
-  std::string last_lookup(const size_t &max_values) const;
+  sls::Archive last_lookup(const size_t &max_values) const;
 
 private:
   mutable std::mutex _lock;
@@ -40,7 +40,7 @@ private:
   void _append(const std::string &new_val,
                const std::chrono::milliseconds &time);
   void _append_archive(const sls::Archive &archive);
-  std::string _index_lookup(const size_t &start, const size_t &end) const;
+  sls::Archive _index_lookup(const size_t &start, const size_t &end) const;
   void _sync();
 };
 

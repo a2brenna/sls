@@ -26,12 +26,12 @@ public:
 
   void append_archive(const std::string &key, const sls::Archive &archive);
 
-  std::string index_lookup(const std::string &key, const size_t &start,
+  sls::Archive index_lookup(const std::string &key, const size_t &start,
                            const size_t &end);
-  std::string time_lookup(const std::string &key,
+  sls::Archive time_lookup(const std::string &key,
                           const std::chrono::milliseconds &begin,
                           const std::chrono::milliseconds &end);
-  std::string last_lookup(const std::string &key, const size_t &max_values);
+  sls::Archive last_lookup(const std::string &key, const size_t &max_values);
 
 private:
   std::string _disk_dir;

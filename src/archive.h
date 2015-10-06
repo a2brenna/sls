@@ -25,7 +25,7 @@ public:
 class Archive {
 
     private:
-        std::unique_ptr<char> _buffer;
+        std::shared_ptr<char> _buffer;
         size_t _index;
         size_t _size;
 

@@ -35,20 +35,20 @@ void SLS::append_archive(const std::string &key, const sls::Archive &archive) {
   active_key->append_archive(archive);
 }
 
-std::string SLS::time_lookup(const std::string &key,
+sls::Archive SLS::time_lookup(const std::string &key,
                              const std::chrono::milliseconds &start,
                              const std::chrono::milliseconds &end) {
   std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
   return active_key->time_lookup(start, end);
 }
 
-std::string SLS::index_lookup(const std::string &key, const size_t &start,
+sls::Archive SLS::index_lookup(const std::string &key, const size_t &start,
                               const size_t &end) {
   std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
   return active_key->index_lookup(start, end);
 }
 
-std::string SLS::last_lookup(const std::string &key, const size_t &max_values) {
+sls::Archive SLS::last_lookup(const std::string &key, const size_t &max_values) {
   std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
   return active_key->last_lookup(max_values);
 }
