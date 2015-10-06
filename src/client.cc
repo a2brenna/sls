@@ -12,7 +12,7 @@ sls::Client::Client(std::shared_ptr<smpl::Remote_Address> server) {
   server_connection = std::unique_ptr<smpl::Channel>(server->connect());
 }
 
-std::pair<sls::Response, sls::Archive> sls::Client::_request(const sls::Request &request) {
+std::pair<sls::Response, std::string> sls::Client::_request(const sls::Request &request) {
   assert(request.key().size() > 0);
 
   std::string request_string;
@@ -25,16 +25,16 @@ std::pair<sls::Response, sls::Archive> sls::Client::_request(const sls::Request 
   response.ParseFromString(returned);
 
   if (response.data_to_follow()) {
-    const sls::Archive data(server_connection->recv());
-    return std::pair<sls::Response, sls::Archive>(response, data);
+    const auto foo = std::pair<sls::Response, std::string>(response, server_connection->recv());
+    return foo;
   }
   else{
-    const sls::Archive data("");
-    return std::pair<sls::Response, sls::Archive>(response, data);
+    const std::string data;
+    return std::pair<sls::Response, std::string>(response, data);
   }
 }
 
-sls::Archive sls::Client::_interval(const std::string &key, const unsigned long long &start,
+std::string sls::Client::_interval(const std::string &key, const unsigned long long &start,
                        const unsigned long long &end, const bool &is_time) {
   assert(key.size() > 0);
 
@@ -49,7 +49,8 @@ sls::Archive sls::Client::_interval(const std::string &key, const unsigned long 
   if (response.first.success()) {
     return response.second;
   } else {
-    return sls::Archive("");
+      const std::string foo;
+    return foo;
   }
 }
 
@@ -105,9 +106,9 @@ sls::Archive sls::Client::lastn(const std::string &key,
   const auto response = _request(request);
 
   if (response.first.success()) {
-    return response.second;
+    return sls::Archive(response.second);
   } else {
-    return sls::Archive("");
+    return sls::Archive();
   }
 }
 
