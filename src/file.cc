@@ -37,7 +37,9 @@ std::string readfile(const Path &filepath, const size_t &offset){
     char *buff = &msg[0];
 
     int _fd = ::open(filepath.str().c_str(), O_RDONLY);
-    ::lseek(_fd, offset, SEEK_SET);
+    if(offset != 0){
+        ::lseek(_fd, offset, SEEK_SET);
+    }
 
     for(;;) {
         const size_t to_read = MAX_SIZE - read;
@@ -65,7 +67,9 @@ std::string readfile(const Path &filepath, const size_t &offset){
 ssize_t readfile(const Path &filepath, const size_t &offset, char *buffer, const size_t &max_size){
 
     int _fd = ::open(filepath.str().c_str(), O_RDONLY);
-    ::lseek(_fd, offset, SEEK_SET);
+    if(offset != 0){
+        ::lseek(_fd, offset, SEEK_SET);
+    }
 
     ssize_t read = 0;
     for(;;) {
