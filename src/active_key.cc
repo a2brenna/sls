@@ -237,6 +237,7 @@ sls::Archive Active_Key::index_lookup(const size_t &start,
 sls::Archive Active_Key::_index_lookup(const size_t &start,
                                       const size_t &end) const {
   assert(start <= end);
+  assert(end <= _num_elements);
   std::cerr << "Begin index lookup" << std::endl;
 
   sls::Archive result;
@@ -280,25 +281,18 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
         sls::Archive arch(path);
         arch.set_offset(f.offset());
         size_t current_index = f.position();
-        while (true) {
-            try {
-                if (current_index < start) {
-                    arch.advance_index();
-                    current_index++;
-                } else if (current_index > end) {
-                    break;
-                } else if (current_index >= start && current_index <= end) {
-                    result.append(arch.head_record());
-                    arch.advance_index();
-                    current_index++;
-                } else {
-                    assert(false);
-                }
-            } catch (sls::End_Of_Archive e) {
-                break;
+        while (current_index <= end) {
+            if (current_index < start) {
+                arch.advance_index();
+                current_index++;
+            }
+            else {
+                result.append(arch.head_record());
+                arch.advance_index();
+                current_index++;
             }
         }
-  }
+    }
     std::cerr << "Total Retreival Time: " << (std::chrono::high_resolution_clock::now() - start_time).count() << std::endl;
     std::cerr << "Bytes Retreived: " << result.size() << std::endl;
 
