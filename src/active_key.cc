@@ -202,29 +202,47 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
         *Info << "Reading file: " << f.filename() << std::endl;
       }
   }
-  for (const auto &f : files) {
-    Path path(_directory.str() + f.filename());
-    sls::Archive arch(path);
-    arch.set_offset(f.offset());
-    while (true) {
-      try {
-        const std::chrono::milliseconds current_time = arch.head_time();
 
-        if (current_time < start) {
-          arch.advance_index();
-        } else if (current_time > end) {
-          break;
-        } else if (current_time >= start && current_time <= end) {
-          result.append(arch.head_record());
-          arch.advance_index();
-        } else {
-          assert(false);
-        }
-      } catch (sls::End_Of_Archive e) {
-        break;
-      }
+    if(files.size() > 1){
+            const auto f = files[0];
+            Path path(_directory.str() + f.filename());
+            sls::Archive temp(path, f.offset());
+            std::chrono::milliseconds current_time = f.timestamp();
+            while(current_time < start){
+                temp.advance_index();
+                current_time = temp.head_time();
+            }
+            result.append(temp.remainder());
     }
-  }
+    if(files.size() > 2){
+        for(size_t i = 1; i < (files.size() - 1); i++){
+            const auto f = files[i];
+            Path path(_directory.str() + f.filename());
+            result.append(path, 0);
+        }
+    }
+    if(files.size() > 0){
+        const auto f = files.back();
+        Path path(_directory.str() + f.filename());
+        sls::Archive arch(path);
+        arch.set_offset(f.offset());
+        std::chrono::milliseconds current_time = f.timestamp();
+        while (current_time <= end) {
+            try{
+                if (current_time < start) {
+                    arch.advance_index();
+                    current_time = arch.head_time();
+                }
+                else {
+                    result.append(arch.head_record());
+                    arch.advance_index();
+                    current_time = arch.head_time();
+                }
+            } catch (sls::End_Of_Archive e){
+                break;
+            }
+        }
+    }
   return result;
 }
 
