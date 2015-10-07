@@ -235,9 +235,10 @@ sls::Archive Active_Key::index_lookup(const size_t &start,
 }
 
 sls::Archive Active_Key::_index_lookup(const size_t &start,
-                                      const size_t &end) const {
+                                      const size_t &upper_bound) const {
+  const size_t end = std::min(upper_bound, _total_elements());
+
   assert(start <= end);
-  assert(end <= _num_elements);
   std::cerr << "Begin index lookup" << std::endl;
 
   sls::Archive result;
@@ -307,4 +308,8 @@ sls::Archive Active_Key::last_lookup(const size_t &max_values) const {
       std::max(0, last_index - (int)max_values +
                       1); // +1 because lookups are inclusive on index
   return _index_lookup(start_index, last_index);
+}
+
+size_t Active_Key::_total_elements() const{
+    return _num_elements + _start_pos;
 }

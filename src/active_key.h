@@ -42,6 +42,7 @@ private:
   void _append_archive(const sls::Archive &archive);
   sls::Archive _index_lookup(const size_t &start, const size_t &end) const;
   void _sync();
+  size_t _total_elements() const;
 };
 
 #endif
