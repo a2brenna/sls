@@ -26,8 +26,9 @@ class Archive {
 
     private:
         std::shared_ptr<char> _buffer;
-        size_t _cursor;
-        size_t _size;
+        char* _cursor;
+        char* _end;
+        void _validate() const;
 
 public:
   Archive(const Path &file);

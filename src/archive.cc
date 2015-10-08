@@ -11,31 +11,31 @@ namespace sls{
 
 Archive::Archive():
     _buffer(new char[MAX_ARCHIVE_SIZE]){
-        _cursor = 0;
-        _size = 0;
+        _cursor = _buffer.get();
+        _end = _buffer.get();
 }
 
 Archive::Archive(const Path &file):
     _buffer(new char[MAX_ARCHIVE_SIZE]){
-        const auto size = readfile(file, 0, _buffer.get(), MAX_ARCHIVE_SIZE);
-        if(size < 0){
+        const auto archive_size = readfile(file, 0, _buffer.get(), MAX_ARCHIVE_SIZE);
+        if(archive_size < 0){
             throw Bad_Archive();
         }
         else{
-            _size = size;
-            _cursor = 0;
+            _cursor = _buffer.get();
+            _end = _buffer.get() + archive_size;
         }
 }
 
 Archive::Archive(const Path &file, const size_t &offset):
     _buffer(new char[MAX_ARCHIVE_SIZE]){
-        const auto size = readfile(file, offset, _buffer.get(), MAX_ARCHIVE_SIZE);
-        if(size < 0){
+        const auto archive_size = readfile(file, offset, _buffer.get(), MAX_ARCHIVE_SIZE);
+        if(archive_size < 0){
             throw Bad_Archive();
         }
         else{
-            _size = size;
-            _cursor = 0;
+            _cursor = _buffer.get();
+            _end = _buffer.get() + archive_size;
         }
 }
 
@@ -46,88 +46,91 @@ Archive::Archive(const std::string &raw):
         }
         else{
             memcpy(_buffer.get(), &raw[0], raw.size());
-            _size = raw.size();
-            _cursor = 0;
+
+            _cursor = _buffer.get();
+            _end = _buffer.get() + raw.size();
         }
 }
 
-uint64_t Archive::cursor() const { return _cursor; }
+void Archive::_validate() const{
+    assert(_cursor <= _end);
+    assert(_buffer.get() <= _cursor);
+}
 
-size_t Archive::size() const { return _size; }
+
+uint64_t Archive::cursor() const { return (_cursor - _buffer.get()); }
+
+size_t Archive::size() const { return (_end - _buffer.get()); }
 
 std::chrono::milliseconds Archive::head_time() const {
-  const char *i = _buffer.get() + _cursor;
-  if (i == (_buffer.get() + size())) {
+  _validate();
+  if (_cursor == _end  ) {
     throw End_Of_Archive();
   }
-  assert(i < (_buffer.get() + size()));
 
-  const std::chrono::milliseconds timestamp(*((uint64_t *)(i)));
+  const std::chrono::milliseconds timestamp(*((uint64_t *)(_cursor)));
+    _validate();
   return timestamp;
 }
 
 std::string Archive::head_data() const {
-  const char *i = _buffer.get() + _cursor;
-  if (i == (_buffer.get() + size())) {
+    _validate();
+  if (_cursor == _end) {
     throw End_Of_Archive();
   }
-  assert(i < (_buffer.get() + size()));
 
-  const uint64_t blob_length = *((uint64_t *)(i + sizeof(uint64_t)));
-  const char *blob_start = i + sizeof(uint64_t) * 2;
+  const uint64_t blob_length = *((uint64_t *)(_cursor + sizeof(uint64_t)));
+  const char *blob_start = _cursor + sizeof(uint64_t) * 2;
 
+    _validate();
   return std::string(blob_start, blob_length);
 }
 
 std::string Archive::head_record() const {
-  const char *i = _buffer.get() + _cursor;
-  const char *end_of_archive = _buffer.get() + size();
-  if (i == end_of_archive) {
+    _validate();
+  if (_cursor == _end) {
     throw End_Of_Archive();
   }
 
-  const uint64_t data_length = *((uint64_t *)(i + sizeof(uint64_t)));
+  const uint64_t data_length = *((uint64_t *)(_cursor + sizeof(uint64_t)));
   const size_t record_length = sizeof(uint64_t) * 2 + data_length;
 
-  assert(i < end_of_archive);
   assert(record_length > 0);
-  return std::string(i, record_length);
+  assert(_cursor + record_length <= _end);
+    _validate();
+  return std::string(_cursor, record_length);
 }
 
 Metadata Archive::check() const {
+    _validate();
   uint64_t last_offset = 0;
   size_t num_elements = 0;
   uint64_t milliseconds_from_epoch = 0;
 
-  uint64_t cursor = 0;
+  char *cursor = _buffer.get();
   for (;;) {
 
-    const char *i = _buffer.get() + cursor;
     // Check that index is inside Archive
-    if (i == (_buffer.get() + size())) {
+    if (cursor == _end) {
       break;
-    } else if (i > (_buffer.get() + size())) {
-        std::cerr << "cursor: " << cursor << " size(): " << size() << std::endl;
+    } else if (cursor > _end) {
       throw Bad_Archive();
     }
-    assert(i < (_buffer.get() + size()));
 
     // Ensure time goes forward
-    const uint64_t new_milliseconds_from_epoch = *((uint64_t *)(i));
+    const uint64_t new_milliseconds_from_epoch = *((uint64_t *)(cursor));
     if (new_milliseconds_from_epoch == 0){
-        std::cerr << "Time ZERO at: " << cursor << std::endl;
         throw Bad_Archive();
     }
     else if (new_milliseconds_from_epoch < milliseconds_from_epoch) {
-        std::cerr << "New time: " << new_milliseconds_from_epoch << " old_time: " << milliseconds_from_epoch << std::endl;
-      throw Bad_Archive();
+        throw Bad_Archive();
     }
 
     milliseconds_from_epoch = new_milliseconds_from_epoch;
-    last_offset = cursor;
+    last_offset = cursor - _buffer.get();
     num_elements++;
 
-    const uint64_t blob_length = *((uint64_t *)(i + sizeof(uint64_t)));
+    const uint64_t blob_length = *((uint64_t *)(cursor + sizeof(uint64_t)));
     cursor = cursor + sizeof(uint64_t) * 2 + blob_length;
   }
 
@@ -136,99 +139,94 @@ Metadata Archive::check() const {
   m.index = last_offset;
   m.timestamp = std::chrono::milliseconds(milliseconds_from_epoch);
 
+    _validate();
   return m;
 }
 
 std::vector<std::pair<std::chrono::milliseconds, std::string>>
 Archive::unpack() const {
-  const char *i = _buffer.get() + _cursor;
-  if (i == (_buffer.get() + size())) {
+    _validate();
+  if (_cursor == _end) {
     throw End_Of_Archive();
   }
-  assert(i < (_buffer.get() + size()));
+
+  const char* cursor = _cursor;
 
   std::vector<std::pair<std::chrono::milliseconds, std::string>> output;
 
-  const char *end = _buffer.get() + size();
-  assert(i < end);
+  while (_cursor < _end) {
+    const std::chrono::milliseconds timestamp(*((uint64_t *)(cursor)));
+    cursor += sizeof(uint64_t);
 
-  while (i < end) {
-    const std::chrono::milliseconds timestamp(*((uint64_t *)(i)));
-    i += sizeof(uint64_t);
+    const uint64_t blob_length = *((uint64_t *)(cursor));
+    cursor += sizeof(uint64_t);
 
-    const uint64_t blob_length = *((uint64_t *)(i));
-    i += sizeof(uint64_t);
-
-    try{
     output.push_back(std::pair<std::chrono::milliseconds, std::string>(
-        timestamp, std::string(i, blob_length)));
-    }
-    catch(std::bad_alloc e){
-        throw Bad_Archive();
-    }
-    i += blob_length;
+        timestamp, std::string(cursor, blob_length)));
+    cursor += blob_length;
   }
 
+    _validate();
   return output;
 }
 
 std::vector<std::string> Archive::extract() const {
-  const char *i = _buffer.get() + _cursor;
-  if (i == (_buffer.get() + size())) {
+    _validate();
+  if (_cursor == _end) {
     throw End_Of_Archive();
   }
-  assert(i < (_buffer.get() + size()));
+  const char* cursor = _cursor;
 
   std::vector<std::string> output;
 
-  const char *end = _buffer.get() + size();
-  assert(*end == '\0');
+  while (cursor < _end) {
+    cursor += sizeof(uint64_t);
 
-  while (i < end) {
-    i += sizeof(uint64_t);
+    const uint64_t blob_length = *((uint64_t *)(cursor));
+    cursor += sizeof(uint64_t);
 
-    const uint64_t blob_length = *((uint64_t *)(i));
-    i += sizeof(uint64_t);
-
-    output.push_back(std::string(i, blob_length));
-    i += blob_length;
+    output.push_back(std::string(cursor, blob_length));
+    cursor += blob_length;
   }
 
+    _validate();
   return output;
 }
 
 const std::string Archive::str() const{
+    _validate();
     std::string foo;
     foo.reserve(size());
     foo.append(_buffer.get(), size());
+    _validate();
     return foo;
 }
 
 void Archive::advance_cursor() {
-  const char *i = _buffer.get() + _cursor;
-  if (i == (_buffer.get() + size())) {
+    _validate();
+  if (_cursor == _end) {
     throw End_Of_Archive();
   }
-  assert(i < (_buffer.get() + size()));
 
-  const uint64_t blob_length = *((uint64_t *)(i + sizeof(uint64_t)));
+  const uint64_t blob_length = *((uint64_t *)(_cursor + sizeof(uint64_t)));
+  _cursor = _cursor + sizeof(uint64_t) * 2 + blob_length;
 
-  const size_t new_cursor = _cursor + sizeof(uint64_t) * 2 + blob_length;
-  assert(new_cursor <= size());
-
-  _cursor = new_cursor;
+  _validate();
 }
 
 void Archive::set_offset(const size_t &offset) {
-    assert(_cursor < size());
-    _cursor = offset;
+    _validate();
+    _cursor = _buffer.get() + offset;
+    _validate();
 }
 
 const std::string Archive::remainder() const{
-    return std::string(_buffer.get() + _cursor, _size - _cursor);
+    _validate();
+    return std::string(_cursor, _end - _cursor);
 }
 
 size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){
+    _validate();
     const uint64_t milliseconds_since_epoch = timestamp.count();
     const uint64_t value_size = value.size();
 
@@ -245,39 +243,46 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
     bytes_copied += value.size();
 
     assert(bytes_copied == bytes_to_copy);
-    _size = _size + bytes_copied;
+    _end = _end + bytes_copied;
 
+    _validate();
     return bytes_copied;
 }
 
 size_t Archive::append(const sls::Archive &archive){
+    _validate();
     if( (size() + archive.size()) > MAX_ARCHIVE_SIZE){
         std::cerr << "size(): " << size() << " archive.size(): " << archive.size() << " MAX_ARCHIVE_SIZE: " << MAX_ARCHIVE_SIZE << std::endl;
         throw Bad_Archive();
     }
     memcpy(_buffer.get(), &archive.str()[0], archive.size());
-    _size = _size + archive.size();
+    _end = _end + archive.size();
+    _validate();
     return archive.size();
 }
 
 size_t Archive::append(const std::string &archive){
+    _validate();
     if( (size() + archive.size()) > MAX_ARCHIVE_SIZE){
         std::cerr << "size(): " << size() << " archive.size(): " << archive.size() << " MAX_ARCHIVE_SIZE: " << MAX_ARCHIVE_SIZE << std::endl;
         throw Bad_Archive();
     }
     memcpy(_buffer.get(), &archive[0], archive.size());
-    _size = _size + archive.size();
+    _end = _end + archive.size();
+    _validate();
     return archive.size();
 }
 
 size_t Archive::append(const Path &file, const size_t &offset){
-    const auto size = readfile(file, offset, _buffer.get() + _size, MAX_ARCHIVE_SIZE);
-    if(size < 0){
+    _validate();
+    const auto chars_read = readfile(file, offset, _end, MAX_ARCHIVE_SIZE);
+    if(chars_read < 0){
         throw Bad_Archive();
     }
     else{
-        _size = _size + size;
-        return size;
+        _end = _end + chars_read;
+        _validate();
+        return chars_read;
     }
 }
 
