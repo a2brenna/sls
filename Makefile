@@ -32,13 +32,13 @@ sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o file.o
 	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o file.o util.o active_key.o index.o -o sls -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lslog -lcityhash
 
 fsck: src/fsck.cc sls.pb.o index.o archive.o file.o
-	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o file.o -o fsck -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o file.o -o fsck -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lcityhash
 
 migrate: src/migrate.cc legacy.pb.o file.o
-	${CXX} ${CXXFLAGS} src/migrate.cc legacy.pb.o file.o -o migrate -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp
+	${CXX} ${CXXFLAGS} src/migrate.cc legacy.pb.o file.o -o migrate -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lcityhash
 
 sls_query: src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o
-	${CXX} ${CXXFLAGS} src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket
+	${CXX} ${CXXFLAGS} src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lcityhash
 
 test_client: src/test_client.cc util.o
 	${CXX} ${CXXFLAGS} src/test_client.cc util.o -o test_client -lprotobuf -lpthread -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls

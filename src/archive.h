@@ -49,6 +49,7 @@ public:
   sls::Metadata check() const;
   const std::string remainder() const;
   const std::string str() const;
+  uint64_t checksum() const;
   size_t append(const std::chrono::milliseconds &timestamp, const std::string &value);
   size_t append(const Archive &archive);
   size_t append(const std::string &archive);

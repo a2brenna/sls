@@ -4,6 +4,7 @@
 #include "file.h"
 #include <cstring>
 #include <iostream>
+#include <city.h>
 
 #define MAX_ARCHIVE_SIZE 1073741824
 
@@ -50,6 +51,10 @@ Archive::Archive(const std::string &raw):
             _cursor = _buffer.get();
             _end = _buffer.get() + raw.size();
         }
+}
+
+uint64_t Archive::checksum() const{
+    return CityHash64(_buffer.get(), size());
 }
 
 void Archive::_validate() const{
