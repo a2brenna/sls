@@ -11,7 +11,7 @@ namespace sls{
 
 Archive::Archive():
     _buffer(new char[MAX_ARCHIVE_SIZE]){
-        _index = 0;
+        _cursor = 0;
         _size = 0;
 }
 
@@ -23,7 +23,7 @@ Archive::Archive(const Path &file):
         }
         else{
             _size = size;
-            _index = 0;
+            _cursor = 0;
         }
 }
 
@@ -35,7 +35,7 @@ Archive::Archive(const Path &file, const size_t &offset):
         }
         else{
             _size = size;
-            _index = 0;
+            _cursor = 0;
         }
 }
 
@@ -47,16 +47,16 @@ Archive::Archive(const std::string &raw):
         else{
             memcpy(_buffer.get(), &raw[0], raw.size());
             _size = raw.size();
-            _index = 0;
+            _cursor = 0;
         }
 }
 
-uint64_t Archive::index() const { return _index; }
+uint64_t Archive::cursor() const { return _cursor; }
 
 size_t Archive::size() const { return _size; }
 
 std::chrono::milliseconds Archive::head_time() const {
-  const char *i = _buffer.get() + _index;
+  const char *i = _buffer.get() + _cursor;
   if (i == (_buffer.get() + size())) {
     throw End_Of_Archive();
   }
@@ -67,7 +67,7 @@ std::chrono::milliseconds Archive::head_time() const {
 }
 
 std::string Archive::head_data() const {
-  const char *i = _buffer.get() + _index;
+  const char *i = _buffer.get() + _cursor;
   if (i == (_buffer.get() + size())) {
     throw End_Of_Archive();
   }
@@ -80,7 +80,7 @@ std::string Archive::head_data() const {
 }
 
 std::string Archive::head_record() const {
-  const char *i = _buffer.get() + _index;
+  const char *i = _buffer.get() + _cursor;
   const char *end_of_archive = _buffer.get() + size();
   if (i == end_of_archive) {
     throw End_Of_Archive();
@@ -95,19 +95,19 @@ std::string Archive::head_record() const {
 }
 
 Metadata Archive::check() const {
-  uint64_t last_index = 0;
+  uint64_t last_offset = 0;
   size_t num_elements = 0;
   uint64_t milliseconds_from_epoch = 0;
 
-  uint64_t index = 0;
+  uint64_t cursor = 0;
   for (;;) {
 
-    const char *i = _buffer.get() + index;
+    const char *i = _buffer.get() + cursor;
     // Check that index is inside Archive
     if (i == (_buffer.get() + size())) {
       break;
     } else if (i > (_buffer.get() + size())) {
-        std::cerr << "index: " << index << " size(): " << size() << std::endl;
+        std::cerr << "cursor: " << cursor << " size(): " << size() << std::endl;
       throw Bad_Archive();
     }
     assert(i < (_buffer.get() + size()));
@@ -115,7 +115,7 @@ Metadata Archive::check() const {
     // Ensure time goes forward
     const uint64_t new_milliseconds_from_epoch = *((uint64_t *)(i));
     if (new_milliseconds_from_epoch == 0){
-        std::cerr << "Time ZERO at: " << index << std::endl;
+        std::cerr << "Time ZERO at: " << cursor << std::endl;
         throw Bad_Archive();
     }
     else if (new_milliseconds_from_epoch < milliseconds_from_epoch) {
@@ -124,16 +124,16 @@ Metadata Archive::check() const {
     }
 
     milliseconds_from_epoch = new_milliseconds_from_epoch;
-    last_index = index;
+    last_offset = cursor;
     num_elements++;
 
     const uint64_t blob_length = *((uint64_t *)(i + sizeof(uint64_t)));
-    index = index + sizeof(uint64_t) * 2 + blob_length;
+    cursor = cursor + sizeof(uint64_t) * 2 + blob_length;
   }
 
   sls::Metadata m;
   m.elements = num_elements;
-  m.index = last_index;
+  m.index = last_offset;
   m.timestamp = std::chrono::milliseconds(milliseconds_from_epoch);
 
   return m;
@@ -141,7 +141,7 @@ Metadata Archive::check() const {
 
 std::vector<std::pair<std::chrono::milliseconds, std::string>>
 Archive::unpack() const {
-  const char *i = _buffer.get() + _index;
+  const char *i = _buffer.get() + _cursor;
   if (i == (_buffer.get() + size())) {
     throw End_Of_Archive();
   }
@@ -173,7 +173,7 @@ Archive::unpack() const {
 }
 
 std::vector<std::string> Archive::extract() const {
-  const char *i = _buffer.get() + _index;
+  const char *i = _buffer.get() + _cursor;
   if (i == (_buffer.get() + size())) {
     throw End_Of_Archive();
   }
@@ -204,8 +204,8 @@ const std::string Archive::str() const{
     return foo;
 }
 
-void Archive::advance_index() {
-  const char *i = _buffer.get() + _index;
+void Archive::advance_cursor() {
+  const char *i = _buffer.get() + _cursor;
   if (i == (_buffer.get() + size())) {
     throw End_Of_Archive();
   }
@@ -213,19 +213,19 @@ void Archive::advance_index() {
 
   const uint64_t blob_length = *((uint64_t *)(i + sizeof(uint64_t)));
 
-  const size_t new_index = _index + sizeof(uint64_t) * 2 + blob_length;
-  assert(new_index <= size());
+  const size_t new_cursor = _cursor + sizeof(uint64_t) * 2 + blob_length;
+  assert(new_cursor <= size());
 
-  _index = new_index;
+  _cursor = new_cursor;
 }
 
 void Archive::set_offset(const size_t &offset) {
-    assert(_index < size());
-    _index = offset;
+    assert(_cursor < size());
+    _cursor = offset;
 }
 
 const std::string Archive::remainder() const{
-    return std::string(_buffer.get() + _index, _size - _index);
+    return std::string(_buffer.get() + _cursor, _size - _cursor);
 }
 
 size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::string &value){

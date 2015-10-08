@@ -209,7 +209,7 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
             sls::Archive temp(path, f.offset());
             std::chrono::milliseconds current_time = f.timestamp();
             while(current_time < start){
-                temp.advance_index();
+                temp.advance_cursor();
                 current_time = temp.head_time();
             }
             result.append(temp.remainder());
@@ -230,12 +230,12 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
         while (current_time <= end) {
             try{
                 if (current_time < start) {
-                    arch.advance_index();
+                    arch.advance_cursor();
                     current_time = arch.head_time();
                 }
                 else {
                     result.append(arch.head_record());
-                    arch.advance_index();
+                    arch.advance_cursor();
                     current_time = arch.head_time();
                 }
             } catch (sls::End_Of_Archive e){
@@ -282,7 +282,7 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
             size_t current_index = f.position();
             while(current_index < start){
                 std::cerr << "current_index: " << current_index << " skipping..." << std::endl;
-                temp.advance_index();
+                temp.advance_cursor();
                 current_index++;
             }
             result.append(temp.remainder());
@@ -302,12 +302,12 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
         size_t current_index = f.position();
         while (current_index <= end) {
             if (current_index < start) {
-                arch.advance_index();
+                arch.advance_cursor();
                 current_index++;
             }
             else {
                 result.append(arch.head_record());
-                arch.advance_index();
+                arch.advance_cursor();
                 current_index++;
             }
         }

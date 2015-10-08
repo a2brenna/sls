@@ -26,7 +26,7 @@ class Archive {
 
     private:
         std::shared_ptr<char> _buffer;
-        size_t _index;
+        size_t _cursor;
         size_t _size;
 
 public:
@@ -36,14 +36,14 @@ public:
   Archive(const std::string &raw);
   Archive();
 
-  void advance_index();
+  void advance_cursor();
   void set_offset(const size_t &offset);
   std::chrono::milliseconds head_time() const;
   std::string head_data() const;
   std::string head_record() const;
   std::vector<std::pair<std::chrono::milliseconds, std::string>> unpack() const;
   std::vector<std::string> extract() const;
-  uint64_t index() const;
+  uint64_t cursor() const;
   size_t size() const;
   sls::Metadata check() const;
   const std::string remainder() const;

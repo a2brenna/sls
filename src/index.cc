@@ -234,7 +234,7 @@ Index build_index(const Path &directory, const size_t &resolution) {
             first_timestamp, Index_Record(first_timestamp, 0, file, 0)));
 
     size_t count = 1;
-    uint64_t last_index = 0;
+    uint64_t last_offset = 0;
 
     std::chrono::milliseconds last_timestamp = first_timestamp;
 
@@ -244,12 +244,12 @@ Index build_index(const Path &directory, const size_t &resolution) {
           timestamp_records.push_back(
               std::pair<std::chrono::milliseconds, Index_Record>(
                   last_timestamp,
-                  Index_Record(last_timestamp, count - 1, file, last_index)));
+                  Index_Record(last_timestamp, count - 1, file, last_offset)));
           dirty = false;
         }
-        arch.advance_index();
+        arch.advance_cursor();
         last_timestamp = arch.head_time();
-        last_index = arch.index();
+        last_offset = arch.cursor();
         count++;
         dirty = true;
       } catch (sls::End_Of_Archive e) {
@@ -259,13 +259,13 @@ Index build_index(const Path &directory, const size_t &resolution) {
 
     assert(count > 0);
     assert(last_timestamp >= first_timestamp);
-    assert(last_index > 0);
+    assert(last_offset > 0);
 
     if (dirty) {
       timestamp_records.push_back(
           std::pair<std::chrono::milliseconds, Index_Record>(
               last_timestamp,
-              Index_Record(last_timestamp, count - 1, file, last_index)));
+              Index_Record(last_timestamp, count - 1, file, last_offset)));
     }
     size_map[file] = count;
   }
