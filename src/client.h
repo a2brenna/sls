@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 
-#include <sls/archive.h>
+#include "archive.h"
 #include "sls.h"
 #include "sls.pb.h"
 

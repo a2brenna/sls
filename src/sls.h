@@ -9,7 +9,7 @@
 #include <memory>
 #include <smpl.h>
 
-#include <sls/archive.h>
+#include "archive.h"
 #include "sls.pb.h"
 
 namespace sls {
