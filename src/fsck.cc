@@ -9,8 +9,6 @@
 std::string CONFIG_SLS_DIR;
 std::string CONFIG_INCLUDE_REGEX = ".*";
 std::string CONFIG_EXCLUDE_REGEX = "";
-std::regex include_regex;
-std::regex exclude_regex;
 size_t CONFIG_RESOLUTION = 1000;
 
 namespace po = boost::program_options;
@@ -19,16 +17,12 @@ void config(int argc, char *argv[]) {
 
   po::options_description desc("Options");
 
-  desc.add_options()("help", "Produce help message")(
-      "sls_dir", po::value<std::string>(&CONFIG_SLS_DIR),
-      "Directory to database from")(
-      "include_regex", po::value<std::string>(&CONFIG_INCLUDE_REGEX),
-      "Fsck keys only if they match this regex and are not caught by the "
-      "exclude_regex")("exclude_regex",
-                       po::value<std::string>(&CONFIG_EXCLUDE_REGEX),
-                       "Exclude keys matching this regex")(
-      "resolution", po::value<size_t>(&CONFIG_RESOLUTION),
-      "Resolution of the index");
+  desc.add_options()("help", "Produce help message")
+      ("sls_dir", po::value<std::string>(&CONFIG_SLS_DIR), "Directory to database from")
+      ("include_regex", po::value<std::string>(&CONFIG_INCLUDE_REGEX), "Fsck keys only if they match this regex and are not caught by the exclude_regex")
+      ("exclude_regex", po::value<std::string>(&CONFIG_EXCLUDE_REGEX), "Exclude keys matching this regex")
+      ("resolution", po::value<size_t>(&CONFIG_RESOLUTION), "Resolution of the index")
+      ;
 
   po::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -46,12 +40,12 @@ void config(int argc, char *argv[]) {
     exit(1);
   }
 
-  include_regex = std::regex(CONFIG_INCLUDE_REGEX);
-  exclude_regex = std::regex(CONFIG_EXCLUDE_REGEX);
 }
 
 int main(int argc, char *argv[]) {
   config(argc, argv);
+    std::regex include_regex(CONFIG_INCLUDE_REGEX);
+    std::regex exclude_regex(CONFIG_EXCLUDE_REGEX);
 
   std::vector<std::string> keys;
   const auto m = getdir(CONFIG_SLS_DIR, keys);
@@ -73,7 +67,6 @@ int main(int argc, char *argv[]) {
     try {
       index = build_index(key_directory.str(), CONFIG_RESOLUTION);
     } catch (...) {
-      throw;
       std::cerr << "Error, failure to build_index for: " << key_directory.str()
                 << std::endl;
       continue;
