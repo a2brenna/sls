@@ -257,10 +257,9 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
 size_t Archive::append(const sls::Archive &archive){
     _validate();
     if( (size() + archive.size()) > MAX_ARCHIVE_SIZE){
-        std::cerr << "size(): " << size() << " archive.size(): " << archive.size() << " MAX_ARCHIVE_SIZE: " << MAX_ARCHIVE_SIZE << std::endl;
         throw Bad_Archive();
     }
-    memcpy(_buffer.get(), &archive.str()[0], archive.size());
+    memcpy(_end, &archive.str()[0], archive.size());
     _end = _end + archive.size();
     _validate();
     return archive.size();
@@ -269,10 +268,9 @@ size_t Archive::append(const sls::Archive &archive){
 size_t Archive::append(const std::string &archive){
     _validate();
     if( (size() + archive.size()) > MAX_ARCHIVE_SIZE){
-        std::cerr << "size(): " << size() << " archive.size(): " << archive.size() << " MAX_ARCHIVE_SIZE: " << MAX_ARCHIVE_SIZE << std::endl;
         throw Bad_Archive();
     }
-    memcpy(_buffer.get(), &archive[0], archive.size());
+    memcpy(_end, &archive[0], archive.size());
     _end = _end + archive.size();
     _validate();
     return archive.size();
