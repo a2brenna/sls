@@ -236,15 +236,15 @@ size_t Archive::append(const std::chrono::milliseconds &timestamp, const std::st
     const uint64_t value_size = value.size();
 
     const size_t bytes_to_copy = 2 * sizeof(uint64_t) + value.size();
-    size_t bytes_copied = 0;
 
     assert( (size() + bytes_to_copy) < MAX_ARCHIVE_SIZE);
 
-    memcpy(_buffer.get() + size() + bytes_copied, (const char *)(&milliseconds_since_epoch), sizeof(uint64_t));
+    size_t bytes_copied = 0;
+    memcpy(_end + bytes_copied, (const char *)(&milliseconds_since_epoch), sizeof(uint64_t));
     bytes_copied += sizeof(uint64_t);
-    memcpy(_buffer.get() + size() + bytes_copied, (const char *)(&value_size), sizeof(uint64_t));
+    memcpy(_end + bytes_copied, (const char *)(&value_size), sizeof(uint64_t));
     bytes_copied += sizeof(uint64_t);
-    memcpy(_buffer.get() + size() + bytes_copied, (const char *)(&value[0]), value.size());
+    memcpy(_end + bytes_copied, (const char *)(&value[0]), value.size());
     bytes_copied += value.size();
 
     assert(bytes_copied == bytes_to_copy);
