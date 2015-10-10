@@ -47,6 +47,7 @@ public:
   std::vector<std::pair<std::chrono::milliseconds, std::string>> unpack() const;
   std::vector<std::string> extract() const;
   uint64_t cursor() const;
+  const char *buffer() const;
   size_t size() const;
   sls::Metadata check() const;
   const std::string remainder() const;

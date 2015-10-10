@@ -168,7 +168,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
         response.SerializeToString(&response_string);
         client->send(response_string);
         if (response.data_to_follow()) {
-            client->send(data_string.str());
+            client->send(data_string.buffer(), data_string.size());
         }
     }
     catch(smpl::Transport_Failed e){

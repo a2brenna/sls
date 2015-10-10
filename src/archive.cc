@@ -79,6 +79,10 @@ uint64_t Archive::cursor() const { return (_cursor - _buffer.get()); }
 
 size_t Archive::size() const { return (_end - _buffer.get()); }
 
+const char* Archive::buffer() const{
+    return _buffer.get();
+}
+
 std::chrono::milliseconds Archive::head_time() const {
   _validate();
   if (_cursor == _end  ) {
