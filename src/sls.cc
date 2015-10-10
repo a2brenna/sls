@@ -163,11 +163,19 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
       *Error << "Got invalid request" << std::endl;
     }
 
-    std::string response_string;
-    response.SerializeToString(&response_string);
-    client->send(response_string);
-    if (response.data_to_follow()) {
-      client->send(data_string.str());
+    try{
+        std::string response_string;
+        response.SerializeToString(&response_string);
+        client->send(response_string);
+        if (response.data_to_follow()) {
+            client->send(data_string.str());
+        }
+    }
+    catch(smpl::Transport_Failed e){
+        std::lock_guard<std::mutex> l(requests_in_progress_lock);
+        assert(requests_in_progress > 0);
+        requests_in_progress--;
+        break;
     }
 
     std::lock_guard<std::mutex> l(requests_in_progress_lock);
