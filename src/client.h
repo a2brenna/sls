@@ -16,8 +16,8 @@ extern std::shared_ptr<smpl::Remote_Address> global_server;
 class Client {
 private:
   std::unique_ptr<smpl::Channel> server_connection;
-  std::pair<sls::Response, std::string> _request(const sls::Request &request);
-  std::string _interval(const std::string &key, const unsigned long long &start,
+  std::pair<sls::Response, sls::Archive> _request(const sls::Request &request);
+  sls::Archive _interval(const std::string &key, const unsigned long long &start,
             const unsigned long long &end, const bool &is_time);
 
 public:

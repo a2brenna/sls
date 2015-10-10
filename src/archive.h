@@ -6,6 +6,7 @@
 #include <string>
 #include <chrono>
 #include <memory>
+#include <smpl.h>
 
 namespace sls{
 
@@ -35,6 +36,7 @@ public:
   Archive(const Path &file, const size_t &offset);
   Archive(const Path &file, const size_t &offset, const size_t &max_size);
   Archive(const std::string &raw);
+  Archive(smpl::Channel *channel);
   Archive();
 
   void advance_cursor();

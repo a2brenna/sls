@@ -40,6 +40,18 @@ Archive::Archive(const Path &file, const size_t &offset):
         }
 }
 
+Archive::Archive(smpl::Channel *channel):
+    _buffer(new char[MAX_ARCHIVE_SIZE]){
+        try{
+            _cursor = _buffer.get();
+            const size_t archive_size = channel->recv(_buffer.get(), MAX_ARCHIVE_SIZE);
+            _end = _buffer.get() + archive_size;
+        }
+        catch(smpl::Transport_Failed e){
+            throw Bad_Archive();
+        }
+}
+
 Archive::Archive(const std::string &raw):
     _buffer(new char[MAX_ARCHIVE_SIZE]){
         if(raw.size() > MAX_ARCHIVE_SIZE){
