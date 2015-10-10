@@ -85,22 +85,23 @@ int main(int argc, char *argv[]) {
         } else {
         return -1;
         }
+        std::cerr << "Elements Retreieved: " << result.size() << std::endl;
         for (const auto &r : result) {
             std::cout << r.first.count() << " " << r.second << std::endl;
         }
     }
     else{
-        size_t size;
+        uint64_t checksum;
         if (LAST > 0) {
-        size = sls::lastn(KEY, LAST).size();
+        checksum = sls::lastn(KEY, LAST).checksum();
         } else if (TIME_END > TIME_START) {
-        size = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).size();
+        checksum = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).checksum();
         } else if (ALL) {
-        size = sls::all(KEY).size();
+        checksum = sls::all(KEY).checksum();
         } else {
         return -1;
         }
-        std::cerr << "Fetched: " << size << std::endl;
+        std::cerr << "Checksum: " << checksum << std::endl;
     }
   }
 
