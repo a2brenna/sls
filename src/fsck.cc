@@ -47,44 +47,52 @@ int main(int argc, char *argv[]) {
     std::regex include_regex(CONFIG_INCLUDE_REGEX);
     std::regex exclude_regex(CONFIG_EXCLUDE_REGEX);
 
-  std::vector<std::string> keys;
-  const auto m = getdir(CONFIG_SLS_DIR, keys);
-  if (m != 0) {
-    std::cerr << "Fatal error reading from: " << CONFIG_SLS_DIR << std::endl;
-    exit(1);
-  }
+    std::vector<std::string> buckets;
+    getdir(CONFIG_SLS_DIR, buckets);
+    for(const auto &b: buckets){
+        const auto DIRECTORY = CONFIG_SLS_DIR + "/" + b + "/";
+        std::cerr << "Processing bucket: " << DIRECTORY << std::endl;
 
-  for (const auto &k : keys) {
+        std::vector<std::string> keys;
+        const auto m = getdir(DIRECTORY, keys);
+        if (m != 0) {
+            std::cerr << "Fatal error reading from: " << DIRECTORY << std::endl;
+            exit(1);
+        }
 
-    if (!std::regex_match(k, include_regex)) {
-      continue;
-    } else if (std::regex_match(k, exclude_regex)) {
-      continue;
+        for (const auto &k : keys) {
+            std::cerr << "Processing: " << DIRECTORY + "/" + k << std::endl;
+
+            if (!std::regex_match(k, include_regex)) {
+                std::cerr << k << ": not in include_regex: " << CONFIG_INCLUDE_REGEX << std::endl;
+                continue;
+            } else if (std::regex_match(k, exclude_regex)) {
+                std::cerr << k << ": in exclude_regex: " << CONFIG_EXCLUDE_REGEX << std::endl;
+                continue;
+            }
+
+            Path key_directory(DIRECTORY+ "/" + k);
+            Index index;
+            try {
+                index = build_index(key_directory.str(), CONFIG_RESOLUTION);
+            } catch (...) {
+                std::cerr << "Error, failure to build_index for: " << key_directory.str() << std::endl;
+                continue;
+            }
+
+            Path index_file(DIRECTORY + "/" + k + "/index");
+            std::ofstream o(index_file.str(),
+                            std::ofstream::out | std::ofstream::trunc);
+            if (!o) {
+                std::cerr << "Error, unable to open file for writing: " << index_file.str() << std::endl;
+                continue;
+            } else {
+                o << index;
+                o.close();
+                std::cerr << "Indexed " << key_directory.str() << std::endl;
+            }
+        }
     }
-
-    Path key_directory(CONFIG_SLS_DIR + "/" + k);
-    Index index;
-    try {
-      index = build_index(key_directory.str(), CONFIG_RESOLUTION);
-    } catch (...) {
-      std::cerr << "Error, failure to build_index for: " << key_directory.str()
-                << std::endl;
-      continue;
-    }
-
-    Path index_file(CONFIG_SLS_DIR + "/" + k + "/index");
-    std::ofstream o(index_file.str(),
-                    std::ofstream::out | std::ofstream::trunc);
-    if (!o) {
-      std::cerr << "Error, unable to open file for writing: "
-                << index_file.str() << std::endl;
-      continue;
-    } else {
-      o << index;
-      o.close();
-      std::cout << "Indexed " << key_directory.str() << std::endl;
-    }
-  }
 
   return 0;
 }
