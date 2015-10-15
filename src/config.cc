@@ -6,7 +6,7 @@ namespace po = boost::program_options;
 
 std::string global_config_file = "/etc/sls.conf";
 
-std::string CONFIG_DISK_DIR = "/pool/sls/";
+std::string CONFIG_DISK_DIR = "/pool/sls/buckets/";
 int port = 6998;
 std::string CONFIG_UNIX_DOMAIN_FILE = "/tmp/sls.sock";
 size_t CONFIG_RESOLUTION = 1000;
