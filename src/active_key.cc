@@ -203,12 +203,16 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
       }
   }
 
+  std::cerr << "Reading from " << files.size() << " files" << std::endl;
+  const auto start_time = std::chrono::high_resolution_clock::now();
+
     if(files.size() > 1){
             const auto f = files[0];
             Path path(_directory.str() + f.filename());
             sls::Archive temp(path, f.offset());
             std::chrono::milliseconds current_time = f.timestamp();
             while(current_time < start){
+                std::cerr << "current_time: " << current_time.count() << " skipping..." << std::endl;
                 temp.advance_cursor();
                 current_time = temp.head_time();
             }
@@ -243,6 +247,8 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
             }
         }
     }
+    std::cerr << "Total Retreival Time: " << (std::chrono::high_resolution_clock::now() - start_time).count() << std::endl;
+    std::cerr << "Bytes Retreived: " << result.size() << std::endl;
   return result;
 }
 
