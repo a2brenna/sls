@@ -73,12 +73,7 @@ int main(int argc, char *argv[]) {
 
             Path key_directory(DIRECTORY+ "/" + k);
             Index index;
-            try {
-                index = build_index(key_directory.str(), CONFIG_RESOLUTION);
-            } catch (...) {
-                std::cerr << "Error, failure to build_index for: " << key_directory.str() << std::endl;
-                continue;
-            }
+            index = build_index(key_directory.str(), CONFIG_RESOLUTION);
 
             Path index_file(DIRECTORY + "/" + k + "/index");
             std::ofstream o(index_file.str(),
