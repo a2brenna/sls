@@ -207,6 +207,7 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
   const auto start_time = std::chrono::high_resolution_clock::now();
 
     if(files.size() > 1){
+        try{
             const auto f = files[0];
             Path path(_directory.str() + f.filename());
             sls::Archive temp(path, f.offset());
@@ -217,6 +218,11 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
                 current_time = temp.head_time();
             }
             result.append(temp.remainder());
+        }
+        catch(sls::End_Of_Archive e){
+            //This can occur when start_time appears between end of one file and beginning of next...
+            //Timestamps are not dense
+        }
     }
     if(files.size() > 2){
         for(size_t i = 1; i < (files.size() - 1); i++){
@@ -282,6 +288,7 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
   const auto start_time = std::chrono::high_resolution_clock::now();
 
     if(files.size() > 1){
+        try{
             const auto f = files[0];
             Path path(_directory.str() + f.filename());
             sls::Archive temp(path, f.offset());
@@ -292,6 +299,12 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
                 current_index++;
             }
             result.append(temp.remainder());
+        }
+        catch(sls::End_Of_Archive e){
+            //This should be impossible and indicates that the index_lookup is borked
+            //indexes ARE dense
+            assert(false);
+        }
     }
     if(files.size() > 2){
         for(size_t i = 1; i < (files.size() - 1); i++){
