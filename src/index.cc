@@ -263,7 +263,6 @@ Index build_index(const Path &directory, const size_t &resolution) {
 
     assert(count > 0);
     assert(last_timestamp >= first_timestamp);
-    assert(last_offset > 0);
 
     if (dirty) {
       timestamp_records.push_back(
