@@ -228,6 +228,10 @@ Index build_index(const Path &directory, const size_t &resolution) {
     Path arch_path(directory.str() + "/" + file);
     sls::Archive arch(arch_path);
 
+    if(arch.size() == 0){
+        continue;
+    }
+
     const std::chrono::milliseconds first_timestamp = arch.head_time();
     timestamp_records.push_back(
         std::pair<std::chrono::milliseconds, Index_Record>(
