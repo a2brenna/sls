@@ -11,8 +11,9 @@ bool DISCARD = false;
 size_t LAST = 0;
 size_t INDEX_START = 0;
 size_t INDEX_END = 0;
-uint64_t TIME_START = 0;
-uint64_t TIME_END = 0;
+uint64_t START_TIME = 0;
+uint64_t END_TIME = 0;
+uint64_t AGE = 0;
 
 std::string VALUE = "";
 int64_t TIME = -1;
@@ -23,11 +24,12 @@ void config(int argc, char *argv[]) {
 
   desc.add_options()("help", "Produce help messagwe")
       ("key", po::value<std::string>(&KEY), "Key to retrieve values for")
-      ("append", po::value<std::string>(&VALUE), "Value to append")
+      ("value", po::value<std::string>(&VALUE), "Value to append")
       ("time", po::value<int64_t>(&TIME), "Time (milliseconds since epoch) to append at")
       ("last", po::value<size_t>(&LAST), "Number of most recent elements to retrieve")
-      ("start", po::value<uint64_t>(&TIME_START), "Time to start retrieving elements")
-      ("end", po::value<uint64_t>(&TIME_END), "Time to start retrieving elements")
+      ("start_time", po::value<uint64_t>(&START_TIME), "Time to start retrieving elements")
+      ("end_time", po::value<uint64_t>(&END_TIME), "Time to start retrieving elements")
+      ("max_age", po::value<uint64_t>(&AGE), "Age of oldest element to fetch")
       ("all", po::bool_switch(&ALL), "Retrieve all elements")
       ("discard", po::bool_switch(&DISCARD), "Discard results after fetching. Useful for testing.")
       ("unix_domain_file", po::value<std::string>(&CONFIG_SERVER), "Server unix domain file");
@@ -50,6 +52,11 @@ void config(int argc, char *argv[]) {
   if (KEY == "") {
     std::cout << desc << std::endl;
     exit(1);
+  }
+
+  if(AGE != 0){
+      END_TIME = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+      START_TIME = END_TIME - AGE;
   }
 }
 
@@ -78,8 +85,8 @@ int main(int argc, char *argv[]) {
         std::vector<std::pair<std::chrono::milliseconds, std::string>> result;
         if (LAST > 0) {
         result = sls::lastn(KEY, LAST).unpack();
-        } else if (TIME_END > TIME_START) {
-        result = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).unpack();
+        } else if (END_TIME > START_TIME) {
+        result = sls::intervalt(KEY, std::chrono::milliseconds(START_TIME), std::chrono::milliseconds(END_TIME)).unpack();
         } else if (ALL) {
         result = sls::all(KEY).unpack();
         } else {
@@ -94,8 +101,8 @@ int main(int argc, char *argv[]) {
         uint64_t checksum;
         if (LAST > 0) {
         checksum = sls::lastn(KEY, LAST).checksum();
-        } else if (TIME_END > TIME_START) {
-        checksum = sls::intervalt(KEY, std::chrono::milliseconds(TIME_START), std::chrono::milliseconds(TIME_END)).checksum();
+        } else if (END_TIME > START_TIME) {
+        checksum = sls::intervalt(KEY, std::chrono::milliseconds(START_TIME), std::chrono::milliseconds(END_TIME)).checksum();
         } else if (ALL) {
         checksum = sls::all(KEY).checksum();
         } else {
