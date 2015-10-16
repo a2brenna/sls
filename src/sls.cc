@@ -102,65 +102,63 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
     sls::Archive data_string;
 
     if (request.IsInitialized()) {
-      const std::string key = request.key();
-      assert(key.size() > 0);
-      if (request.has_req_append()) {
-        sls::Append a = request.req_append();
-        const std::string data = a.data();
+        const std::string key = request.key();
+        assert(key.size() > 0);
+        if (request.has_req_append()) {
+            sls::Append a = request.req_append();
+            const std::string data = a.data();
 
-        try {
-          if (a.has_time()) {
-            const std::chrono::milliseconds time(a.time());
-            s->append(key, time, data);
-          } else {
-            s->append(key, data);
-          }
-          response.set_success(true);
-        } catch (sls::Out_Of_Order) {
-          response.set_success(false);
-        } catch (...) {
-          assert(false);
-        }
-      } else if (request.has_req_range()) {
-        const uint64_t start = request.mutable_req_range()->start();
-        const uint64_t end = request.mutable_req_range()->end();
-        const bool is_time = request.mutable_req_range()->is_time();
+            try {
+                if (a.has_time()) {
+                    const std::chrono::milliseconds time(a.time());
+                    s->append(key, time, data);
+                } else {
+                    s->append(key, data);
+                }
+                response.set_success(true);
+            } catch (sls::Out_Of_Order) {
+                response.set_success(false);
+            } catch (...) {
+                assert(false);
+            }
+        } else if (request.has_req_range()) {
+            const uint64_t start = request.mutable_req_range()->start();
+            const uint64_t end = request.mutable_req_range()->end();
+            const bool is_time = request.mutable_req_range()->is_time();
 
-        if (is_time) {
-          data_string = s->time_lookup(key, std::chrono::milliseconds(start),
-                                       std::chrono::milliseconds(end));
+            if (is_time) {
+                data_string = s->time_lookup(key, std::chrono::milliseconds(start),
+                                            std::chrono::milliseconds(end));
+            } else {
+                data_string = s->index_lookup(key, start, end);
+            }
+
+            if (!(data_string.size() == 0)) {
+                response.set_data_to_follow(true);
+            }
+            response.set_success(true);
+
+        } else if (request.has_last()) {
+            const unsigned long long max_values = request.last().max_values();
+            data_string = s->last_lookup(key, max_values);
+            if (!(data_string.size() == 0)) {
+                response.set_data_to_follow(true);
+            }
+            response.set_success(true);
+        } else if (request.has_packed_archive()) {
+            try {
+                s->append_archive(key, sls::Archive(request.packed_archive()));
+                response.set_success(true);
+            } catch (sls::Bad_Archive e) {
+                response.set_success(false);
+            } catch (sls::Out_Of_Order e) {
+                response.set_success(false);
+            } catch (...) {
+                assert(false);
+            }
         } else {
-          data_string = s->index_lookup(key, start, end);
+            *Error << "Cannot handle request" << std::endl;
         }
-
-        if (!(data_string.size() == 0)) {
-          response.set_data_to_follow(true);
-        }
-        response.set_success(true);
-
-      } else if (request.has_last()) {
-        const unsigned long long max_values = request.last().max_values();
-        data_string = s->last_lookup(key, max_values);
-        if (!(data_string.size() == 0)) {
-          response.set_data_to_follow(true);
-        }
-        response.set_success(true);
-      } else if (request.has_packed_archive()) {
-        try {
-          s->append_archive(key, sls::Archive(request.packed_archive()));
-          response.set_success(true);
-        } catch (sls::Bad_Archive e) {
-          response.set_success(false);
-        } catch (sls::Out_Of_Order e) {
-          response.set_success(false);
-        } catch (...) {
-          assert(false);
-        }
-      } else {
-        *Error << "Cannot handle request" << std::endl;
-      }
-    } else {
-      *Error << "Got invalid request" << std::endl;
     }
 
     try{
