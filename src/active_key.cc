@@ -10,8 +10,6 @@
 #include "config.h"
 #include <chrono>
 
-#include <iostream>
-
 std::string bucket_dir(const std::string &key){
     return std::to_string(CityHash64(key.c_str(), key.size()) % CONFIG_NUM_BUCKETS);
 }
@@ -203,7 +201,6 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
       }
   }
 
-  std::cerr << "Reading from " << files.size() << " files" << std::endl;
   const auto start_time = std::chrono::high_resolution_clock::now();
 
     if(files.size() > 1){
@@ -213,7 +210,6 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
             sls::Archive temp(path, f.offset());
             std::chrono::milliseconds current_time = f.timestamp();
             while(current_time < start){
-                std::cerr << "current_time: " << current_time.count() << " skipping..." << std::endl;
                 temp.advance_cursor();
                 current_time = temp.head_time();
             }
@@ -253,8 +249,6 @@ Active_Key::time_lookup(const std::chrono::milliseconds &start,
             }
         }
     }
-    std::cerr << "Total Retreival Time: " << (std::chrono::high_resolution_clock::now() - start_time).count() << std::endl;
-    std::cerr << "Bytes Retreived: " << result.size() << std::endl;
   return result;
 }
 
@@ -269,7 +263,6 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
   const size_t end = std::min(upper_bound, _total_elements());
 
   assert(start <= end);
-  std::cerr << "Begin index lookup" << std::endl;
 
   sls::Archive result;
 
@@ -284,7 +277,6 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
       }
   }
 
-  std::cerr << "Reading from " << files.size() << " files" << std::endl;
   const auto start_time = std::chrono::high_resolution_clock::now();
 
     if(files.size() > 1){
@@ -294,7 +286,6 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
             sls::Archive temp(path, f.offset());
             size_t current_index = f.position();
             while(current_index < start){
-                std::cerr << "current_index: " << current_index << " skipping..." << std::endl;
                 temp.advance_cursor();
                 current_index++;
             }
@@ -331,8 +322,6 @@ sls::Archive Active_Key::_index_lookup(const size_t &start,
             }
         }
     }
-    std::cerr << "Total Retreival Time: " << (std::chrono::high_resolution_clock::now() - start_time).count() << std::endl;
-    std::cerr << "Bytes Retreived: " << result.size() << std::endl;
 
   return result;
 }
