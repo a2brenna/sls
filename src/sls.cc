@@ -122,29 +122,41 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
                 assert(false);
             }
         } else if (request.has_req_range()) {
-            const uint64_t start = request.mutable_req_range()->start();
-            const uint64_t end = request.mutable_req_range()->end();
-            const bool is_time = request.mutable_req_range()->is_time();
+            try{
+                const uint64_t start = request.mutable_req_range()->start();
+                const uint64_t end = request.mutable_req_range()->end();
+                const bool is_time = request.mutable_req_range()->is_time();
 
-            if (is_time) {
-                data_string = s->time_lookup(key, std::chrono::milliseconds(start),
-                                            std::chrono::milliseconds(end));
-            } else {
-                data_string = s->index_lookup(key, start, end);
-            }
+                if (is_time) {
+                    data_string = s->time_lookup(key, std::chrono::milliseconds(start),
+                                                std::chrono::milliseconds(end));
+                } else {
+                    data_string = s->index_lookup(key, start, end);
+                }
 
-            if (!(data_string.size() == 0)) {
-                response.set_data_to_follow(true);
+                if (!(data_string.size() == 0)) {
+                    response.set_data_to_follow(true);
+                }
+                response.set_success(true);
             }
-            response.set_success(true);
+            catch(std::bad_alloc &b){
+                response.set_success(false);
+                *Error << "Could not allocate memory" << std::endl;
+            }
 
         } else if (request.has_last()) {
-            const unsigned long long max_values = request.last().max_values();
-            data_string = s->last_lookup(key, max_values);
-            if (!(data_string.size() == 0)) {
-                response.set_data_to_follow(true);
+            try{
+                const unsigned long long max_values = request.last().max_values();
+                data_string = s->last_lookup(key, max_values);
+                if (!(data_string.size() == 0)) {
+                    response.set_data_to_follow(true);
+                }
+                response.set_success(true);
             }
-            response.set_success(true);
+            catch(std::bad_alloc &b){
+                response.set_success(false);
+                *Error << "Could not allocate memory" << std::endl;
+            }
         } else if (request.has_packed_archive()) {
             try {
                 s->append_archive(key, sls::Archive(request.packed_archive()));
@@ -165,7 +177,7 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
         std::string response_string;
         response.SerializeToString(&response_string);
         client->send(response_string);
-        if (response.data_to_follow()) {
+        if (response.data_to_follow() && response.success()) {
             client->send(data_string.buffer(), data_string.size());
         }
     }
