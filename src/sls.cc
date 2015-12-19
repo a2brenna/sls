@@ -78,8 +78,6 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
       request_string = client->recv();
     } catch (smpl::Transport_Failed e) {
       break;
-    } catch (...) {
-      assert(false);
     }
 
     {
@@ -118,8 +116,6 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
                 response.set_success(true);
             } catch (sls::Out_Of_Order) {
                 response.set_success(false);
-            } catch (...) {
-                assert(false);
             }
         } else if (request.has_req_range()) {
             try{
@@ -165,8 +161,6 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
                 response.set_success(false);
             } catch (sls::Out_Of_Order e) {
                 response.set_success(false);
-            } catch (...) {
-                assert(false);
             }
         } else {
             *Error << "Cannot handle request" << std::endl;
