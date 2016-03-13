@@ -11,6 +11,7 @@
 #include <set>
 #include <deque>
 #include <chrono>
+#include <iostream>
 
 #include "legacy.pb.h"
 #include "file.h"
