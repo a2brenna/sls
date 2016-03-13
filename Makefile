@@ -29,19 +29,19 @@ uninstall:
 	rm -rf ${DESTDIR}/${PREFIX}/include/sls/
 
 sls: src/sls.cc sls.pb.o server.o config.o archive.o active_key.o index.o file.o util.o src/config.h
-	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o file.o util.o active_key.o index.o -o sls -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lslog -lcityhash
+	${CXX} ${CXXFLAGS} src/sls.cc server.o config.o sls.pb.o archive.o file.o util.o active_key.o index.o -o sls -lprotobuf -lpthread -lstdc++ -lboost_program_options -lsmplsocket -lslog -lcityhash
 
 fsck: src/fsck.cc sls.pb.o index.o archive.o file.o
-	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o file.o -o fsck -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lcityhash
+	${CXX} ${CXXFLAGS} src/fsck.cc sls.pb.o index.o archive.o file.o -o fsck -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcityhash
 
 migrate: src/migrate.cc legacy.pb.o file.o
-	${CXX} ${CXXFLAGS} src/migrate.cc legacy.pb.o file.o -o migrate -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lcityhash
+	${CXX} ${CXXFLAGS} src/migrate.cc legacy.pb.o file.o -o migrate -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcityhash
 
 sls_query: src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o
-	${CXX} ${CXXFLAGS} src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lcurl -ljsoncpp -lsmplsocket -lcityhash
+	${CXX} ${CXXFLAGS} src/sls_query.cc client.o slsc.o sls.pb.o archive.o file.o -o sls_query -lprotobuf -lpthread -lstdc++ -lboost_program_options -lsmplsocket -lcityhash
 
 test_client: src/test_client.cc util.o
-	${CXX} ${CXXFLAGS} src/test_client.cc util.o -o test_client -lprotobuf -lpthread -lstdc++ -lcurl -ljsoncpp -lboost_program_options -lsmplsocket -lsls
+	${CXX} ${CXXFLAGS} src/test_client.cc util.o -o test_client -lprotobuf -lpthread -lstdc++ -lboost_program_options -lsmplsocket -lsls
 
 libsls.so: slsc.o client.o sls.pb.o archive.o file.o
 	${CXX} ${CXXFLAGS} -shared -Wl,-soname,libsls.so -o libsls.so slsc.o client.o sls.pb.o archive.o file.o
