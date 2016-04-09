@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <regex>
+#include <iostream>
 
 std::string CONFIG_SLS_DIR;
 std::string CONFIG_INCLUDE_REGEX = ".*";
