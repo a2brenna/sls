@@ -19,7 +19,7 @@ Archive::Archive():
 Archive::Archive(const Path &file):
     _buffer(new char[MAX_ARCHIVE_SIZE]){
         const auto archive_size = readfile(file, 0, _buffer.get(), MAX_ARCHIVE_SIZE);
-        if(archive_size < 0){
+        if( (archive_size < 0) || (archive_size == MAX_ARCHIVE_SIZE) ){
             throw Bad_Archive();
         }
         else{
@@ -31,7 +31,7 @@ Archive::Archive(const Path &file):
 Archive::Archive(const Path &file, const size_t &offset):
     _buffer(new char[MAX_ARCHIVE_SIZE]){
         const auto archive_size = readfile(file, offset, _buffer.get(), MAX_ARCHIVE_SIZE);
-        if(archive_size < 0){
+        if( (archive_size < 0) || (archive_size == MAX_ARCHIVE_SIZE) ){
             throw Bad_Archive();
         }
         else{
@@ -45,6 +45,9 @@ Archive::Archive(smpl::Channel *channel):
         try{
             _cursor = _buffer.get();
             const size_t archive_size = channel->recv(_buffer.get(), MAX_ARCHIVE_SIZE);
+            if( (archive_size < 0) || (archive_size == MAX_ARCHIVE_SIZE) ){
+                throw Bad_Archive();
+            }
             _end = _buffer.get() + archive_size;
         }
         catch(smpl::Transport_Failed e){
