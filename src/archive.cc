@@ -6,7 +6,7 @@
 #include <iostream>
 #include <city.h>
 
-#define MAX_ARCHIVE_SIZE 1073741824
+#define MAX_ARCHIVE_SIZE 15073741824
 
 namespace sls{
 
