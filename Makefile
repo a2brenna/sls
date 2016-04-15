@@ -10,10 +10,13 @@ all: sls libsls.so libsls.a migrate fsck sls_query
 
 test: test_client
 
-install: install_headers libsls.so libsls.a
+install: install_headers libsls.so libsls.a sls fsck sls_query
 	mkdir -p ${DESTDIR}/${PREFIX}/lib
 	cp *.a ${DESTDIR}/${PREFIX}/lib
 	cp *.so ${DESTDIR}/${PREFIX}/lib
+	mkdir -p ${DESTDIR}/${PREFIX}/bin
+	cp sls ${DESTDIR}/${PREFIX}/bin/
+	cp sls_query ${DESTDIR}/${PREFIX}/bin/
 
 install_headers: src/sls.h src/sls.pb.h src/client.h src/archive.h src/file.h
 	mkdir -p ${DESTDIR}/${PREFIX}/include/sls/
