@@ -16,7 +16,7 @@ uint64_t START_TIME = 0;
 uint64_t END_TIME = 0;
 uint64_t AGE = 0;
 
-int CONFIG_PORT = 6998;
+int CONFIG_PORT = -1;
 std::string CONFIG_REMOTE_SERVER = "10.0.3.64";
 
 std::string VALUE = "";
@@ -65,6 +65,9 @@ void config(int argc, char *argv[]) {
       END_TIME = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
       START_TIME = END_TIME - AGE;
   }
+
+  //Must have a remote_server ip and port OR a local_server unix domain path
+  assert( (!CONFIG_REMOTE_SERVER.empty() && (CONFIG_PORT != -1) ) || (!CONFIG_LOCAL_SERVER.empty()));
 }
 
 int main(int argc, char *argv[]) {
