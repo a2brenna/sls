@@ -21,9 +21,16 @@ message Request{
     optional string key = 3;
     optional Last last = 4;
     optional bytes packed_archive = 5;
+    optional string dump_regex = 6;
 }
 
 message Response{
     required bool success = 1;
     optional bool data_to_follow = 2;
+    optional uint64 dumped_keys = 3;
+}
+
+message Archive_Header{
+    required string key = 1;
+    required uint64 archive_size = 2;
 }

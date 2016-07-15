@@ -17,6 +17,8 @@
 #include <thread>
 #include <memory>
 
+#include <regex>
+
 sls::SLS *s;
 
 std::unique_ptr<slog::Log> Error;
@@ -97,6 +99,8 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
     sls::Response response;
     response.set_success(false);
 
+    bool response_sent = false;
+
     sls::Archive data_string;
 
     if (request.IsInitialized()) {
@@ -162,17 +166,51 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
             } catch (sls::Out_Of_Order e) {
                 response.set_success(false);
             }
+        } else if (request.has_dump_regex()) {
+            const auto dump_end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch());
+            const auto dump_start = std::chrono::milliseconds(0);
+            const std::regex key_filter(request.dump_regex());
+            const auto all_keys = s->get_all_keys();
+
+            std::vector<std::string> filtered_keys;
+            for(const auto &k: all_keys){
+                if(std::regex_match(k, key_filter)){
+                    filtered_keys.push_back(k);
+                }
+            }
+
+            response.set_dumped_keys(filtered_keys.size());
+            response.set_success(true);
+            std::string response_string;
+            response.SerializeToString(&response_string);
+            client->send(response_string);
+            response_sent = true;
+
+            for(const auto &k: filtered_keys){
+                sls::Archive key_dump = s->time_lookup(key, dump_start, dump_end);
+
+                sls::Archive_Header header;
+                header.set_key(k);
+                header.set_archive_size(key_dump.size());
+                std::string header_string;
+                header.SerializeToString(&header_string);
+
+                client->send(header_string);
+                client->send(key_dump.buffer(), key_dump.size());
+            }
         } else {
             *Error << "Cannot handle request" << std::endl;
         }
     }
 
     try{
-        std::string response_string;
-        response.SerializeToString(&response_string);
-        client->send(response_string);
-        if (response.data_to_follow() && response.success()) {
-            client->send(data_string.buffer(), data_string.size());
+        if(!response_sent){
+            std::string response_string;
+            response.SerializeToString(&response_string);
+            client->send(response_string);
+            if (response.data_to_follow() && response.success()) {
+                client->send(data_string.buffer(), data_string.size());
+            }
         }
     }
     catch(smpl::Transport_Failed e){
