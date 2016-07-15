@@ -3,6 +3,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <hgutil/files.h>
 #include "active_key.h"
 
 namespace sls {
@@ -51,6 +52,18 @@ sls::Archive SLS::index_lookup(const std::string &key, const size_t &start,
 sls::Archive SLS::last_lookup(const std::string &key, const size_t &max_values) {
   std::shared_ptr<Active_Key> active_key = _get_active_file(key, false);
   return active_key->last_lookup(max_values);
+}
+
+std::vector<std::string> SLS::get_all_keys() const{
+    std::vector<std::string> keys;
+    std::vector<std::string> buckets;
+    getdir(_disk_dir, buckets);
+    for(const auto &b: buckets){
+        std::vector<std::string> keys_in_bucket;
+        getdir(_disk_dir + "/" + b, keys_in_bucket);
+        keys.insert(keys.end(), keys_in_bucket.begin(), keys_in_bucket.end());
+    }
+    return keys;
 }
 
 SLS::SLS(const std::string &dd) { _disk_dir = dd; }

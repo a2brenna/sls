@@ -26,6 +26,8 @@ public:
 
   void append_archive(const std::string &key, const sls::Archive &archive);
 
+  std::vector<std::string> get_all_keys() const;
+
   sls::Archive index_lookup(const std::string &key, const size_t &start,
                            const size_t &end);
   sls::Archive time_lookup(const std::string &key,
