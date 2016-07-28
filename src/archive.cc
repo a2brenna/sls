@@ -45,7 +45,7 @@ Archive::Archive(smpl::Channel *channel):
         try{
             _cursor = _buffer.get();
             const size_t archive_size = channel->recv(_buffer.get(), MAX_ARCHIVE_SIZE);
-            if( (archive_size < 0) || (archive_size == MAX_ARCHIVE_SIZE) ){
+            if( archive_size == MAX_ARCHIVE_SIZE ){
                 throw Bad_Archive();
             }
             _end = _buffer.get() + archive_size;
