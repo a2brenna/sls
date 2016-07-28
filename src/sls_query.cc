@@ -16,9 +16,12 @@ uint64_t START_TIME = 0;
 uint64_t END_TIME = 0;
 uint64_t AGE = 0;
 
+int CONFIG_PORT = -1;
+std::string CONFIG_REMOTE_SERVER = "10.0.3.64";
+
 std::string VALUE = "";
 int64_t TIME = -1;
-std::string CONFIG_SERVER = "/tmp/sls.sock";
+std::string CONFIG_LOCAL_SERVER;
 
 void config(int argc, char *argv[]) {
   po::options_description desc("Options");
@@ -33,7 +36,10 @@ void config(int argc, char *argv[]) {
       ("max_age", po::value<uint64_t>(&AGE), "Age of oldest element to fetch")
       ("all", po::bool_switch(&ALL), "Retrieve all elements")
       ("discard", po::bool_switch(&DISCARD), "Discard results after fetching. Useful for testing.")
-      ("unix_domain_file", po::value<std::string>(&CONFIG_SERVER), "Server unix domain file");
+      ("unix_domain_file", po::value<std::string>(&CONFIG_LOCAL_SERVER), "Server unix domain file")
+      ("remote_server", po::value<std::string>(&CONFIG_REMOTE_SERVER), "Server ip address")
+      ("remote_port", po::value<int>(&CONFIG_PORT), "Server port")
+      ;
 
   po::variables_map vm;
 
@@ -59,13 +65,22 @@ void config(int argc, char *argv[]) {
       END_TIME = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
       START_TIME = END_TIME - AGE;
   }
+
+  //Must have a remote_server ip and port OR a local_server unix domain path
+  assert( (!CONFIG_REMOTE_SERVER.empty() && (CONFIG_PORT != -1) ) || (!CONFIG_LOCAL_SERVER.empty()));
 }
 
 int main(int argc, char *argv[]) {
   config(argc, argv);
 
-  sls::global_server = std::shared_ptr<smpl::Remote_Address>(
-      new smpl::Remote_UDS(CONFIG_SERVER));
+  if(!CONFIG_LOCAL_SERVER.empty()){
+    sls::global_server = std::shared_ptr<smpl::Remote_Address>(
+        new smpl::Remote_UDS(CONFIG_LOCAL_SERVER));
+  }
+  else{
+    sls::global_server = std::shared_ptr<smpl::Remote_Address>(
+        new smpl::Remote_Port(CONFIG_REMOTE_SERVER, CONFIG_PORT));
+  }
 
   if (VALUE != "") {
     if (TIME < 0) {

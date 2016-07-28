@@ -226,6 +226,14 @@ void handle_channel(std::shared_ptr<smpl::Channel> client) {
   }
 }
 
+void handle_local_address(std::shared_ptr<smpl::Local_Address> incoming){
+  while (true) {
+    std::shared_ptr<smpl::Channel> new_client(incoming->listen());
+    auto t = std::thread(std::bind(handle_channel, new_client));
+    t.detach();
+  }
+}
+
 int main(int argc, char *argv[]) {
   srand(time(0));
   slog::initialize_syslog("sls", LOG_USER);
@@ -241,13 +249,21 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, shutdown);
 
-  std::unique_ptr<smpl::Local_Address> incoming(
+  std::shared_ptr<smpl::Local_Address> unix_domain_socket(
       new smpl::Local_UDS(CONFIG_UNIX_DOMAIN_FILE));
 
-  while (true) {
-    std::shared_ptr<smpl::Channel> new_client(incoming->listen());
-    auto t = std::thread(std::bind(handle_channel, new_client));
-    t.detach();
+  std::shared_ptr<smpl::Local_Address> network_socket(
+      new smpl::Local_Port("0.0.0.0", CONFIG_PORT));
+
+    auto unix_domain_handler = std::thread(std::bind(handle_local_address, unix_domain_socket));
+    unix_domain_handler.detach();
+
+    auto network_domain_handler = std::thread(std::bind(handle_local_address, network_socket));
+    network_domain_handler.detach();
+
+  while (true){
+      std::this_thread::sleep_for(std::chrono::seconds(3600));
   }
+
   return 0;
 }
